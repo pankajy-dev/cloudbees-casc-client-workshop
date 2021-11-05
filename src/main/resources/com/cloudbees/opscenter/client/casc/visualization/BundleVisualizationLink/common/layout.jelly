@@ -5,7 +5,7 @@
         <cbcipm:layout
                 feedbackHref="${%feedbackUrl}"
                 learnMoreHref="${%learnMoreUrl}"
-                logoSrc="${resURL}/plugin/cloudbees-casc-api/images/CasC-Export.svg"
+                logoSrc="${resURL}/plugin/cloudbees-casc-client/images/CasC-Export.svg"
                 logoAlt="${%logoAlt}"
                 title="${%title}"
                 subtitle="${%subtitle}">

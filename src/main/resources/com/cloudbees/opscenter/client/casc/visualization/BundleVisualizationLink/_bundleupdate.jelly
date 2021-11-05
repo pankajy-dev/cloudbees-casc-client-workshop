@@ -7,7 +7,7 @@
          xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
     <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}" type="one-column">
         <l:header>
-            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualization.css" type="text/css"/>
+            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
             <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
         </l:header>
         <l:main-panel>

@@ -3,7 +3,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
   <j:if test="${it.isUpdateAvailable()}">
     <link rel="stylesheet"
-          href="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualizationManagementLink.css"
+          href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualizationManagementLink.css"
           type="text/css"/>
     <span id="bundleManagementLink" >
       <span class="badge">
