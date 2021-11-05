@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    This plugin allows to use CasC bundles and to export the instance configuration to a CasC bundle.
+</div>
