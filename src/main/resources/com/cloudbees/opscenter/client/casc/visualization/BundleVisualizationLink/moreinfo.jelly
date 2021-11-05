@@ -1,0 +1,25 @@
+<?jelly escape-by-default='true'?>
+<!--
+    View of the CloudBees CasC Bundle with info about the feature.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:cbcipm="/lib/cbci/pluginManagement" xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}" type="one-column">
+        <l:header>
+            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualization.css" type="text/css"/>
+            <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+        </l:header>
+        <l:main-panel>
+            <common:layout>
+                <cbcipm:tabcontent class="plugin-management-content--narrow-700  plugin-management-content--margin">
+                    Configuration as Code (CasC) simplifies the management of a CloudBees CI cluster
+                    by capturing the configuration of this instance in human-readable, declarative configuration
+                    files that can be applied in a reproducible way.
+                </cbcipm:tabcontent>
+                <cbcipm:tabcontent class="plugin-management-content--narrow-700  plugin-management-content--margin">
+                    The configuration is described in a collection of YAML files referred to as a
+                    Configuration as Code (CasC) bundle. Refer to the documentation for more information.
+                </cbcipm:tabcontent>
+            </common:layout>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

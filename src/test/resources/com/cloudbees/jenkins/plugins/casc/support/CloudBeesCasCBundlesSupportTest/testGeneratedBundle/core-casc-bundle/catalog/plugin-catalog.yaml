@@ -1,0 +1,50 @@
+type: "plugin-catalog"
+version: "1"
+name: "plugin-catalog"
+displayName: "Plugin Catalog"
+configurations:
+# TODO #1 remove the following when https://cloudbees.atlassian.net/browse/FNDJEN-2013 is solved in all supported versions
+- description: "Plugins for v <= 2.204.3.4"
+  prerequisites:
+    productVersion: "(,2.204.3.4]" # refer to https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
+  includePlugins:
+    pipeline-maven:
+      version: "3.8.1"
+    h2-api:
+      version: "1.4.199"
+    # Timestamper was added to the envelope after 2.204.3.4, so the plugin catalog should not provide it
+    timestamper:
+      version: "1.10"
+# End of TODO #1
+- description: "Plugins for 2.204.3.4 < v < 2.249.1"
+  # TODO #2: remove the productVersion prerequisite following when https://cloudbees.atlassian.net/browse/FNDJEN-2013 is solved in all supported versions
+  prerequisites:
+    productVersion: "(2.204.3.4,2.249.1)"
+  # End of TODO #2
+  includePlugins:
+    pipeline-maven:
+      version: "3.8.1"
+    h2-api:
+      version: "1.4.199"
+- description: "Plugins for 2.249.1 <= v < 2.277.2"
+  prerequisites:
+    productVersion: "[2.249.1,2.277.2)" # refer to BEE-225: CasC API Plugin in CAP
+  includePlugins:
+    pipeline-maven:
+      version: "3.8.1"
+    h2-api:
+      version: "1.4.199"
+    cloudbees-casc-api:
+      version: "0.7"
+    mock-security-realm:
+      version: "1.5"
+- description: "Plugins for v >= 2.277.2"
+  prerequisites:
+    productVersion: "[2.277.2,)"
+  includePlugins:
+    pipeline-maven:
+      version: "3.8.1"
+    h2-api:
+      version: "1.4.199"
+    mock-security-realm:
+      version: "1.5"

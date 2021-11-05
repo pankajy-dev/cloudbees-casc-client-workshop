@@ -1,0 +1,19 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "organizationFolder"
+    displayName: "organization-folder"
+    name: "organization-folder"
+    description: "organization-folder"
+    navigators:
+      - github:
+          repoOwner: "cloudbees"
+    properties:
+      - organizationChildTriggersProperty:
+          templates:
+            - periodicFolderTrigger:
+                interval: "1d"
+      - organizationChildOrphanedItemsProperty:
+          strategy:
+            inherit: {}

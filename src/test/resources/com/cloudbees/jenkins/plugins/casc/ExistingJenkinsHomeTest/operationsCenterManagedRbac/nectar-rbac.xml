@@ -1,0 +1,89 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<nectar.plugins.rbac.strategy.RoleMatrixAuthorizationPlugin plugin="nectar-rbac@5.51">
+  <lastModified>1613667993236</lastModified>
+  <configuration class="com.cloudbees.opscenter.client.plugin.OperationsCenterRoleMatrixAuthorizationConfig" plugin="operations-center-client@2.263.0.2">
+    <cache root-groups-url="http://127.0.0.1:9090/job/cm/groups" dangerous-permissions-migrated="true">
+      <parent class="nectar.plugins.rbac.groups.ContextGroupContainer" plugin="nectar-rbac@5.51">
+        <name>Jenkins</name>
+        <groups class="java.util.Collections$UnmodifiableRandomAccessList" resolves-to="java.util.Collections$UnmodifiableList">
+          <c class="list">
+            <nectar.plugins.rbac.groups.ReadOnlyGroup>
+              <name>superuser</name>
+              <member>admin</member>
+              <role>super</role>
+            </nectar.plugins.rbac.groups.ReadOnlyGroup>
+          </c>
+          <list reference="../c"/>
+        </groups>
+        <roleFilters class="java.util.Collections$UnmodifiableSet">
+          <c class="set"/>
+        </roleFilters>
+      </parent>
+      <role name="anonymous" filterable="true"/>
+      <role name="authenticated" filterable="true">
+        <permission id="hudson.model.Hudson.Read"/>
+      </role>
+      <role name="super" filterable="false">
+        <permission id="com.cloudbees.opscenter.server.model.SharedCloud.Disconnect"/>
+        <permission id="hudson.model.Computer.Connect"/>
+        <permission id="hudson.model.Hudson.UploadPlugins"/>
+        <permission id="jenkins.metrics.api.Metrics.View"/>
+        <permission id="com.cloudbees.opscenter.server.model.ClientMaster.Lifecycle"/>
+        <permission id="com.cloudbees.opscenter.server.model.SharedCloud.Connect"/>
+        <permission id="com.cloudbees.plugins.updatecenter.UpdateCenter.Upload"/>
+        <permission id="com.cloudbees.opscenter.server.model.SharedCloud.Configure"/>
+        <permission id="hudson.model.Hudson.ConfigureUpdateCenter"/>
+        <permission id="nectar.plugins.rbac.groups.Group.Manage"/>
+        <permission id="hudson.model.Hudson.Administer"/>
+        <permission id="hudson.model.Item.Cancel"/>
+        <permission id="com.cloudbees.jenkins.plugin.metrics.views.Alerter.View"/>
+        <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.View"/>
+        <permission id="hudson.model.Computer.Delete"/>
+        <permission id="hudson.model.Item.Build"/>
+        <permission id="hudson.model.Item.Move"/>
+        <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Update"/>
+        <permission id="hudson.model.Item.Create"/>
+        <permission id="com.cloudbees.jenkins.plugin.metrics.views.Alerter.Mute"/>
+        <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Delete"/>
+        <permission id="com.cloudbees.opscenter.server.model.SharedCloud.ForceRelease"/>
+        <permission id="jenkins.metrics.api.Metrics.ThreadDump"/>
+        <permission id="com.cloudbees.opscenter.server.model.ClientMaster.Configure"/>
+        <permission id="hudson.model.Hudson.RunScripts"/>
+        <permission id="hudson.model.View.Create"/>
+        <permission id="hudson.model.Computer.Secure"/>
+        <permission id="hudson.model.Computer.Configure"/>
+        <permission id="nectar.plugins.rbac.roles.Role.Filter"/>
+        <permission id="hudson.model.Run.Update"/>
+        <permission id="hudson.model.View.Delete"/>
+        <permission id="hudson.model.Run.Delete"/>
+        <permission id="hudson.model.Computer.Create"/>
+        <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.ManageDomains"/>
+        <permission id="hudson.model.Item.Promote"/>
+        <permission id="hudson.model.View.Configure"/>
+        <permission id="com.cloudbees.jenkins.support.SupportPlugin.DownloadBundle"/>
+        <permission id="hudson.model.Computer.Build"/>
+        <permission id="hudson.model.Item.Configure"/>
+        <permission id="hudson.model.Item.Read"/>
+        <permission id="jenkins.metrics.api.Metrics.HealthCheck"/>
+        <permission id="nectar.plugins.rbac.groups.Group.Create"/>
+        <permission id="hudson.scm.SCM.Tag"/>
+        <permission id="hudson.model.Item.Discover"/>
+        <permission id="hudson.model.Hudson.Read"/>
+        <permission id="com.cloudbees.plugins.updatecenter.UpdateCenter.Configure"/>
+        <permission id="nectar.plugins.rbac.roles.Role.View"/>
+        <permission id="hudson.model.Item.Workspace"/>
+        <permission id="hudson.model.Computer.Provision"/>
+        <permission id="com.cloudbees.plugins.updatecenter.UpdateCenter.Store"/>
+        <permission id="nectar.plugins.rbac.groups.Group.Configure"/>
+        <permission id="nectar.plugins.rbac.groups.Group.Delete"/>
+        <permission id="hudson.model.View.Read"/>
+        <permission id="hudson.model.Item.Delete"/>
+        <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Create"/>
+        <permission id="hudson.model.Computer.Disconnect"/>
+        <permission id="hudson.model.Item.Request"/>
+        <permission id="nectar.plugins.rbac.groups.Group.View"/>
+        <permission id="com.cloudbees.plugins.updatecenter.UpdateCenter.Promote"/>
+      </role>
+    </cache>
+  </configuration>
+</nectar.plugins.rbac.strategy.RoleMatrixAuthorizationPlugin>

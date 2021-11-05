@@ -1,0 +1,6 @@
+id: "my-master"
+version: "4"
+apiVersion: "1"
+description: "Minimun version"
+jcasc:
+  - "jenkins.yaml"

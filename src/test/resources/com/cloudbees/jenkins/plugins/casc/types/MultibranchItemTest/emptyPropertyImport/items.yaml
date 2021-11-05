@@ -1,0 +1,10 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "multibranch"
+    displayName: "my-multibranch"
+    name: "my-multibranch"
+    description: ""
+    properties:
+      - envVars: {}

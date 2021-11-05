@@ -1,0 +1,53 @@
+<?jelly escape-by-default='true'?>
+<!--
+    Table with the list of files in a bundle.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define">
+
+    <d:taglib uri="local">
+        <d:tag name="row">
+            <tr>
+                <td class="table__column table__column--filename"><pre>${fullname}</pre></td>
+                <td class="table__column table__column--description">${description}</td>
+                <td class="table__column table__column--actions">
+                    <a id="view-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-effective-bundle-export/downloadFile/${fullname}" target="_blank">
+                        <i class="fa fa-eye" title="Visualize"/>
+                    </a>
+                    <a id="copy-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-effective-bundle-export/downloadFile?/${fullname}" target="_blank"
+                       data-action="copy-in-clipboard"
+                       data-success-message="${%Copied(fullname)}"
+                       data-error-message="${%CopyError(fullname)}"
+                       data-empty-file-message="${%Empty(fullname)}"
+                    >
+                        <i class="fa fa-copy" title="Copy content"/>
+                    </a>
+                    <a id="download-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-effective-bundle-export/downloadFile/${fullname}" download="${filename}" target="_.blank">
+                        <i class="fa fa-download" title="Download"/>
+                    </a>
+                </td>
+            </tr>
+        </d:tag>
+    </d:taglib>
+
+    <j:choose>
+        <j:when test="${it.isBundleUsed()}">
+            <table id="casc-bundle-files-table" class="pane bigtable" xmlns:local="local">
+                <tr>
+                    <th class="table__header table__header--filename">${%Filename}</th>
+                    <th class="table__header table__header--description">${%Description}</th>
+                    <th class="table__header table__header--actions"/>
+                </tr>
+                <j:forEach items="${it.effectiveBundle}" var="yml">
+                    <local:row description="${yml.description}" fullname="${yml.fullname}" filename="${yml.filename}"/>
+                </j:forEach>
+            </table>
+            <p>Download all exported files in zip format.</p>
+            <a id="download-zip" class="yui-button icon-button" href="${rootURL}/core-casc-effective-bundle-export" download="" target="_blank">
+                <i class="fa fa-download" title="Download"/>
+            </a>
+        </j:when>
+        <j:otherwise>
+            This instance is not using a Configuration as Code (CasC) bundle.
+        </j:otherwise>
+    </j:choose>
+</j:jelly>

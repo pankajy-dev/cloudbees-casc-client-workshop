@@ -1,0 +1,156 @@
+package com.cloudbees.opscenter.client.casc;
+
+import java.io.IOException;
+import java.net.URL;
+import javax.servlet.http.HttpServletResponse;
+
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import org.junit.AfterClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import nectar.plugins.rbac.strategy.RoleMatrixAuthorizationStrategyImpl;
+import net.sf.json.JSONObject;
+
+import hudson.model.User;
+import hudson.security.HudsonPrivateSecurityRealm;
+import hudson.security.Permission;
+import hudson.security.ProjectMatrixAuthorizationStrategy;
+import jenkins.model.Jenkins;
+import jenkins.security.ApiTokenProperty;
+
+import com.cloudbees.jenkins.cjp.installmanager.AbstractIMTest;
+import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
+import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
+import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
+import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
+import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
+public class BundleReloadActionTest extends AbstractIMTest {
+
+    @Rule
+    public final CJPRule rule;
+
+    /**
+     * Rule to restore system props after modifying them in a test
+     */
+    @Rule
+    public final FlagRule<String> props = FlagRule.systemProperty("core.casc.config.bundle", "src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle"
+                                                                                             + "-with-catalog");
+
+    public BundleReloadActionTest() {
+        this.rule = new CJPRule(this.tmp);
+    }
+
+    @Override
+    protected CJPRule rule() {
+        return this.rule;
+    }
+
+    @Test
+    @WithEnvelope(TwoPluginsV2dot289.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog")
+    public void checkHigherVersionAndHotReloadTest() throws IOException {
+        initializeRealm(rule);
+        // GIVEN The bundle is version 1 and there are 2 users: admin (with ADMINISTER role) and user (with READ role)
+        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
+        User plainUser = setSecurityRealmUser(rule, "user", Jenkins.READ);
+        CJPRule.WebClient wc = rule.createWebClient();
+
+        // WHEN Checking for a newer version if there's no new version
+        // THEN Admin should get the result, no update available for the moment
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
+        assertThat("We should get a 200", resp.getStatusCode() , is(HttpServletResponse.SC_OK));
+        JSONObject response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("There's no new version available", !response.getBoolean("update-available"));
+
+        // THEN User should also get a 200, no update available for the moment
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), plainUser, wc);
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("There's no new version available", !response.getBoolean("update-available"));
+
+        // WHEN Reloading if the bundle is not hot reloadable
+        // THEN Admin should get the result, not possible to update
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        assertThat("We should get a 200", resp.getStatusCode() , is(HttpServletResponse.SC_OK));
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("The bundle is not hot reloadable", !response.getBoolean("reloaded"));
+
+        // THEN User should get a forbidden (403) error, as MANAGE permissions are required
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), plainUser, wc);
+        assertThat("We should get a 403", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
+
+        // WHEN there's a new version of the bundle
+        System.setProperty("core.casc.config.bundle", "src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog-v2");
+        // THEN any user should get a 200 with update-available: true
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), plainUser, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("There's a new version available", response.getBoolean("update-available"));
+
+        // WHEN the bundle is hot reloadable
+        ConfigurationBundleManager.get().getConfigurationBundle().setHotReloadable(true);
+        // THEN Admin should get a 200 with reloaded: true
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("The bundle was reloaded", response.getBoolean("reloaded"));
+    }
+
+
+
+    private static void initializeRealm(CJPRule j){
+        j.jenkins.setSecurityRealm(new HudsonPrivateSecurityRealm(false, false, null));
+        j.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
+    }
+
+    private static User setSecurityRealmUser(CJPRule j, String username, Permission permission) throws IOException {
+        HudsonPrivateSecurityRealm realm = (HudsonPrivateSecurityRealm) j.jenkins.getSecurityRealm();
+        User user = realm.createAccount(username, "password");
+        j.jenkins.setSecurityRealm(realm);
+        ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) j.jenkins.getAuthorizationStrategy();
+        authorizationStrategy.add(permission, user.getId());
+        j.jenkins.setAuthorizationStrategy(authorizationStrategy);
+        user.addProperty(new ApiTokenProperty());
+        user.getProperty(ApiTokenProperty.class).changeApiToken();
+        return user;
+    }
+
+    private WebResponse requestWithToken(HttpMethod method, URL fullURL, User asUser, CJPRule.WebClient wc)
+            throws IOException {
+
+        try {
+            WebRequest getRequest = new WebRequest(fullURL, method);
+            return wc.withBasicApiToken(asUser).getPage(getRequest).getWebResponse();
+        }
+        catch (FailingHttpStatusCodeException exception) {
+            return exception.getResponse();
+        }
+    }
+
+    @AfterClass
+    public static void after() {
+        System.clearProperty("casc.jenkins.config");
+    }
+
+    public static final class TwoPluginsV2dot289 implements TestEnvelopeProvider {
+        public TwoPluginsV2dot289() {
+        }
+
+        @NonNull
+        public Envelope call() {
+            return TestEnvelopes.e("2.289.1", 1, "", TestEnvelopes.beer12(), TestEnvelopes.p("manage-permission", "1.0.1"));
+        }
+    }
+}

@@ -1,0 +1,12 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: folder
+    displayName: my-folders
+    name: my-folders
+    description: ''
+    properties:
+      - envVars: {}
+      - itemRestrictions:
+          filter: false

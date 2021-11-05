@@ -1,0 +1,126 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: "multibranch"
+    name: "multibranch1"
+    orphanedItemStrategy:
+      defaultOrphanedItemStrategy:
+        pruneDeadBranches: true
+        daysToKeep: 1
+        numToKeep: 2
+    healthMetrics:
+      - worstChildHealthMetric:
+          recursive: false
+      - averageChildHealthMetric: {}
+      - projectEnabledHealthMetric: {}
+      - jobStatusHealthMetric:
+          unstable: true
+          countVirginJobs: false
+          failure: true
+          success: true
+          unbuilt: true
+      - primaryBranchHealthMetric: {}
+    displayName: "Multibranch Job 1"
+    projectFactory:
+      customBranchProjectFactory:
+        marker: ".marker-file-plugins"
+        definition:
+          cpsScmFlowDefinition:
+            scriptPath: "pipelines/default/Jenkinsfile"
+            scm:
+              gitSCM:
+                extensions:
+                  - checkoutOption:
+                      timeout: 4
+                gitTool: "git"
+                userRemoteConfigs:
+                  - userRemoteConfig:
+                      name: "test-name"
+                      credentialsId: "credentialsId"
+                      url: "https://github.com/cloudbees/astro"
+                browser:
+                  githubWeb:
+                    repoUrl: "https://github.com/cloudbees/astro"
+                branches:
+                  - branchSpec:
+                      name: "*/master"
+            lightweight: false
+    description: "Multibranch job for testing purpose!"
+    sourcesList:
+      - branchSource:
+          source:
+            github:
+              apiUri: "https://api.github.com"
+              traits:
+                - gitHubBranchDiscovery:
+                    strategyId: 1
+                - gitHubPullRequestDiscovery:
+                    strategyId: 1
+                - gitHubForkDiscovery:
+                    trust:
+                      gitHubTrustEveryone: {}
+                    strategyId: 1
+                - headWildcardFilter:
+                    excludes: "dependabot/*"
+                    includes: "*"
+                - gitHubSshCheckout:
+                    credentialsId: "github-ssh"
+              repoOwner: "cloudbees"
+              id: "scm-source-id"
+              repository: "cloudbees-casc-api-plugin"
+              configuredByUrl: true
+              repositoryUrl: "https://github.com/cloudbees/cloudbees-casc-api-plugin"
+          strategy:
+            allBranchesSame: {}
+    trigger:
+      periodicFolderTrigger:
+        interval: "30d"
+    properties:
+      - folderLibraries:
+          libraries:
+            - libraryConfiguration:
+                implicit: false
+                allowVersionOverride: true
+                retriever:
+                  modernSCM:
+                    scm:
+                      github:
+                        apiUri: "https://api.github.com"
+                        traits:
+                          - gitHubBranchDiscovery:
+                              strategyId: 1
+                          - gitHubPullRequestDiscovery:
+                              strategyId: 1
+                          - gitHubForkDiscovery:
+                              trust:
+                                gitHubTrustEveryone: {}
+                              strategyId: 1
+                          - headWildcardFilter:
+                              excludes: ""
+                              includes: "*"
+                          - gitHubSshCheckout:
+                              credentialsId: "github-ssh"
+                        repoOwner: "cloudbees"
+                        repository: "rosie-libs"
+                        configuredByUrl: true
+                        repositoryUrl: "https://github.com/cloudbees/rosie-libs"
+                        id: "library-id"
+                name: "my-library"
+                includeInChangesets: true
+      - envVars:
+          vars:
+            ENV_VAR1: "VALUE1"
+            ENV_VAR2: "VALUE2"
+  - kind: "multibranch"
+    name: "multibranch2"
+    displayName: "Multibranch Job 2"
+    orphanedItemStrategy:
+      defaultOrphanedItemStrategy:
+        pruneDeadBranches: true
+        daysToKeep: 3
+        numToKeep: 4
+    projectFactory:
+      workflowBranchProjectFactory:
+        scriptPath: "Jenkinsfile"
+    description: "Minimalist job"

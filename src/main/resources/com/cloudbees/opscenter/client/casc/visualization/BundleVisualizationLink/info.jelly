@@ -1,0 +1,14 @@
+<?jelly escape-by-default='true'?>
+
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+  <j:if test="${it.isUpdateAvailable()}">
+    <link rel="stylesheet"
+          href="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualizationManagementLink.css"
+          type="text/css"/>
+    <span id="bundleManagementLink" >
+      <span class="badge">
+        <i class="fa fa-bell badge__icon" aria-hidden="true"></i> Update Available
+      </span>
+    </span>
+  </j:if>
+</j:jelly>

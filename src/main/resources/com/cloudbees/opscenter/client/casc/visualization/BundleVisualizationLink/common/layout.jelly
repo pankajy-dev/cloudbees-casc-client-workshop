@@ -1,0 +1,26 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement">
+
+    <div id="cbci-casc-bundle-visualization">
+        <cbcipm:layout
+                feedbackHref="${%feedbackUrl}"
+                learnMoreHref="${%learnMoreUrl}"
+                logoSrc="${resURL}/plugin/cloudbees-casc-api/images/CasC-Export.svg"
+                logoAlt="${%logoAlt}"
+                title="${%title}"
+                subtitle="${%subtitle}">
+            <cbcipm:tabbar>
+                <cbcipm:tab title="${%MoreInfo}" href="${rootURL}/casc-bundle-export-ui/moreinfo">${%MoreInfo}</cbcipm:tab>
+                <cbcipm:tab title="${%GeneratedBundleFiles}" href="${rootURL}/casc-bundle-export-ui/" permission="${app.ADMINISTER}">${%GeneratedBundleFiles}</cbcipm:tab>
+                <cbcipm:tab title="${%EffectiveBundleFiles}" href="${rootURL}/casc-bundle-export-ui/effective-bundle" permission="${app.ADMINISTER}">${%EffectiveBundleFiles}</cbcipm:tab>
+                <cbcipm:tab title="${%BundleUpdate}" href="${rootURL}/casc-bundle-export-ui/bundleUpdate">
+                    ${%BundleUpdate}
+                    <j:if test="${it.isUpdateAvailable()}">
+                        <i class="fa fa-bell primary-text" aria-hidden="true"></i>
+                    </j:if>
+                </cbcipm:tab>
+            </cbcipm:tabbar>
+            <d:invokeBody/>
+        </cbcipm:layout>
+    </div>
+</j:jelly>

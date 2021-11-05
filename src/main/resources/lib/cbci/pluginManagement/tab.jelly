@@ -1,0 +1,41 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+
+    <st:documentation>
+        A tab in a plugin management view
+        <st:attribute name="href" use="required">
+            The href of the link inside the tab.
+        </st:attribute>
+        <st:attribute name="title" use="required">
+            Text to show while hovering the tab.
+        </st:attribute>
+        <st:attribute name="disabled">
+            Whether the tab is disabled (different color and not clickable) or not. By default it is not.
+        </st:attribute>
+        <st:attribute name="disabledCause">
+            Text to show while hovering the tab when it is disabled.
+            It can be used to explain the user why it is disabled.
+
+            If both title and disabledCause are set, and the tab is disabled, disabledCause is displayed when hovering.
+        </st:attribute>
+        <st:attribute name="permission">
+            If given, this tab is only made available to users who have the specified permission.
+            (The permission will be checked against the "it" object.)
+        </st:attribute>
+    </st:documentation>
+    <f:prepareDatabinding />
+
+    <j:if test="${h.hasPermission(permission)}">
+        <j:set var="match" value="${h.hyperlinkMatchesCurrentPage(href)}"/>
+        <span title="${(disabled &amp;&amp; disabledCause!=null) ? disabledCause : ''}">
+            <a class="plugin-management-tabs__tab
+                    ${match ? 'plugin-management-tabs__tab--selected' : '' }
+                    ${disabled ? 'plugin-management-tabs__tab--disabled' : '' }"
+               title="${title}"
+               href="${disabled ? '' : href}">
+                <d:invokeBody/>
+            </a>
+        </span>
+    </j:if>
+
+</j:jelly>

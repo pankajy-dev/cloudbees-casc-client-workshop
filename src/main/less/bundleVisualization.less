@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+/**
+ * Entry point of the styles of the BundleVisualization view.
+ */
+#cbci-casc-bundle-visualization {
+    // Import the styles of the layout scoped to this selector, to avoid exposing them to the global scope
+    // and avoid any future conflict with jenkins-core classes
+    @import 'lib/pluginManagement.less';
+    @import 'lib/alert.less';
+
+    table th,
+    table td {
+        text-align: left;
+    }
+
+    .table__header--actions,
+    .table__column--actions {
+        width: 1%;  // Keep the column as small as possible
+        white-space: nowrap;  // Keep all the icons in the same line
+    }
+
+    @media only screen and (max-width: 768px) {
+        /* For mobile phones: */
+        .table__column--description,
+        .table__header--description {
+            display: none;
+        }
+    }
+
+    .secondary-text {
+        color: #767676;
+    }
+
+    .primary-text {
+        color: #0b6aa2;
+        color: var(--primary, #0b6aa2);
+    }
+
+    .check-updates-btn {
+        margin-left: 0;
+        margin-right: 1rem;
+    }
+
+    .mb-0 {
+        margin-bottom: 0;
+    }
+}

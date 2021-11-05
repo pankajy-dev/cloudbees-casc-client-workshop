@@ -1,0 +1,36 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - concurrentBuild: false
+    builders:
+      - shell:
+          command: echo freestyle-nested
+    blockBuildWhenUpstreamBuilding: false
+    blockBuildWhenDownstreamBuilding: false
+    kind: freeStyle
+    displayName: Testing FreeStyle
+    name: freestyle-nested
+    disabled: false
+    scm:
+      none: {}
+    scmCheckoutStrategy:
+      standard: {}
+  - publishersList:
+      - downstream:
+          childProjects: freestyle-nested
+          threshold: FAILURE
+    concurrentBuild: false
+    builders:
+      - shell:
+          command: echo freestyle-toplevel
+    blockBuildWhenUpstreamBuilding: false
+    blockBuildWhenDownstreamBuilding: false
+    kind: freeStyle
+    displayName: Testing FreeStyle
+    name: freestyle-toplevel
+    disabled: false
+    scm:
+      none: {}
+    scmCheckoutStrategy:
+      standard: {}

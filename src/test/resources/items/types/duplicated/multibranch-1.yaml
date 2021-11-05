@@ -1,0 +1,43 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: "multibranch"
+    name: "multibranch-test"
+    displayName: "multibranch-test"
+    description: "multibranch-test"
+    properties:
+      - folderLibraries:
+          libraries:
+            - libraryConfiguration:
+                implicit: false
+                allowVersionOverride: true
+                retriever:
+                  modernSCM:
+                    scm:
+                      github:
+                        traits:
+                          - gitHubBranchDiscovery:
+                              strategyId: 1
+                          - gitHubPullRequestDiscovery:
+                              strategyId: 1
+                          - gitHubForkDiscovery:
+                              trust:
+                                gitHubTrustEveryone: {}
+                              strategyId: 1
+                          - headWildcardFilter:
+                              excludes: ""
+                              includes: "*"
+                          - gitHubSshCheckout:
+                              credentialsId: "github-ssh"
+                        repoOwner: "cloudbees"
+                        repository: "rosie-libs"
+                        configuredByUrl: true
+                        repositoryUrl: "https://github.com/cloudbees/rosie-libs"
+                        id: "library-id"
+                name: "my-library"
+                includeInChangesets: true
+      - envVars:
+          vars:
+            ENV_VAR1: "VALUE1"
+            ENV_VAR2: "VALUE2"

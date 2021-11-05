@@ -1,0 +1,21 @@
+.idea
+*.iml
+target
+work
+
+# Node
+node/
+node_modules/
+npm-debug.log
+
+# Generated JavaScript Bundles
+jsbundles
+
+.classpath
+.project
+.settings
+
+# IDE ignores
+.classpath
+.settings/
+.project
