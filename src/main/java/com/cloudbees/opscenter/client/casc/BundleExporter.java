@@ -2,8 +2,6 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
-import com.cloudbees.jenkins.plugins.assurance.model.PluginItem;
-import com.cloudbees.jenkins.plugins.assurance.model.Plugins;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.Configuration;
