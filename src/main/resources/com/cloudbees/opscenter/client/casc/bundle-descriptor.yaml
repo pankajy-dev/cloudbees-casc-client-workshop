@@ -1,0 +1,4 @@
+apiVersion: "1"
+id: "%BUNDLE_ID%"
+description: "%DESCRIPTION%"
+version: "1"

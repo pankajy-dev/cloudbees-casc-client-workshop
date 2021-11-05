@@ -1,0 +1,30 @@
+<?jelly escape-by-default='true'?>
+<!--
+    View of the CloudBees CasC Bundle where the user can see or download the bundle files.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler"
+         xmlns:cbcipm="/lib/cbci/pluginManagement"
+         xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
+
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.ADMINISTER}" type="one-column">
+        <l:header>
+            <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
+            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
+            <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+        </l:header>
+        <l:main-panel>
+            <common:layout>
+                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                    You can export the current configuration to create a template Configuration as Code (CasC) bundle. However, the exported configuration is not an exact replica of this instance and must be manually updated.
+                    Refer to the documentation for more information.
+                </cbcipm:tabcontent>
+                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                    You must verify there are no Beekeeper plugin warnings in the exported configuration. Otherwise, the files may be unusable and require modifications due to warning comments in the files caused by plugin conflicts.
+                </cbcipm:tabcontent>
+                <cbcipm:tabcontent class="plugin-management-content--margin">
+                    <st:include page="_filesTable.jelly" />
+                </cbcipm:tabcontent>
+            </common:layout>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

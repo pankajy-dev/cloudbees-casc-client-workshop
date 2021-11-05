@@ -1,0 +1,62 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: folder
+    displayName: Acceptance Test Harness
+    name: Acceptance Test Harness
+    description: This contains all the Acceptance Test Harness jobs
+    groups:
+      - members:
+          unknown:
+            - amuniz@cloudbees.com
+        name: Administrator
+    items:
+      - kind: folder
+        displayName: With rosie-libs
+        name: With rosie-libs
+        items:
+          - kind: folder
+            displayName: cje-ath
+            name: cje-ath
+            groups:
+              - members:
+                  unknown:
+                    - amuniz@cloudbees.com
+                roles:
+                  - name: administer
+                    grantedAt: current
+                    propagates: 'false'
+                name: Administrators
+              - members:
+                  unknown:
+                    - Special Administrators
+                    - ldap-developers
+                roles:
+                  - name: developer
+                    grantedAt: child
+                name: Developers
+              - roles:
+                  - name: browser
+                    grantedAt: current
+                name: Browsers
+              - members:
+                  unknown:
+                    - special-admins
+                name: Special-Administrators
+            filteredRoles:
+              - browser
+              - developer
+          - kind: folder
+            displayName: cjoc-ath
+            name: cjoc-ath
+  - kind: folder
+    displayName: Plugins
+    name: Plugins
+    items:
+      - kind: folder
+        displayName: Operations Center all the things
+        name: Operations Center all the things
+      - kind: folder
+        displayName: Others
+        name: Others

@@ -1,0 +1,16 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "folder"
+    displayName: "folder-test"
+    name: "folder-test"
+    description: "folder-test"
+    properties:
+      - itemRestrictions:
+          allowedTypes:
+            - "org.jenkinsci.plugins.workflow.job.WorkflowJob"
+            - "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
+            - "com.cloudbees.hudson.plugins.folder.Folder"
+            - "jenkins.branch.OrganizationFolder.org.jenkinsci.plugins.github_branch_source.GitHubSCMNavigator"
+          filter: true

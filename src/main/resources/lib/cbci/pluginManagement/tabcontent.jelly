@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+    <st:documentation>
+        Piece of content inside a plugin management tag
+        <st:attribute name="class" >
+            Classes to add to the tag
+        </st:attribute>
+    </st:documentation>
+
+    <div class="plugin-management-content ${class}">
+        <d:invokeBody/>
+    </div>
+</j:jelly>

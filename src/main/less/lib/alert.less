@@ -1,0 +1,25 @@
+/** Extends the .alert class defined in jenkins-core */
+.alert-secondary {
+    // CSS variables for badges
+    --cbci-alert-secondary-color: bar(--text-color, #333);
+    --cbci-alert-secondary-bg-color: #e4e4e4;
+    --cbci-alert-secondary-border-color: #ddd;
+
+    color: #333;
+    color: var(--cbci-alert-secondary-color);
+    border: 1px solid #ddd;
+    border: 1px solid var(--cbci-alert-secondary-border-color);
+    background-color: #e4e4e4;
+    background-color: var(--cbci-alert-secondary-bg-color);
+}
+
+/* Make room to the alert__form with flexbox */
+.alert {
+  display: flex;
+}
+.alert__body {
+  flex: 1;
+}
+.alert__form {
+  flex: 0 0 auto;
+}

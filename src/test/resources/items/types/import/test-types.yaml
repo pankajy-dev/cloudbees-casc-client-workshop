@@ -1,0 +1,36 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: "testTypes"
+    displayName: "Job to test the types"
+    name: "test-job"
+    description: "Job to test the types!"
+    describableProperty:
+      descriptor1:
+        property3: "This is the property 3"
+        property4: "TYPE_OFF"
+        minorSecret: "{MINOR_SECRET}"
+    stringProperty: "string-value"
+    topSecret: "{TOP_SECRET}"
+    describableList:
+      - descriptor1:
+          property2: true
+          property1: 20
+      - descriptor1:
+          property2: false
+          property1: 30
+    type: "TYPE_ON"
+    groups:
+      - name: "Item Administrators"
+        members:
+          users:
+            - "user@acme.com"
+        roles:
+          - name: "administer"
+            grantedAt: "current"
+            propagates: "true"
+    filteredRoles:
+      - "developer"
+      - "reader"
+

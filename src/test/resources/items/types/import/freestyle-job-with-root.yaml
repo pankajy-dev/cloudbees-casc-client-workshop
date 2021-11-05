@@ -1,0 +1,96 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+root: "/folder"
+items:
+  - kind: "freeStyle"
+    name: "test-project"
+    displayName: "Test Project"
+    description: "Test Project"
+    concurrentBuild: true
+    blockBuildWhenDownstreamBuilding: true
+    blockBuildWhenUpstreamBuilding: false
+    customWorkspace: "/tmp/my-folder"
+    disabled: false
+    quietPeriod: 10
+    scm:
+      gitSCM:
+        extensions:
+          - checkoutOption:
+              timeout: 4
+        gitTool: git
+        userRemoteConfigs:
+          - userRemoteConfig:
+              name: "testing-name"
+              credentialsId: "credentialsId"
+              url: "git@github.com:cloudbees/cloudbees-casc-api.git"
+        browser:
+          githubWeb:
+            repoUrl: "https://github.com/cloudbees/cloudbees-casc-api"
+        branches:
+          - branchSpec:
+              name: "*/master"
+    buildDiscarder:
+      logRotator:
+        artifactDaysToKeep: 3
+        daysToKeep: 1
+        numToKeep: 2
+        artifactNumToKeep: 4
+    scmCheckoutStrategy:
+      standard: { }
+    JDK:
+      name: "jdk"
+    builders:
+      - shell:
+          command: "pwd"
+      - maven:
+          settings:
+            standard: { }
+          injectBuildVariables: false
+          globalSettings:
+            standard: { }
+          usePrivateRepository: false
+          targets: "clean test"
+    label: "testing-label"
+    triggers:
+      - pollSCM:
+          ignorePostCommitHooks: false
+          scmpoll_spec: "0 0 * * *"
+      - cron:
+          spec: "1 1 * * *"
+    parameters:
+      - string:
+          trim: true
+          defaultValue: "default string value"
+          name: "param1"
+          description: "description param1"
+      - choice:
+          name: "param2"
+          description: "description param2"
+          choices:
+            - "option1"
+            - "option2"
+            - "option3"
+      - booleanParam:
+          defaultValue: true
+          name: "param3"
+          description: "description param3"
+    publishersList:
+      - archiveArtifacts:
+          allowEmptyArchive: true
+          caseSensitive: true
+          onlyIfSuccessful: true
+          fingerprint: true
+          defaultExcludes: true
+          followSymlinks: true
+          artifacts: "*.txt"
+      - jUnitResultArchiver:
+          testResults: "testResults"
+          allowEmptyResults: true
+          healthScaleFactor: 1.5
+          keepLongStdio: true
+          skipMarkingBuildUnstable: true
+      - mailer:
+          notifyEveryUnstableBuild: false
+          sendToIndividuals: true
+          recipients: "user@acme.com"

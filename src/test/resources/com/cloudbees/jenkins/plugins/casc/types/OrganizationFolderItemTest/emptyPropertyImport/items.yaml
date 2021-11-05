@@ -1,0 +1,14 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "organizationFolder"
+    displayName: "my-org-folder"
+    name: "my-org-folder"
+    description: ""
+    navigators:
+      - github:
+          repoOwner: "cloudbees"
+          credentialsId: "svc-jenkins-git-ca-userpw"
+    properties:
+      - envVars: {}

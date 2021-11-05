@@ -1,0 +1,13 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: "multibranch"
+    name: "multibranch-test"
+    displayName: "multibranch-test"
+    description: "multibranch-test"
+    properties:
+      - envVars:
+          vars:
+            ENV_VAR1: "VALUE1"
+            ENV_VAR2: "VALUE2"

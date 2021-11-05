@@ -1,0 +1,72 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    displayName: "Folder for testing purpose"
+    name: "folder-test"
+    description: "Folder for testing purpose!"
+    healthMetrics:
+      - worstChildHealthMetric:
+          recursive: false
+      - averageChildHealthMetric: {}
+      - jobStatusHealthMetric:
+          unstable: true
+          countVirginJobs: true
+          failure: true
+          success: true
+          unbuilt: true
+      - projectEnabledHealthMetric: {}
+    properties:
+      - envVars:
+          vars:
+            FOO: BAR
+            ANOTHER: WHATEVER
+      - folderLibraries:
+          libraries:
+            - libraryConfiguration:
+                implicit: false
+                allowVersionOverride: true
+                retriever:
+                  modernSCM:
+                    scm:
+                      github:
+                        apiUri: "https://api.github.com"
+                        traits:
+                          - gitHubBranchDiscovery:
+                              strategyId: 1
+                          - gitHubPullRequestDiscovery:
+                              strategyId: 1
+                          - gitHubForkDiscovery:
+                              trust:
+                                gitHubTrustEveryone: {}
+                              strategyId: 1
+                        repoOwner: "cloudbees"
+                        id: "library-id"
+                        repository: "rosie-libs"
+                        configuredByUrl: true
+                        repositoryUrl: "https://github.com/cloudbees/rosie-libs"
+                name: "my-library"
+                includeInChangesets: true
+      - itemRestrictions:
+          allowedTypes:
+            - "org.jenkinsci.plugins.workflow.job.WorkflowJob"
+            - "hudson.matrix.MatrixProject"
+            - "hudson.model.FreeStyleProject"
+            - "com.cloudbees.pipeline.governance.templates.classic.multibranch.GovernanceMultibranchPipelineTemplate"
+            - "com.cloudbees.hudson.plugins.modeling.impl.jobTemplate.JobTemplate"
+            - "com.cloudbees.hudson.plugins.folder.Folder"
+            - "com.cloudbees.hudson.plugins.modeling.impl.builder.BuilderTemplate"
+            - "com.cloudbees.hudson.plugins.modeling.impl.auxiliary.AuxModel"
+            - "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
+            - "com.cloudbees.hudson.plugins.modeling.impl.publisher.PublisherTemplate"
+            - "com.cloudbees.pipeline.governance.templates.classic.standalone.GovernancePipelineJobTemplate"
+            - "com.cloudbees.hudson.plugins.modeling.impl.folder.FolderTemplate"
+            - "com.infradna.hudson.plugins.backup.BackupProject"
+            - "jenkins.branch.OrganizationFolder.org.jenkinsci.plugins.github_branch_source.GitHubSCMNavigator"
+          filter: true
+    items:
+      - kind: "freeStyle"
+        displayName: "FreeStyle Job in the folder"
+        name: "child-project"

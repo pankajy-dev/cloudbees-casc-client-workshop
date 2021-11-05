@@ -1,0 +1,8 @@
+type: plugin-catalog
+version: '1'
+name: test-catalog
+displayName: Test Catalog
+configurations:
+- description: Bundle catalog
+  includePlugins:
+

@@ -1,0 +1,33 @@
+# https://docs.cloudbees.com/docs/cloudbees-ci/latest/cloud-admin-guide/ci-casc-modern#_sample_items_yaml_file
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "ATH"
+    description: "This contains all the Acceptance Test Harness jobs"
+    groups:
+      - name: "ATH Administrators"
+        members:
+          users:
+            - "simon"
+        roles:
+          - name: "administer"
+    items:
+      - kind: "folder"
+        name: "TestA"
+        groups:
+          - name: "Test A Administrators"
+            members:
+              users:
+                - "john-doe"
+            roles:
+              - name: "administer"
+        items:
+          - kind: "folder"
+            name: "cjoc-ath"
+          - kind: "folder"
+            name: "cje-ath"
+  - kind: "folder"
+    name: "Plugins"

@@ -1,0 +1,10 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "organizationFolder"
+    name: "with-invalid-navigator"
+    description: "Minimal Bitbucket Project description"
+    navigators:
+      - fake:
+          repoOwner: "cloudbees-bitbucket"

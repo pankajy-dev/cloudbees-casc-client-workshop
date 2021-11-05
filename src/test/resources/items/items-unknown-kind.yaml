@@ -1,0 +1,13 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+items:
+  - kind: "folder"
+    name: "Acceptance Test Harness"
+    description: "This contains all the Acceptance Test Harness jobs"
+    items:
+      - kind: "WAT"
+        name: "With rosie-libs"
+        properties:
+          - kind: "WAT"
+            value: "myPropertyValue"

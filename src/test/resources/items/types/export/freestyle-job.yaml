@@ -1,0 +1,95 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - publishersList:
+      - archiveArtifacts:
+          allowEmptyArchive: true
+          caseSensitive: true
+          onlyIfSuccessful: true
+          fingerprint: true
+          defaultExcludes: true
+          followSymlinks: true
+          artifacts: '*.txt'
+      - jUnitResultArchiver:
+          skipPublishingChecks: false
+          testResults: testResults
+          allowEmptyResults: true
+          skipMarkingBuildUnstable: false
+          healthScaleFactor: 1.5
+          keepLongStdio: true
+      - mailer:
+          notifyEveryUnstableBuild: false
+          recipients: user@acme.com
+          sendToIndividuals: false
+    builders:
+      - shell:
+          command: pwd
+      - maven:
+          settings:
+            standard: {}
+          injectBuildVariables: false
+          globalSettings:
+            standard: {}
+          usePrivateRepository: false
+          targets: clean test
+    kind: freeStyle
+    displayName: Test Project
+    description: Test Project
+    label: testing-label
+    triggers:
+      - pollSCM:
+          ignorePostCommitHooks: false
+          scmpoll_spec: 0 0 * * *
+      - cron:
+          spec: 1 1 * * *
+    customWorkspace: /tmp/my-folder
+    JDK:
+      name: jdk
+    concurrentBuild: true
+    blockBuildWhenUpstreamBuilding: false
+    blockBuildWhenDownstreamBuilding: true
+    name: freestyle-test
+    disabled: false
+    scm:
+      gitSCM:
+        extensions:
+          - checkoutOption:
+              timeout: 4
+        gitTool: git
+        userRemoteConfigs:
+          - userRemoteConfig:
+              name: any-name
+              credentialsId: credentialsId
+              url: git@github.com:cloudbees/cloudbees-casc-api.git
+        browser:
+          githubWeb:
+            repoUrl: https://github.com/cloudbees/cloudbees-casc-api
+        branches:
+          - branchSpec:
+              name: '*/master'
+    scmCheckoutStrategy:
+      standard: {}
+    parameters:
+      - string:
+          trim: true
+          defaultValue: default string value
+          name: param1
+          description: description param1
+      - choice:
+          name: param2
+          description: description param2
+          choices:
+            - option1
+            - option2
+            - option3
+      - booleanParam:
+          defaultValue: true
+          name: param3
+          description: description param3
+    buildDiscarder:
+      logRotator:
+        artifactDaysToKeep: 3
+        artifactNumToKeep: 4
+        daysToKeep: 1
+        numToKeep: 2

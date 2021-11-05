@@ -1,0 +1,45 @@
+# This is for future use. It specifies how to handle removed items from this file
+# which still exist in Jenkins. We need to force definition of the attribute now
+# even when it's going to do "nothing" so we can evolve compatibly in the future
+removeStrategy:
+  # This is for future use. It specifies how to handle removed items from this file
+  # which still exist in Jenkins. We need to force definition of the attribute now
+  # even when it's going to do "nothing" so we can evolve compatibly in the future
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder" # defines the item type
+    name: "Acceptance Test Harness"
+    description: "This contains all the Acceptance Test Harness jobs"
+    groups:
+      - name: "ATH Administrators"
+        members:
+          users:
+            - "amuniz@cloudbees.com"
+        roles:
+          - name: "administer"
+            grantedAt: "current" # "child" or "grandchild"
+            propagates: "true"
+    items:
+      - kind: "folder"
+        name: "With rosie-libs"
+        properties:
+          - kind: "myProperty"
+            value: "myPropertyValue"
+        filteredRoles:
+          - "developer"
+          - "browser"
+        items:
+          - kind: "test-kind" # defines the item type
+            name: "cjoc-ath"
+            # not going deeper on this as it's out of scope for now
+          - kind: "test-kind"
+            name: "cje-ath"
+  - kind: "folder"
+    name: "Plugins"
+    items:
+      - kind: "test-kind-2"
+        name: "Operations Center all the things"
+      - kind: "test-kind-2"
+        name: "Others"

@@ -1,0 +1,56 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+
+    <st:documentation>
+        The layout of a view to configure a plugin within the Manage menu.
+        Provides a title, subtitle, and a side bar with the plugin logo, and Feedback and Learn More buttons.
+        Use tabbar and tab to add a navigation bar with tabs.
+        Use mainsection to wrap the main content.
+
+        <st:attribute name="learnMoreHref" use="required">
+            Href of the "Learn More" link.
+        </st:attribute>
+        <st:attribute name="feedbackHref" use="required">
+            Href of the "Feedback" link.
+        </st:attribute>
+        <st:attribute name="logoSrc" use="required">
+            Src attribute of the logo img tag.
+        </st:attribute>
+        <st:attribute name="logoAlt" use="required">
+            Alt attribute of the logo img tag.
+        </st:attribute>
+        <st:attribute name="title" use="required">
+            Title of the page. Content of the h1 tag.
+        </st:attribute>
+        <st:attribute name="subtitle" use="required">
+            Subtitle of the page. Content of the h3 tag.
+        </st:attribute>
+        <st:attribute name="displayError">
+            Error message to display as an alert. Use it to show an error after submitting a form or any other interaction.
+        </st:attribute>
+    </st:documentation>
+    <f:prepareDatabinding />
+
+    <j:set var="instance" value="${it}"/>
+    <j:set var="descriptor" value="${it.descriptor}"/>
+
+    <div class="plugin-management" data-global-error="${displayError}">
+        <aside class="plugin-management-side-bar">
+            <img class="plugin-management-side-bar__element
+                        plugin-management-side-bar__element--logo"
+                 src="${logoSrc}"
+                 width="10rem" height="10rem"
+                 alt="${logoAlt}"/>
+            <a class="yui-button plugin-management-side-bar__element" target="_blank" href="${learnMoreHref}">${%Learn More}</a>
+            <a class="yui-button plugin-management-side-bar__element" target="_blank" href="${feedbackHref}">${%Feedback}</a>
+        </aside>
+        <section class="plugin-management-body">
+            <header class="plugin-management-header">
+                <h1 class="h2 plugin-management-header__title">${title}</h1>
+                <h3 class="h5 plugin-management-header__subtitle">${subtitle}</h3>
+            </header>
+            <d:invokeBody/>
+        </section>
+    </div>
+
+</j:jelly>
