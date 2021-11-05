@@ -1,0 +1,18 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - JDK:
+      name: my-jdk
+    concurrentBuild: false
+    blockBuildWhenUpstreamBuilding: false
+    blockBuildWhenDownstreamBuilding: false
+    kind: freeStyle
+    displayName: Testing FreeStyle
+    name: freeStyle-test
+    description: FreeStyleProject for testing purpose!
+    disabled: false
+    scm:
+      none: {}
+    scmCheckoutStrategy:
+      standard: {}

@@ -1,0 +1,13 @@
+removeStrategy:
+  items: "none"
+  rbac: "update"
+
+items:
+  - kind: "folder"
+    name: "Teams"
+    items:
+      - kind: "folder"
+        name: "Team A"
+        items:
+          - kind: "folder"
+            name: "Team member folders"

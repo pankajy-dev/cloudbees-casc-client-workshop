@@ -1,0 +1,6 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "organizationFolder"
+    name: "without-navigator"

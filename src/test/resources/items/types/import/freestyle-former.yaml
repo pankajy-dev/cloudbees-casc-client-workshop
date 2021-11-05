@@ -1,0 +1,13 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "freeStyle"
+    name: "freeStyle-test"
+    displayName: "Testing FreeStyle"
+    description: "FreeStyleProject for testing purpose!"
+    JDK:
+      jdk:
+        name: "my-jdk"
+        home: "path/to/java"

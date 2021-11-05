@@ -1,0 +1,34 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+items:
+  - kind: "pipeline"
+    name: "workflow-test-1"
+    displayName: "workflow-test-1"
+    description: "workflow-test-1"
+    concurrentBuild: false
+    properties:
+      - buildDiscarder:
+          strategy:
+            logRotator:
+              artifactDaysToKeep: 3
+              artifactNumToKeep: 4
+              daysToKeep: 1
+              numToKeep: 2
+      - preserveStashes:
+          buildCount: 1
+  - kind: "pipeline"
+    name: "workflow-test-2"
+    displayName: "workflow-test-2"
+    description: "workflow-test-2"
+    concurrentBuild: true
+    properties:
+      - buildDiscarder:
+          strategy:
+            logRotator:
+              artifactDaysToKeep: 3
+              artifactNumToKeep: 4
+              daysToKeep: 1
+              numToKeep: 2
+      - preserveStashes:
+          buildCount: 1

@@ -1,0 +1,13 @@
+removeStrategy:
+  rbac: SYNC
+  items: NONE
+items:
+  - kind: folder
+    displayName: My folder
+    name: my-folder
+    description: This folder contains properties in the former yaml format
+    properties:
+      - envVars:
+          vars:
+            FOO: BAR
+            ANOTHER: WHATEVER

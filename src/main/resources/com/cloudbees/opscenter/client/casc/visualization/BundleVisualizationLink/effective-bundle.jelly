@@ -1,0 +1,26 @@
+<?jelly escape-by-default='true'?>
+<!--
+    View of the CloudBees CasC Bundle where the user can see or download the bundle files.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler"
+         xmlns:cbcipm="/lib/cbci/pluginManagement"
+         xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
+
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.ADMINISTER}" type="one-column">
+        <l:header>
+            <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualization.js"/>
+            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-api/jsbundles/bundleVisualization.css" type="text/css"/>
+            <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+        </l:header>
+        <l:main-panel>
+            <common:layout>
+                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                    The original bundle is the folder or file that was applied when this instance was started.
+                </cbcipm:tabcontent>
+                <cbcipm:tabcontent class="plugin-management-content--margin">
+                    <st:include page="_effectiveBundleTable.jelly" />
+                </cbcipm:tabcontent>
+            </common:layout>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

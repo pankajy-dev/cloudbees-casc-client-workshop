@@ -1,0 +1,10 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "folder"
+    displayName: "my-folder"
+    name: "my-folder"
+    description: ""
+    properties:
+      - envVars: {}

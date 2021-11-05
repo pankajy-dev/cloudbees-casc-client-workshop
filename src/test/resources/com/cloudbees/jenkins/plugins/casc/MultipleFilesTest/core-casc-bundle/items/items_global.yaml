@@ -1,0 +1,23 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "Acceptance Test Harness"
+    displayName: "ATH"
+    description: "This contains all the Acceptance Test Harness jobs"
+    items:
+      - kind: "folder"
+        name: "With rosie-libs"
+  - kind: "folder"
+    name: "Teams"
+    groups:
+      - name: "Team Administrators"
+        members:
+          users:
+            - "amuniz@cloudbees.com"
+        roles:
+          - name: "administer"
+            grantedAt: "current" # "child" or "grandchild"
+            propagates: "true"

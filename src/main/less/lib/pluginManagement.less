@@ -1,0 +1,121 @@
+/*
+ * Layout for a plugin settings view, with a side bar with and icon and the buttons "Feedback" and "More info",
+ * and a main body with a title, subtitle and tabs.
+ * The styles are almost the same as the used in the slack plugin, but they have been cleaned and refactored a bit.
+*/
+
+.plugin-management {
+    margin: 0 auto;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+
+    @media only screen and (max-width: 768px) {
+        /* For mobile phones: */
+        flex-wrap: wrap;
+    }
+}
+
+.plugin-management-side-bar {
+    /* SIDE BAR */
+    width: 122px;
+    margin-left: 20px;
+    margin-right: 20px;
+
+    &__element {
+        width: 100%;
+        margin: 0;
+        margin-bottom: 16px;
+    }
+
+    &__element--logo {
+         height: 120px;
+         border: 2px solid #9ba7af;
+         border-color: var(--btn-secondary-border);
+         padding: 20px;
+         border-radius: 1rem;
+    }
+}
+
+.plugin-management-body {
+    /* BODY */
+    margin: 0 20px;
+    min-width: 400px;
+    max-width: 900px;
+    flex-basis: 900px; // To solve an issue in IE11: https://github.com/philipwalton/flexbugs/tree/6e720da852c3d566a84f3d82eb500e6f53f0a326#flexbug-17
+    flex: 1 1 auto; /* Can grow or shrink */
+
+    @media only screen and (max-width: 768px) {
+      /* For mobile phones: */
+       //The body takes all the width, forcing the sidebar to wrap
+      flex-basis: 100%;
+    }
+}
+
+.plugin-management-header {
+    /* HEADER */
+    margin-bottom: 30px;
+
+    &__title {
+        margin: 8px 0;  /* reduce space between title and subtitle */
+    }
+
+    &__subtitle {
+        margin: 0;      /* reduce space between title and subtitle */
+        font-weight: 400;
+    }
+}
+
+/* TABS */
+.plugin-management-tabs {
+    border-bottom: 2px solid rgb(200, 200, 200);
+    margin-bottom: 24px;
+
+    &__tab {
+        display: inline-block;
+        padding: 0.375rem 1.5rem;
+        margin-bottom: -2px;  /* place the border on top of the bar border */
+        border: 2px solid transparent;  /* avoid changing the dimensions of the tab when the border is displayed */
+        font-weight: 700;   /* the text is like the buttons text */
+        font-size: 0.75rem; /* the text is like the buttons text */
+        text-decoration: none;  /* remove underline of links */
+        color: unset;   /* remove blue color of links */
+
+        &--selected {
+            border-bottom: 2px solid rgb(51, 51, 51);
+        }
+
+        &--disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        &:hover,
+        &:focus {
+            color: #0b6aa2;
+            background-color: #f8f8f8;
+            border-color: #f8f8f8;  /* the border is part of the background */
+            border-bottom-color: #0b6aa2;
+        }
+    }
+}
+
+.plugin-management-content {
+    /* CONTENT */
+
+    margin-bottom: 14px;
+    margin-top: 14px;
+
+    &--margin {
+      margin-left: 1.5rem;
+      margin-right: 1.5rem;
+    }
+
+    &--narrow-500 {
+        max-width: 500px;
+    }
+
+    &--narrow-700 {
+        max-width: 700px;
+    }
+}

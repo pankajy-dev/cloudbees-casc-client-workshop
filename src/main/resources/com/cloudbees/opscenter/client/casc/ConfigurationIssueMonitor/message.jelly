@@ -1,0 +1,6 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <div class="alert alert-warning">
+        Couldn't check if there is a new CasC Bundle version available. It might be a temporary issue in the connection to Operations Center or a failure reading the Bundle
+    </div>
+</j:jelly>

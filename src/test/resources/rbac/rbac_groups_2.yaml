@@ -1,0 +1,24 @@
+removeStrategy:
+  # For security reasons, we want sync here to remove groups/roles from Jenkins
+  # when they are removed from this file
+  rbac: "sync"
+
+groups:
+  - name: "Administrators"
+    members:
+      users:
+        - "eescobarreyero@cloudbees.com"
+    roles:
+      - name: "administer"
+        grantedAt: "current" # "child" or "grandchild"
+        propagates: "false"
+  - name: "Astro"
+    members:
+      internal_groups:
+        - "Special Administrators"
+      external_groups:
+        - "ldap-developers"
+    roles:
+      - name: "developer"
+        grantedAt: "child"
+        # default propagates is "true"

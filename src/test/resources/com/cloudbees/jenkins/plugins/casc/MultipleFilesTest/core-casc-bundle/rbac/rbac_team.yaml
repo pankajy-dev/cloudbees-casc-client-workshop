@@ -1,0 +1,11 @@
+removeStrategy:
+  rbac: "sync"
+
+groups:
+  - name: "Team"
+    members:
+      external_groups:
+        - "ldap-team"
+    roles:
+      - name: "developer"
+        grantedAt: "current"

@@ -1,0 +1,14 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "freeStyle"
+    name: !!com.cloudbees.jenkins.plugins.casc.items.HackityHack
+    displayName: "freeStyle"
+    buildDiscarder:
+      logRotator:
+        artifactDaysToKeepStr: !!com.cloudbees.jenkins.plugins.casc.items.HackityHack
+        daysToKeepStr: "1"
+        numToKeepStr: "2"
+        artifactNumToKeepStr: "3"

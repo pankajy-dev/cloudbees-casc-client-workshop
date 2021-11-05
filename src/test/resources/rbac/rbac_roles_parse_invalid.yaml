@@ -1,0 +1,52 @@
+removeStrategy:
+  # For security reasons, we want sync here to remove groups/roles from Jenkins
+  # when they are removed from this file
+  rbac: "sync"
+
+groups:
+  - name: "Administrators"
+    members:
+      users:
+        - "amuniz@cloudbees.com"
+    roles:
+      - name: "administrator"
+        grantedAt: "current" # "child" or "grandchild"
+        propagates: "true"
+  - name: "Developers"
+    members:
+      internal_groups:
+        - "Special Administrators"
+      external_groups:
+        - "ldap-developers"
+    roles:
+      - name: "developer"
+        grantedAt: "current"
+        # default propagates is "true"
+  - name: "Browsers"
+    roles:
+      - name: "browser"
+      # default grantedAt is "current"
+      # default propagates is "true"
+  - name: "Special-Administrators"
+    members:
+      external_groups:
+        - "special-admins"
+
+roles:
+  - name: "administer"
+    filterable: "false"
+    permissions:
+      - "hudson.model.Hudson.Administer"
+    exception:
+      - invalid: "throw new Exception()"
+  - name: "developer"
+    filterable: "true"
+    permissions:
+      # list of permissions (Permission.id) to grant this role
+      - "hudson.model.Hudson.Read"
+      - "hudson.model.Item.Configure"
+  - name: "browser"
+    filterable: "true"
+    permissions:
+      - "hudson.model.Hudson.Read"
+  - name: "empty"

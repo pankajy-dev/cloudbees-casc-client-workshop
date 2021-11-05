@@ -1,0 +1,110 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<nectar.plugins.rbac.strategy.RoleMatrixAuthorizationPlugin plugin="nectar-rbac@5.51">
+    <lastModified>1613752867842</lastModified>
+    <configuration class="nectar.plugins.rbac.strategy.DefaultRoleMatrixAuthorizationConfig" dangerous-permissions-migrated="true">
+        <role name="administer" filterable="false">
+            <permission id="hudson.model.Computer.Connect"/>
+            <permission id="hudson.model.Hudson.UploadPlugins"/>
+            <permission id="jenkins.metrics.api.Metrics.View"/>
+            <permission id="hudson.model.Hudson.ConfigureUpdateCenter"/>
+            <permission id="nectar.plugins.rbac.groups.Group.Manage"/>
+            <permission id="hudson.model.Item.Cancel"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.View"/>
+            <permission id="com.cloudbees.jenkins.plugin.metrics.views.Alerter.View"/>
+            <permission id="hudson.model.Computer.Delete"/>
+            <permission id="hudson.model.Item.Build"/>
+            <permission id="hudson.model.Item.Move"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Update"/>
+            <permission id="hudson.model.Item.Create"/>
+            <permission id="com.cloudbees.jenkins.plugin.metrics.views.Alerter.Mute"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Delete"/>
+            <permission id="jenkins.metrics.api.Metrics.ThreadDump"/>
+            <permission id="hudson.model.View.Create"/>
+            <permission id="hudson.model.Hudson.RunScripts"/>
+            <permission id="hudson.model.Computer.Secure"/>
+            <permission id="hudson.model.Computer.Configure"/>
+            <permission id="nectar.plugins.rbac.roles.Role.Filter"/>
+            <permission id="hudson.model.Run.Update"/>
+            <permission id="hudson.model.View.Delete"/>
+            <permission id="hudson.model.Run.Delete"/>
+            <permission id="hudson.model.Computer.Create"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.ManageDomains"/>
+            <permission id="hudson.model.Item.Promote"/>
+            <permission id="hudson.model.View.Configure"/>
+            <permission id="com.cloudbees.jenkins.support.SupportPlugin.DownloadBundle"/>
+            <permission id="hudson.model.Item.Configure"/>
+            <permission id="hudson.model.Computer.Build"/>
+            <permission id="hudson.model.Item.Read"/>
+            <permission id="jenkins.metrics.api.Metrics.HealthCheck"/>
+            <permission id="nectar.plugins.rbac.groups.Group.Create"/>
+            <permission id="hudson.scm.SCM.Tag"/>
+            <permission id="hudson.model.Item.Discover"/>
+            <permission id="hudson.model.Hudson.Read"/>
+            <permission id="nectar.plugins.rbac.roles.Role.View"/>
+            <permission id="hudson.model.Item.Workspace"/>
+            <permission id="hudson.model.Computer.Provision"/>
+            <permission id="nectar.plugins.rbac.groups.Group.Configure"/>
+            <permission id="nectar.plugins.rbac.groups.Group.Delete"/>
+            <permission id="hudson.model.View.Read"/>
+            <permission id="hudson.model.Item.Delete"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.Create"/>
+            <permission id="hudson.model.Computer.Disconnect"/>
+            <permission id="hudson.model.Item.Request"/>
+            <permission id="nectar.plugins.rbac.groups.Group.View"/>
+        </role>
+        <role name="anonymous" filterable="true"/>
+        <role name="authenticated" filterable="true">
+            <permission id="hudson.model.Hudson.Manage"/>
+            <permission id="hudson.security.Permission.GenericDelete"/>
+            <permission id="hudson.security.Permission.GenericWrite"/>
+            <permission id="hudson.security.Permission.GenericUpdate"/>
+            <permission id="hudson.security.Permission.GenericCreate"/>
+            <permission id="hudson.model.Item.WipeOut"/>
+            <permission id="hudson.model.Hudson.SystemRead"/>
+            <permission id="hudson.model.Computer.ExtendedRead"/>
+            <permission id="hudson.security.Permission.GenericRead"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.UseOwn"/>
+            <permission id="hudson.model.Item.ExtendedRead"/>
+            <permission id="hudson.security.Permission.GenericConfigure"/>
+            <permission id="hudson.security.Permission.FullControl"/>
+            <permission id="hudson.model.Run.Artifacts"/>
+            <permission id="com.cloudbees.plugins.credentials.CredentialsProvider.UseItem"/>
+            <permission id="hudson.model.Item.Read"/>
+            <permission id="hudson.model.Item.Discover"/>
+            <permission id="hudson.model.Hudson.Read"/>
+            <permission id="hudson.model.View.Read"/>
+        </role>
+        <role name="browse" filterable="true">
+            <permission id="hudson.model.Item.Read"/>
+            <permission id="hudson.model.Item.Discover"/>
+            <permission id="hudson.model.Hudson.Read"/>
+            <permission id="hudson.model.View.Read"/>
+        </role>
+        <role name="develop" filterable="true">
+            <permission id="hudson.model.Item.Cancel"/>
+            <permission id="hudson.model.Item.Build"/>
+            <permission id="hudson.model.Item.Move"/>
+            <permission id="hudson.model.Item.Create"/>
+            <permission id="hudson.model.View.Create"/>
+            <permission id="hudson.model.Run.Update"/>
+            <permission id="hudson.model.View.Delete"/>
+            <permission id="hudson.model.Run.Delete"/>
+            <permission id="hudson.model.Item.Promote"/>
+            <permission id="hudson.model.View.Configure"/>
+            <permission id="hudson.model.Item.Configure"/>
+            <permission id="hudson.model.Item.Read"/>
+            <permission id="hudson.scm.SCM.Tag"/>
+            <permission id="hudson.model.Item.Discover"/>
+            <permission id="hudson.model.Hudson.Read"/>
+            <permission id="hudson.model.Item.Workspace"/>
+            <permission id="hudson.model.View.Read"/>
+            <permission id="hudson.model.Item.Delete"/>
+            <permission id="hudson.model.Item.Request"/>
+        </role>
+        <group>
+            <name>blue-admins</name>
+            <member>admin</member>
+            <role>administer</role>
+        </group>
+    </configuration>
+</nectar.plugins.rbac.strategy.RoleMatrixAuthorizationPlugin>

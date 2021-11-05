@@ -1,0 +1,285 @@
+removeStrategy:
+  rbac: "sync"
+  items: "none"
+items:
+  - kind: "organizationFolder"
+    displayName: "Minimal Github Organization Folder Job"
+    name: "minimal-github-org"
+    description: "Minimal Github Organization Folder Job description"
+    navigators:
+      - github:
+          repoOwner: "cloudbees"
+  - kind: "organizationFolder"
+    displayName: "Minimal Bitbucket Project"
+    name: "minimal-bitbucket-project"
+    description: "Minimal Bitbucket Project description"
+    navigators:
+      - bitbucket:
+          repoOwner: "cloudbees-bitbucket"
+  - kind: "organizationFolder"
+    displayName: "Github Organization Folder Job"
+    name: "githubOrg"
+    description: "Github Organization Folder Job description"
+    orphanedItemStrategy:
+      defaultOrphanedItemStrategy:
+        pruneDeadBranches: true
+        daysToKeep: 1
+        numToKeep: 2
+    healthMetrics:
+      - worstChildHealthMetric:
+          recursive: false
+      - averageChildHealthMetric: {}
+      - projectEnabledHealthMetric: {}
+      - jobStatusHealthMetric:
+          unstable: true
+          countVirginJobs: false
+          failure: true
+          success: true
+          unbuilt: true
+    navigators:
+      - github:
+          apiUri: "https://api.github.com"
+          traits:
+            - gitHubExcludeArchivedRepositories: {}
+            - gitHubExcludePublicRepositories: {}
+            - gitHubTopicsFilter:
+                topicList: "my-topic"
+            - sourceRegexFilter:
+                regex: ".*"
+            - sourceWildcardFilter:
+                excludes: "dependabot/*"
+                includes: "*"
+            - teamSlugFilter:
+                teamSlug: "my-slug"
+            - gitHubBranchDiscovery:
+                strategyId: 1
+            - gitHubPullRequestDiscovery:
+                strategyId: 1
+            - gitHubForkDiscovery:
+                trust:
+                  gitHubTrustEveryone: {}
+                strategyId: 1
+            - gitHubTagDiscovery: {}
+            - headRegexFilter:
+                regex: ".*"
+            - headWildcardFilter:
+                excludes: "dependabot/*"
+                includes: "*"
+            - checkoutOptionTrait:
+                extension:
+                  checkoutOption:
+                    timeout: 5
+            - cloneOptionTrait:
+                extension:
+                  cloneOption:
+                    reference: main
+                    noTags: false
+                    honorRefspec: false
+                    shallow: true
+                    timeout: 6
+            - submoduleOptionTrait:
+                extension:
+                  submoduleOption:
+                    reference: "main"
+                    recursiveSubmodules: true
+                    trackingSubmodules: true
+                    parentCredentials: true
+                    shallow: false
+                    timeout: 2
+                    disableSubmodules: true
+            - localBranchTrait: {}
+            - gitHubSshCheckout:
+                credentialsId: "github-ssh"
+            - cleanAfterCheckoutTrait:
+                extension:
+                  cleanCheckout:
+                    deleteUntrackedNestedRepositories: false
+            - cleanBeforeCheckoutTrait:
+                extension:
+                  cleanBeforeCheckout:
+                    deleteUntrackedNestedRepositories: false
+            - cloudBeesSCMReporting:
+                visibleLinesOnly: false
+                handlers:
+                  - endBuildError:
+                      maxLogLines: 100
+                  - stage:
+                      verbosity:
+                        all: {}
+            - userIdentityTrait:
+                extension:
+                  userIdentity:
+                    name: "name"
+                    email: "email"
+            - gitLFSPullTrait: {}
+            - pruneStaleBranchTrait: {}
+            - pruneStaleTagTrait: {}
+            - sparseCheckoutPathsTrait:
+                extension:
+                  sparseCheckoutPaths:
+                    sparseCheckoutPaths:
+                      - sparseCheckoutPath:
+                          path: "main/this_not"
+            - authorInChangelogTrait: {}
+            - wipeWorkspaceTrait: {}
+            - remoteNameSCMSourceTrait:
+                remoteName: "origin"
+            - refSpecsSCMSourceTrait:
+                templates:
+                  - refSpecTemplate:
+                      value: "+refs/heads/*:refs/remotes/@{remote}/*"
+          repoOwner: "cloudbees"
+          credentialsId: "credId"
+    projectFactories:
+      - workflowMultiBranchProjectFactory:
+          scriptPath: "Jenkinsfile"
+      - customMultiBranchProjectFactory:
+          factory:
+            customBranchProjectFactory:
+              marker: ".my-marker-file"
+              definition:
+                cpsScmFlowDefinition:
+                  scriptPath: "pipelines/default/Jenkinsfile"
+                  scm:
+                    gitSCM:
+                      extensions:
+                        - checkoutOption:
+                            timeout: 4
+                      gitTool: "git"
+                      userRemoteConfigs:
+                        - userRemoteConfig:
+                            name: "factory-id"
+                            credentialsId: "github-checkout"
+                            url: "https://github.com/cloudbees/astro"
+                      browser:
+                        githubWeb:
+                          repoUrl: "https://github.com/cloudbees/astro"
+                      branches:
+                        - branchSpec:
+                            name: "*/master"
+                  lightweight: false
+    trigger:
+      periodicFolderTrigger:
+        interval: 1d
+    strategy:
+      allBranchesSame:
+        props:
+          - buildRetention:
+              buildDiscarder:
+                logRotator:
+                  artifactDaysToKeep: 3
+                  artifactNumToKeep: 4
+                  daysToKeep: 1
+                  numToKeep: 2
+          - durabilityHint:
+              hint: MAX_SURVIVABILITY
+          - suppressAutomaticTriggering: {}
+          - rateLimit:
+              count: 1
+              userBoost: false
+              durationName: "second"
+          - untrusted:
+              publisherWhitelist:
+                - "hudson.plugins.git.GitPublisher"
+                - "hudson.tasks.BuildTrigger"
+                - "hudson.tasks.Mailer"
+    properties:
+      - organizationChildTriggersProperty:
+          templates:
+            - periodicFolderTrigger:
+                interval: "1d"
+      - organizationChildOrphanedItemsProperty:
+          strategy:
+            inherit: {}
+      - organizationChildHealthMetricsProperty:
+          templates:
+            - worstChildHealthMetric:
+                recursive: false
+            - averageChildHealthMetric: {}
+            - projectEnabledHealthMetric: {}
+            - jobStatusHealthMetric:
+                unstable: true
+                countVirginJobs: false
+                failure: true
+                success: true
+                unbuilt: true
+            - primaryBranchHealthMetric: {}
+      - organizationChildOrphanedItemsProperty:
+          strategy:
+            inherit: {}
+      - organizationChildTriggersProperty:
+          templates:
+            - periodicFolderTrigger:
+                interval: "1d"
+      - envVars:
+          vars:
+            PROP1: "VAL1"
+            PROP2: "VAL2"
+      - folderLibraries:
+          libraries:
+            - libraryConfiguration:
+                implicit: false
+                allowVersionOverride: true
+                retriever:
+                  modernSCM:
+                    scm:
+                      github:
+                        apiUri: "https://api.github.com"
+                        traits:
+                          - gitHubBranchDiscovery:
+                              strategyId: 1
+                          - gitHubPullRequestDiscovery:
+                              strategyId: 1
+                          - gitHubForkDiscovery:
+                              trust:
+                                gitHubTrustEveryone: {}
+                              strategyId: 1
+                          - headWildcardFilter:
+                              excludes: "dependabot/*"
+                              includes: "*"
+                          - gitHubSshCheckout:
+                              credentialsId: "github-ssh"
+                        repoOwner: "cloudbees"
+                        id: "library-id"
+                        repository: "rosie-libs"
+                        configuredByUrl: true
+                        repositoryUrl: "https://github.com/cloudbees/rosie-libs"
+                name: "my-library"
+                includeInChangesets: true
+      - noTriggerOrganizationFolderProperty:
+          branches: ".*"
+  - kind: "organizationFolder"
+    displayName: "Bitbucket Project"
+    name: "bitbucket-project"
+    description: "Bitbucket Project description"
+    orphanedItemStrategy:
+      defaultOrphanedItemStrategy:
+        pruneDeadBranches: true
+        daysToKeep: -1
+        numToKeep: -1
+    navigators:
+      - bitbucket:
+          traits:
+            - bitbucketBranchDiscovery:
+                strategyId: 1
+            - bitbucketPullRequestDiscovery:
+                strategyId: 1
+            - bitbucketForkDiscovery:
+                trust:
+                  bitbucketTrustTeam: {}
+                strategyId: 1
+          repoOwner: "cloudbees-bitbucket"
+          serverUrl: "https://bitbucket.org"
+    projectFactories:
+      - workflowMultiBranchProjectFactory:
+          scriptPath: "Jenkinsfile"
+    strategy:
+      allBranchesSame: {}
+    properties:
+      - organizationChildTriggersProperty:
+          templates:
+            - periodicFolderTrigger:
+                interval: "1d"
+      - organizationChildOrphanedItemsProperty:
+          strategy:
+            inherit: {}

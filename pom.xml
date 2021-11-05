@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright © 2020 CloudBees, Inc.
+  ~ This is proprietary code. All rights reserved.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.cloudbees.jenkins.plugins</groupId>
+    <artifactId>jenkins-plugins</artifactId>
+    <version>106</version>
+    <relativePath />
+  </parent>
+
+  <artifactId>cloudbees-casc-client</artifactId>
+  <version>1.42-SNAPSHOT</version>
+  <packaging>hpi</packaging>
+
+  <name>CloudBees CasC Client Plugin</name>
+  <url>https://docs.cloudbees.com/docs/release-notes/latest/plugins/${project.artifactId}-plugin</url>
+
+  <properties>
+    <cb-installation-manager.version>2.276.0.10</cb-installation-manager.version>
+    <cloudbees-casc-items-api.version>1.0</cloudbees-casc-items-api.version>
+    <cloudbees-casc-items-commons.version>1.0</cloudbees-casc-items-commons.version>
+    <node.version>12.18.3</node.version>
+    <npm.version>6.14.6</npm.version>
+    <frontend-version>1.10.0</frontend-version>
+    <useBeta>true</useBeta> <!-- Jenkins.MANAGE is still Beta.class -->
+    <no-test-jar>false</no-test-jar> <!-- to allow other plugins to extend abstract test classes like ProjectItem.java -->
+  </properties>
+
+  <scm>
+    <connection>scm:git:ssh://git@github.com/cloudbees/${project.artifactId}-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/cloudbees/${project.artifactId}-plugin.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>cloudbees-folder</artifactId>
+        <version>6.16</version>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudbees.nectar.plugins</groupId>
+        <artifactId>nectar-license</artifactId>
+        <version>8.31</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>support-core</artifactId>
+        <version>2.74</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>async-http-client</artifactId>
+        <version>1.7.24.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudbees.jenkins.plugins</groupId>
+        <artifactId>cloudbees-assurance</artifactId>
+        <version>2.138.0.19</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+          </exclusion>
+          <!-- Added because of org.jenkins-ci.plugins:apache-httpcomponents-client-4-api:jar:4.5.5-3.0 -->
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient-cache</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-cache</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.jenkins</groupId>
+        <artifactId>configuration-as-code</artifactId>
+        <version>1.51</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>snakeyaml-api</artifactId>
+        <version>1.29.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>variant</artifactId>
+        <version>1.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>metrics</artifactId>
+        <version>4.0.2.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>scm-api</artifactId>
+        <version>2.6.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-step-api</artifactId>
+        <version>2.23</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-scm-step</artifactId>
+        <version>2.13</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-support</artifactId>
+        <version>3.8</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-api</artifactId>
+        <version>2.46</version>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudbees.nectar.plugins</groupId>
+        <artifactId>cloudbees-license</artifactId>
+        <version>9.49</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci</groupId>
+        <artifactId>symbol-annotation</artifactId>
+        <version>1.23</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>structs</artifactId>
+        <version>1.23</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1.77</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials</artifactId>
+        <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>jackson2-api</artifactId>
+        <version>2.12.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>github-api</artifactId>
+        <version>1.123</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>apache-httpcomponents-client-4-api</artifactId>
+        <version>4.5.13-1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest</artifactId>
+        <version>2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>display-url-api</artifactId>
+        <version>2.3.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>junit</artifactId>
+        <version>1.51</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-casc-items-api</artifactId>
+      <version>${cloudbees-casc-items-api.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.jenkins.modules</groupId>
+      <artifactId>cloudbees-installation-manager</artifactId>
+      <version>${cb-installation-manager.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>snakeyaml-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>cloudbees-folder</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.nectar.plugins</groupId>
+      <artifactId>nectar-license</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>support-core</artifactId>
+    </dependency>
+
+
+    <!-- Optional dependencies -->
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- To pick this up: https://github.com/cloudbees/cloudbees-assurance-plugin/commit/78bfd4d91f9d29b8b166b4af3a2d2c7884776cda -->
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-assurance</artifactId>
+      <!--
+        Why is this optional?
+        Well, it is not really optional, it is required. However modules depending on this one do not necessarily require it as transitive.
+        Actually they should not have it unless they really depend on it, the only way to achieve that is by making it
+        optional. This has other implications in the Jenkins Plugins world, however cloudbees-assurance is in scope
+        bootstrap in all CB products, so it granted to be installed in all supported versions, so this "optional" configuration
+        will not affect any runtime behaviour, it is merely needed for the build and test process.
+      -->
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>annotations</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+
+    <!-- Test -->
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-casc-items-commons</artifactId>
+      <version>${cloudbees-casc-items-commons.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>4.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-auth</artifactId>
+      <version>2.6.8</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.cloudbees.jenkins.modules</groupId>
+      <artifactId>cloudbees-installation-manager</artifactId>
+      <version>${cb-installation-manager.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.beekeeper</groupId>
+      <artifactId>envelope-data</artifactId>
+      <version>2.0.12</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test dependencies for Item Creation -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-project</artifactId>
+      <version>1.18</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- detached plugins issue -->
+    <dependency>
+      <groupId>org.jenkins-ci.modules</groupId>
+      <artifactId>sshd</artifactId>
+      <version>3.0.3</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <configuration>
+          <loggers>
+            <com.cloudbees.jenkins.plugins.casc>FINEST</com.cloudbees.jenkins.plugins.casc>
+          </loggers>
+          <minimumJavaVersion>8</minimumJavaVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.1.2</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.cloudbees.devoptics</groupId>
+              <artifactId>devoptics-checkstyle</artifactId>
+              <version>1.22</version>
+            </dependency>
+            <dependency>
+              <groupId>com.cloudbees</groupId>
+              <artifactId>astro-checkstyle</artifactId>
+              <version>1.0.0</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <configLocation>devoptics/checkstyle.xml</configLocation>
+            <headerLocation>devoptics/LICENSE.txt</headerLocation>
+            <violationSeverity>warning</violationSeverity>
+            <failOnViolation>false</failOnViolation>
+            <failsOnError>true</failsOnError>
+
+            <!-- default suppressions are defined in astro-checkstyle. You can apply local suppressions for your module
+            by putting the following file in the root directory of your module -->
+            <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>

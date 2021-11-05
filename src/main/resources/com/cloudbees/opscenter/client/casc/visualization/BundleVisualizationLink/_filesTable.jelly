@@ -1,0 +1,46 @@
+<?jelly escape-by-default='true'?>
+<!--
+    Table with the list of files in a bundle.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define">
+
+    <d:taglib uri="local">
+        <d:tag name="row">
+            <tr>
+                <td class="table__column table__column--filename"><pre>${filename}</pre></td>
+                <td class="table__column table__column--description">${description}</td>
+                <td class="table__column table__column--actions">
+                    <a id="view-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" target="_blank">
+                        <i class="fa fa-eye" title="Visualize"/>
+                    </a>
+                    <a id="copy-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" target="_blank"
+                       data-action="copy-in-clipboard"
+                       data-success-message="${%Copied(filename)}"
+                       data-error-message="${%CopyError(filename)}"
+                       data-empty-file-message="${%Empty(filename)}"
+                    >
+                        <i class="fa fa-copy" title="Copy content"/>
+                    </a>
+                    <a id="download-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" download="" target="_.blank">
+                        <i class="fa fa-download" title="Download"/>
+                    </a>
+                </td>
+            </tr>
+        </d:tag>
+    </d:taglib>
+
+    <table id="casc-bundle-files-table" class="pane bigtable" xmlns:local="local">
+        <tr>
+            <th class="table__header table__header--filename">${%Filename}</th>
+            <th class="table__header table__header--description">${%Description}</th>
+            <th class="table__header table__header--actions"/>
+        </tr>
+        <j:forEach items="${it.exporters}" var="exporter">
+            <local:row filename="${exporter.yamlFile}" description="${exporter.description}"/>
+        </j:forEach>
+    </table>
+    <p>Download all exported files in zip format.</p>
+    <a id="download-zip" class="yui-button icon-button" href="${rootURL}/core-casc-export/full-export" download="" target="_blank">
+        <i class="fa fa-download" title="Download"/>
+    </a>
+</j:jelly>
