@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
@@ -39,6 +40,10 @@ public class HotReloadAction implements RootAction {
     @Override
     public String getUrlName() {
         return "coreCasCHotReload";
+    }
+
+    public boolean isHotReloadable() {
+        return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
     @RequirePOST
