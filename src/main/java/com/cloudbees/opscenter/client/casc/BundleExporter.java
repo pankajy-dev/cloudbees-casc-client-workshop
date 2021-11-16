@@ -206,7 +206,6 @@ public abstract class BundleExporter implements ExtensionPoint {
 
             Yaml yaml = new Yaml(new SafeConstructor());
             return yaml.dump(obj).chars().filter(ch -> ('{'!=ch && '}' != ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
-            //return yaml.dump(obj);
         }
     }
 
