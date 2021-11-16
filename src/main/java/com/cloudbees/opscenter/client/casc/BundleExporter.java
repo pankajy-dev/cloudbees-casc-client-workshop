@@ -205,7 +205,8 @@ public abstract class BundleExporter implements ExtensionPoint {
             Map<String, List<Map<String, String>>> obj = Collections.singletonMap("plugins", list);
 
             Yaml yaml = new Yaml(new SafeConstructor());
-            return yaml.dump(obj);
+            return yaml.dump(obj).chars().filter(ch -> ('{'!=ch && '}' != ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+            //return yaml.dump(obj);
         }
     }
 
