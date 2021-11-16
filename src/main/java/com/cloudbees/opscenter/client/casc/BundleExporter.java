@@ -204,7 +204,11 @@ public abstract class BundleExporter implements ExtensionPoint {
             List<Map<String, String>> list = plugins.stream().map(p -> {return Collections.singletonMap("id", p);}).collect(Collectors.toList());
             Map<String, List<Map<String, String>>> obj = Collections.singletonMap("plugins", list);
 
-            Yaml yaml = new Yaml(new SafeConstructor());
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            options.setIndent(2);
+            options.setPrettyFlow(true);
+            Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), options);
             return yaml.dump(obj).chars().filter(ch -> ('{'!=ch && '}' != ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
         }
     }
