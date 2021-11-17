@@ -21,9 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -78,7 +76,21 @@ public class BundleExportInControllerTest {
         sortedPlugins.sort(String::compareTo);
 
         MatcherAssert.assertThat(pluginsPlugins, contains(sortedPlugins.toArray()));
+    }
 
+    @Test
+    @Issue({"BEE-9578"})
+    @WithEnvelope(TestEnvelopes.OnePlugin.class)
+    public void exportPlugins() {
+        BundleExporter.PluginsExporter pluginsExporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
+        String yaml = pluginsExporter.getExport();
+
+        MatcherAssert.assertThat(yaml, notNullValue());
+        MatcherAssert.assertThat(yaml, not(containsString("{")));
+        MatcherAssert.assertThat(yaml, not(containsString("}")));
+        Map<String, Object> obj = toYaml(yaml);
+
+        MatcherAssert.assertThat(yaml, notNullValue());
     }
 
     @Test
