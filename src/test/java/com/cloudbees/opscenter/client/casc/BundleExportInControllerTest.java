@@ -4,10 +4,7 @@ import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import hudson.ExtensionList;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,13 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -82,10 +76,10 @@ public class BundleExportInControllerTest {
         sortedPlugins.sort(String::compareTo);
 
         MatcherAssert.assertThat(pluginsPlugins, contains(sortedPlugins.toArray()));
-
     }
 
     @Test
+    @Issue({"BEE-9578"})
     @WithEnvelope(TestEnvelopes.OnePlugin.class)
     public void exportPlugins() {
         BundleExporter.PluginsExporter pluginsExporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
@@ -99,6 +93,20 @@ public class BundleExportInControllerTest {
         MatcherAssert.assertThat(yaml, notNullValue());
     }
 
+    @Test
+    @Issue({"BEE-9580"})
+    @WithEnvelope(TestEnvelopes.OnePlugin.class)
+    public void exportPluginCatalog() {
+        PluginCatalogExporter pluginCatalogExporter = ExtensionList.lookupSingleton(PluginCatalogExporter.class);
+        String yaml = pluginCatalogExporter.getExport();
+
+        MatcherAssert.assertThat(yaml, notNullValue());
+        MatcherAssert.assertThat(yaml, not(containsString("{")));
+        MatcherAssert.assertThat(yaml, not(containsString("}")));
+        Map<String, Object> obj = toYaml(yaml);
+
+        MatcherAssert.assertThat(obj, notNullValue());
+    }
 
     private Map<String, Object> toYaml(String str) {
         Map<String, Object> yaml = new Yaml(new SafeConstructor()).load(str);

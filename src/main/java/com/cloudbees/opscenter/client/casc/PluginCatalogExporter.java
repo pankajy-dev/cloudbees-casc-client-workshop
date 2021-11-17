@@ -23,8 +23,10 @@ import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -231,7 +233,11 @@ public final class PluginCatalogExporter extends BundleExporter {
     }
 
     private String toYaml(JSONObject json) {
-        Yaml yaml = new Yaml(new SafeConstructor());
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        options.setIndent(2);
+        options.setPrettyFlow(true);
+        Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), options);
         StringWriter writer = new StringWriter();
         yaml.dump(json, writer);
         return writer.toString();
