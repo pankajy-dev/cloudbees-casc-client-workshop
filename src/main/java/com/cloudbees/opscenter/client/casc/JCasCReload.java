@@ -6,6 +6,8 @@ import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import org.jenkinsci.plugins.variant.OptionalExtension;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +22,7 @@ public final class JCasCReload extends BundleReload {
     @Override
     public void doReload(ConfigurationBundle bundle) throws CasCException {
         if (bundle.hasJCasCConfig()) {
+            setCasCPath(bundle.getJCasCFilePath());
             try {
                 ConfigurationAsCode.get().configure();
             } catch (ConfiguratorException e) {
@@ -28,5 +31,18 @@ public final class JCasCReload extends BundleReload {
             }
         }
 
+    }
+
+    private void setCasCPath(Path jCasCFilePath) {
+        if (jCasCFilePath != null) {
+            LOGGER.log(Level.INFO, "Using JCasC config: " + jCasCFilePath);
+            if (Files.isDirectory(jCasCFilePath)) {
+                // CasC requires a path if the target is a folder
+                System.setProperty("casc.jenkins.config", jCasCFilePath.toFile().getAbsolutePath());
+            } else {
+                // CasC requires a URI prior to configuration-as-code-1.20 and would fail on a path
+                System.setProperty("casc.jenkins.config", jCasCFilePath.toUri().toString());
+            }
+        }
     }
 }
