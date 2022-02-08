@@ -23,7 +23,7 @@
   <properties>
     <powermock.version>2.0.9</powermock.version>
 
-    <cb-installation-manager.version>2.276.0.10</cb-installation-manager.version> <!-- from URR BOM because of missing test-jar-->
+    <cb-installation-manager.version>2.276.0.28</cb-installation-manager.version> <!-- from URR BOM because of missing test-jar-->
     <cloudbees-casc-items-api.version>1.0</cloudbees-casc-items-api.version> <!-- It cannot be removed until 2.319.x.x -->
     <cloudbees-casc-items-commons.version>1.0</cloudbees-casc-items-commons.version> <!-- It cannot be removed until 2.319.x.x -->
     <node.version>12.18.3</node.version>

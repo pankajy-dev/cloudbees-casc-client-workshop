@@ -116,9 +116,9 @@ public class HotReloadTest extends AbstractIMTest {
         return ConfigurationBundle.builder()
                 .setVersion("new")
                 .setCatalog(null)
-                .setItems(listOf(folder, "items.yaml"))
-                .setJcasc(listOf(folder, "jenkins.yaml"))
-                .setRbac(listOf(folder, "rbac.yaml"))
+                .setItems(listOf(folder, "items/items.yaml"))
+                .setJcasc(listOf(folder, "jcasc/jenkins.yaml"))
+                .setRbac(listOf(folder, "rbac/rbac.yaml"))
                 .setPlugins(plugins)
                 .build();
     }
