@@ -30,7 +30,7 @@ public class VariablesInBundleTest {
         assertThat(Jenkins.get().getSystemMessage(), is("Jenkins configured using CasC"));
         Item item = Jenkins.get().getItemByFullName("test");
         assertThat(item, notNullValue());
-        //assertThat(item.getDisplayName(), is("job description"));
+        assertThat(item.getDisplayName(), is("job description"));
     }
 
     public static final class V2dot319 implements TestEnvelopeProvider {
