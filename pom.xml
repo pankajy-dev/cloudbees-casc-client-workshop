@@ -21,6 +21,7 @@
   <url>https://docs.cloudbees.com/docs/release-notes/latest/plugins/${project.artifactId}-plugin</url>
 
   <properties>
+    <cloudbees-installation-manager.version>2.303.0.1</cloudbees-installation-manager.version> <!-- Not in URR yet -->
     <powermock.version>2.0.9</powermock.version>
     <node.version>12.18.3</node.version>
     <npm.version>6.14.6</npm.version>
@@ -54,7 +55,7 @@
       <dependency> <!-- TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.modules</groupId>
         <artifactId>cloudbees-installation-manager</artifactId>
-        <version>2.276.0.32</version>
+        <version>${cloudbees-installation-manager.version}</version>
       </dependency>
 
       <dependency>
@@ -90,6 +91,12 @@
         <artifactId>support-log-formatter</artifactId>
         <version>1.1</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.12.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -97,6 +104,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-api</artifactId>
+      <version>1.17-20220303.141816-1</version>
     </dependency>
 
     <dependency>
