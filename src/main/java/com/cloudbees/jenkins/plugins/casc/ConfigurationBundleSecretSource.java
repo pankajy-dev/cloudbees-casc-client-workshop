@@ -26,9 +26,12 @@ public class ConfigurationBundleSecretSource extends SecretSource {
     public void init() {
         ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
         variables.clear();
-        if (bundle != null && bundle.getVariables() != null) {
-            for (String plain : bundle.getVariables()) {
-                variables.putAll(read(plain));
+        if (bundle != null) {
+            List<String> vars = bundle.getVariables();
+            if (vars != null) {
+                for (String plain : vars) {
+                    variables.putAll(read(plain));
+                }
             }
         }
     }
