@@ -104,7 +104,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-api</artifactId>
-      <version>1.17-20220303.141816-1</version>
+      <version>1.17</version>
     </dependency>
 
     <dependency>
