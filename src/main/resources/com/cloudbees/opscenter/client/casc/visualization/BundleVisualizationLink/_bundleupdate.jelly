@@ -23,7 +23,7 @@
                                 <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                     <div class="alert alert-danger">
                                         <div class="alert__body">
-                                            <header>An error happened when trying to check if a new new version of the <b>Configuration Bundle</b> is available</header>
+                                            <header>An error happened trying to check if a new version of the <b>Configuration Bundle</b> is available</header>
                                             <p class="mb-0">${it.getErrorMessage()}</p>
                                         </div>
                                     </div>
