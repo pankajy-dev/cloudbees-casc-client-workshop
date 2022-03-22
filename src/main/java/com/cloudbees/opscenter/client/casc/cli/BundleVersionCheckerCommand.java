@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.cli.CLICommand;
@@ -30,10 +31,15 @@ public class BundleVersionCheckerCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-        if (ConfigurationUpdaterHelper.checkForUpdates()){
-            stdout.println("A new version of the configuration bundle is available.");
-        } else {
-            stdout.println("There are no configuration bundle updates available.");
+        try {
+            if (ConfigurationUpdaterHelper.checkForUpdates()) {
+                stdout.println("A new version of the configuration bundle is available.");
+            } else {
+                stdout.println("There are no configuration bundle updates available.");
+            }
+        } catch (CheckNewBundleVersionException e) {
+            stderr.println("Error checking the new bundle version: " + e.getMessage());
+            return 1;
         }
         return 0;
     }

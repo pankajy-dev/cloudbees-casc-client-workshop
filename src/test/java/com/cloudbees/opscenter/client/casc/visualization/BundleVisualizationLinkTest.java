@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc.visualization;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.ExtensionList;
 import hudson.model.User;
@@ -22,6 +24,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -77,8 +80,13 @@ public class BundleVisualizationLinkTest {
             when(mockedConfManager.getConfigurationBundle()).thenReturn(mockedBundle);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 
-            ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate();
+            BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            bundleVisualizationLink.doBundleUpdate();
             assertTrue(ConfigurationStatus.INSTANCE.isUpdateAvailable());
+            assertTrue(bundleVisualizationLink.isUpdateAvailable());
+            assertFalse(ConfigurationStatus.INSTANCE.isErrorInNewVersion());
+            assertFalse(bundleVisualizationLink.isErrorInNewVersion());
+            assertThat(bundleVisualizationLink.getErrorMessage(), is(""));
         }
     }
 
@@ -87,14 +95,19 @@ public class BundleVisualizationLinkTest {
         try (ACLContext ctx = ACL.as(adminUser); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class)) {
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
             ConfigurationBundleManager mockedConfManager = mock(ConfigurationBundleManager.class);
-            when(mockedConfManager.downloadIfNewVersionIsAvailable()).thenThrow(new RuntimeException(new IOException("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404")));
+            when(mockedConfManager.downloadIfNewVersionIsAvailable()).thenThrow(new RuntimeException(new InvalidBundleException(ValidationCode.LOAD, "Error loading the CasC bundle.", new IOException("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404"))));
             ConfigurationBundle mockedBundle = mock(ConfigurationBundle.class);
             when(mockedBundle.getVersion()).thenReturn("1");
             when(mockedConfManager.getConfigurationBundle()).thenReturn(mockedBundle);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 
-            ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate();
+            BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            bundleVisualizationLink.doBundleUpdate();
             assertFalse(ConfigurationStatus.INSTANCE.isUpdateAvailable());
+            assertFalse(bundleVisualizationLink.isUpdateAvailable());
+            assertTrue(ConfigurationStatus.INSTANCE.isErrorInNewVersion());
+            assertTrue(bundleVisualizationLink.isErrorInNewVersion());
+            assertThat(bundleVisualizationLink.getErrorMessage(), containsString("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404"));
         }
     }
 }
