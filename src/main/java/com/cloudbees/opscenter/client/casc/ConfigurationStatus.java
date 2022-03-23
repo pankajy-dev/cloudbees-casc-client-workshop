@@ -3,6 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
 
@@ -27,6 +28,16 @@ public enum ConfigurationStatus {
      */
     @CheckForNull
     private String outdatedVersion;
+
+    /**
+     * True means an error happened when the new version of the bundle was checked or downloaded.
+     */
+    private boolean errorInNewVersion;
+
+    /**
+     * Message after an error happened when the new version of the bundle was checked or downloaded.
+     */
+    private String errorMessage;
 
     /**
      * Returns true if there is a new version available.
@@ -76,5 +87,40 @@ public enum ConfigurationStatus {
     @SuppressWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedVersion(@CheckForNull String outdatedVersion) {
         this.outdatedVersion = outdatedVersion;
+    }
+
+    /**
+     * @return a true if an error happened when the new version of the bundle was checked or downloaded. false otherwise.
+     */
+    public boolean isErrorInNewVersion() {
+        return errorInNewVersion;
+    }
+
+    /**
+     * Set if an error happened when the new version of the bundle was checked or downloaded.
+     * @param errorInNewVersion true if an error happened when the new version of the bundle was checked or downloaded. false otherwise.
+     */
+    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    public void setErrorInNewVersion(boolean errorInNewVersion) {
+        this.errorInNewVersion = errorInNewVersion;
+    }
+
+    /**
+     * Message after an error happened when the new version of the bundle was checked or downloaded. Empty string if there was no error.
+     */
+    public String getErrorMessage() {
+        if (!this.errorInNewVersion) {
+            return "";
+        }
+        return StringUtils.defaultIfBlank(errorMessage, "Please check the logs for further information.");
+    }
+
+    /**
+     * Set the error message
+     * @param errorMessage null if errorInNewVersion is false
+     */
+    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

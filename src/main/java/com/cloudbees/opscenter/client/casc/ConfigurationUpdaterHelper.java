@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import hudson.ExtensionList;
 
 import java.util.Date;
@@ -16,37 +17,54 @@ public final class ConfigurationUpdaterHelper {
     /**
      * Check for new updates in configuration bundle are available.
      * @return True if new version is available
+     * @throws CheckNewBundleVersionException if an error happens when the new version is checked or downloaded
      */
-    public synchronized static boolean checkForUpdates() {
-        if (ConfigurationBundleManager.isSet()) {
-            ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
-            // If there is a new version, the new bundle instance will replace the current one
-            // Keep the version of the current bundle to display it in the UI
-            String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
-            if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
-                LOGGER.log(Level.INFO, () -> String.format("New Configuration Bundle available, version [%s]",
-                        ConfigurationBundleManager.get().getConfigurationBundle().getVersion()));
-                ConfigurationStatus.INSTANCE.setUpdateAvailable(true);
+    public synchronized static boolean checkForUpdates() throws CheckNewBundleVersionException {
+        boolean error = false;
+        try {
+            ConfigurationStatus.INSTANCE.setErrorMessage(null);
+            if (ConfigurationBundleManager.isSet()) {
+                ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
+                // If there is a new version, the new bundle instance will replace the current one
+                // Keep the version of the current bundle to display it in the UI
+                String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+                if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    LOGGER.log(Level.INFO, () -> String.format("New Configuration Bundle available, version [%s]",
+                            ConfigurationBundleManager.get().getConfigurationBundle().getVersion()));
+                    ConfigurationStatus.INSTANCE.setUpdateAvailable(true);
 
-                if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
-                    // If there is no previous known version, store it
-                    ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
+                    if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
+                        // If there is no previous known version, store it
+                        ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
+                    }
+                    ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+
+                    try {
+                        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                        boolean hotReloadable = service.isHotReloadable(bundle);
+                        bundle.setHotReloadable(hotReloadable);
+                    } catch (IllegalStateException e) {
+                        LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+                    }
+
+                    return true;
                 }
-                ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-
-                try {
-                    ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-                    boolean hotReloadable = service.isHotReloadable(bundle);
-                    bundle.setHotReloadable(hotReloadable);
-                } catch (IllegalStateException e) {
-                    LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
-                }
-
-                return true;
             }
-        }
 
-        return false;
+            return false;
+        } catch (RuntimeException e) {
+            // Thrown by com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager#failBundleLoading
+            // Generally RuntimeException > InvalidBundleException > Real cause
+            Throwable cause = e.getCause();
+            if (cause instanceof InvalidBundleException) {
+                cause = cause.getCause();
+            }
+            error = true;
+            ConfigurationStatus.INSTANCE.setErrorMessage(cause.getMessage());
+            throw new CheckNewBundleVersionException(cause.getMessage(), cause);
+        } finally {
+            ConfigurationStatus.INSTANCE.setErrorInNewVersion(error);
+        }
     }
 
     /**

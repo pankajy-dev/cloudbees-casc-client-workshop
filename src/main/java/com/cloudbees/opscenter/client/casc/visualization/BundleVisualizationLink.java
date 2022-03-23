@@ -5,8 +5,10 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
+import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterTask;
 import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -32,6 +34,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Configuration as Code Bundle Visualization.
@@ -40,6 +44,8 @@ import java.util.Objects;
 @Restricted(NoExternalUse.class)
 @Extension
 public class BundleVisualizationLink extends ManagementLink {
+
+    private static final Logger LOGGER = Logger.getLogger(BundleVisualizationLink.class.getName());
 
     @CheckForNull
     @Override
@@ -113,7 +119,11 @@ public class BundleVisualizationLink extends ManagementLink {
     // stapler
     public HttpResponse doBundleUpdate() throws Exception {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
-        ConfigurationUpdaterHelper.checkForUpdates();
+        try {
+            ConfigurationUpdaterHelper.checkForUpdates();
+        } catch (CheckNewBundleVersionException e) {
+            LOGGER.log(Level.WARNING, "Error checking the new bundle version.", e);
+        }
         return HttpResponses.forwardToView(this, "_bundleupdate.jelly");
     }
 
@@ -131,6 +141,22 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     public boolean isUpdateAvailable(){
         return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+    }
+
+    /**
+     * @return True/False if an error happened while checking/downloading the new bundle version.
+     */
+    //used in jelly
+    public boolean isErrorInNewVersion(){
+        return ConfigurationStatus.INSTANCE.isErrorInNewVersion();
+    }
+
+    /**
+     * @return Message from the error when the new bundle version cannot be checked/downloaded
+     */
+    //used in jelly
+    public String getErrorMessage(){
+        return ConfigurationStatus.INSTANCE.getErrorMessage();
     }
 
     /**

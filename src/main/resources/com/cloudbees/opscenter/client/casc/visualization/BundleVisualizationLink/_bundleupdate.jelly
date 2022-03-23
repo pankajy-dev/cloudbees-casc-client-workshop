@@ -18,46 +18,62 @@
                                 class="plugin-management-content--narrow-700 plugin-management-content--margin">
                             You are using version ${it.bundleVersion}.
                         </cbcipm:tabcontent>
-                        <j:if test="${it.isUpdateAvailable()}">
-                            <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
-                                <div class="alert alert-info">
-                                    <div class="alert__body">
-                                        <header>A new version of the <b>Configuration Bundle</b> is available
-                                            <!--(version ${it.getUpdateVersion()})-->
-                                        </header>
-                                        <p class="mb-0">You can perform a restart now to apply the new Configuration
-                                            Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
-                                        <j:if test="${it.isHotReloadable()}">
-                                            <p class="mb-0">You can also apply the new Configuration Bundle without
-                                                restarting,
-                                                using the "Reload Configuration" button.</p>
-                                        </j:if>
+                        <j:choose>
+                            <j:when test="${it.isErrorInNewVersion()}">
+                                <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
+                                    <div class="alert alert-danger">
+                                        <div class="alert__body">
+                                            <header>An error happened trying to check if a new version of the <b>Configuration Bundle</b> is available</header>
+                                            <p class="mb-0">${it.getErrorMessage()}</p>
+                                        </div>
                                     </div>
-                                    <div class="alert__form">
-                                        <f:form method="post" action="act" name="act-update-bundle">
-                                            <f:submit name="restart" value="Safe Restart" />
-                                            <j:if test="${it.isHotReloadable()}"><f:submit name="reload" value="Reload Configuration"/></j:if>
-                                        </f:form>
-                                    </div>
-                                </div>
-                            </cbcipm:tabcontent>
-                        </j:if>
-                        <j:if test="${!it.isUpdateAvailable()}">
-                            <cbcipm:tabcontent
-                                    class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                                </cbcipm:tabcontent>
+                            </j:when>
+                            <j:otherwise>
+                                <j:choose>
+                                    <j:when test="${it.isUpdateAvailable()}">
+                                        <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
+                                            <div class="alert alert-info">
+                                                <div class="alert__body">
+                                                    <header>A new version of the <b>Configuration Bundle</b> is available
+                                                        <!--(version ${it.getUpdateVersion()})-->
+                                                    </header>
+                                                    <p class="mb-0">You can perform a restart now to apply the new Configuration
+                                                        Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
+                                                    <j:if test="${it.isHotReloadable()}">
+                                                        <p class="mb-0">You can also apply the new Configuration Bundle without
+                                                            restarting,
+                                                            using the "Reload Configuration" button.</p>
+                                                    </j:if>
+                                                </div>
+                                                <div class="alert__form">
+                                                    <f:form method="post" action="act" name="act-update-bundle">
+                                                        <f:submit name="restart" value="Safe Restart" />
+                                                        <j:if test="${it.isHotReloadable()}"><f:submit name="reload" value="Reload Configuration"/></j:if>
+                                                    </f:form>
+                                                </div>
+                                            </div>
+                                        </cbcipm:tabcontent>
+                                    </j:when>
+                                    <j:otherwise>
+                                        <cbcipm:tabcontent
+                                                class="plugin-management-content--narrow-700 plugin-management-content--margin">
 
-                                <!-- The form reloads this page-->
-                                <a class="yui-button primary check-updates-btn" href="${request.getRequestURI()}">Check for Updates</a>
-                                <j:if test="${it.lastCheckForUpdate != null}">
-                                    <span class="secondary-text">
-                                        Last check <i:formatDate value="${it.lastCheckForUpdate}"
-                                                                 type="both"
-                                                                 dateStyle="long"
-                                                                 timeStyle="medium" />
-                                    </span>
-                                </j:if>
-                            </cbcipm:tabcontent>
-                        </j:if>
+                                            <!-- The form reloads this page-->
+                                            <a class="yui-button primary check-updates-btn" href="${request.getRequestURI()}">Check for Updates</a>
+                                            <j:if test="${it.lastCheckForUpdate != null}">
+                                                <span class="secondary-text">
+                                                    Last check <i:formatDate value="${it.lastCheckForUpdate}"
+                                                                             type="both"
+                                                                             dateStyle="long"
+                                                                             timeStyle="medium" />
+                                                </span>
+                                            </j:if>
+                                        </cbcipm:tabcontent>
+                                    </j:otherwise>
+                                </j:choose>
+                            </j:otherwise>
+                        </j:choose>
                     </j:when>
                     <j:otherwise>
                         This instance is not using a CasC bundle.

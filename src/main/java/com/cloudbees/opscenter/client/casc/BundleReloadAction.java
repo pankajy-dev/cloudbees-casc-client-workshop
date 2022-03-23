@@ -108,10 +108,15 @@ public class BundleReloadAction implements RootAction {
      */
     @GET
     @WebMethod(name = "check-bundle-update")
-    public HttpResponse doGetBundleNewerVersion(){
+    public HttpResponse doGetBundleNewerVersion() {
         boolean update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
         if (!update) {
-            update = ConfigurationUpdaterHelper.checkForUpdates();
+            try {
+                update = ConfigurationUpdaterHelper.checkForUpdates();
+            } catch (CheckNewBundleVersionException ex) {
+                LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+                return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
         return new JsonHttpResponse(new JSONObject().accumulate("update-available", update));
     }

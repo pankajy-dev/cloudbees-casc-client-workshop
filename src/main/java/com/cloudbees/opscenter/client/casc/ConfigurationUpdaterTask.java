@@ -3,7 +3,9 @@ package com.cloudbees.opscenter.client.casc;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
+import org.kohsuke.stapler.json.JsonHttpResponse;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,9 +47,13 @@ public class ConfigurationUpdaterTask extends PeriodicWork {
     @Override
     protected void doRun() throws Exception {
         if (!isDisable()) {
-            if (ConfigurationUpdaterHelper.checkForUpdates() && shouldRestart()) {
-                LOGGER.log(Level.INFO, "Restarting the instance because of a new Configuration Bundle and the system propery {0}.", AUTORESTART);
-                Jenkins.get().safeRestart();
+            try {
+                if (ConfigurationUpdaterHelper.checkForUpdates() && shouldRestart()) {
+                    LOGGER.log(Level.INFO, "Restarting the instance because of a new Configuration Bundle and the system propery {0}.", AUTORESTART);
+                    Jenkins.get().safeRestart();
+                }
+            } catch (CheckNewBundleVersionException e) {
+                LOGGER.log(Level.WARNING, "Error while checking updated for the bundle", e);
             }
         } else {
             LOGGER.log(Level.FINEST, "The execution of the periodic task is already disabled because the system propery {0}.", DISABLE);
