@@ -73,9 +73,43 @@ public class BundleReloadAction implements RootAction {
         }
     }
 
+    /**
+     * POST request to force reload the bundle
+     * <p>
+     * {@code JENKINS_URL/casc-bundle-mgnt/force-reload-bundle}
+     * Permission required: MANAGE
+     * </p>
+     * @return 200 and a JSON object with the result:
+     *              "reloaded": Boolean that indicates if bundle was reloaded
+     *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
+     *         403 - Not authorized. Administer permission required.
+     *         500 - Server error while validating the catalog or trying to create the items
+     */
+    @POST
+    @WebMethod(name = "force-reload-bundle")
+    public HttpResponse doForceReloadBundle() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        try {
+            return new JsonHttpResponse(executeForceReload());
+        } catch (CasCException | IOException ex) {
+            LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+            return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public JSONObject executeReload() throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
         if (tryReload()) {
+            return new JSONObject().accumulate("reloaded", true);
+        }else {
+            LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
+        }
+    }
+
+    public JSONObject executeForceReload() throws CasCException, IOException {
+        String username = Jenkins.getAuthentication2().getName();
+        if (forceReload()) {
             return new JSONObject().accumulate("reloaded", true);
         }else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
@@ -94,6 +128,20 @@ public class BundleReloadAction implements RootAction {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             return true;
+        }
+        return false;
+    }
+
+    public boolean forceReload() throws IOException, CasCException{
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
+            return tryReload();
+        } else if (ConfigurationBundleManager.isSet() && !isHotReloadable()) {
+            String username = Jenkins.getAuthentication2().getName();
+            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+            LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
+            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+            service.reload(bundle);
         }
         return false;
     }

@@ -134,6 +134,12 @@ public class ConfigurationBundleService {
         return true;
     }
 
+    /**
+     * Reload configuration bundle if the hotReloadable flag is enabled.
+     * @param bundle The configuration bundle
+     * @throws IOException if the issue is related to bundle transport
+     * @throws CasCException if the issue is related to bundle itself
+     */
     public void reloadIfIsHotReloadable(ConfigurationBundle bundle) throws IOException, CasCException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         if(isHotReloadable(bundle)) {
@@ -145,8 +151,11 @@ public class ConfigurationBundleService {
      * Reload configuration bundle: set the plugin catalog, install new plugins and apply configuration
      * as code file.
      * @param bundle The configuration bundle.
+     * @throws IOException if the issue is related to bundle transport
+     * @throws CasCException if the issue is related to bundle itself
      */
-    private void reload(ConfigurationBundle bundle) throws IOException, CasCException {
+    public void reload(ConfigurationBundle bundle) throws IOException, CasCException {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
         try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
             for (BundleReload bundleReload : BundleReload.all()) {
                 bundleReload.doReload(bundle);
