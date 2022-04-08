@@ -111,7 +111,7 @@ public class BundleReloadAction implements RootAction {
         String username = Jenkins.getAuthentication2().getName();
         if (forceReload()) {
             return new JSONObject().accumulate("reloaded", true);
-        }else {
+        } else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
         }

@@ -75,7 +75,7 @@
 
                                             <!-- The form reloads this page-->
                                             <f:form method="post" action="act" name="act-update-bundle" >
-                                                <f:submit name="force" value="Force Reload" /> <span class="secondary-text">     Force the reload of the installed bundle</span>
+                                                <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn" /> <span class="secondary-text">Force the reload of the installed bundle</span>
                                             </f:form>
                                         </cbcipm:tabcontent>
                                     </j:otherwise>
