@@ -70,6 +70,14 @@
                                                 </span>
                                             </j:if>
                                         </cbcipm:tabcontent>
+                                        <cbcipm:tabcontent
+                                                class="plugin-management-content--narrow-700 plugin-management-content--margin ">
+
+                                            <!-- The form reloads this page-->
+                                            <f:form method="post" action="act" name="act-update-bundle" >
+                                                <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn" /> <span class="secondary-text">Force the reload of the installed bundle</span>
+                                            </f:form>
+                                        </cbcipm:tabcontent>
                                     </j:otherwise>
                                 </j:choose>
                             </j:otherwise>

@@ -1,17 +1,16 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-    <l:layout title="Reload the Configuration Bundle" permission="${app.MANAGE}">
+    <l:layout title="Force reload the Configuration Bundle" permission="${app.MANAGE}">
         <l:main-panel>
             <j:choose>
-                <j:when test="${it.isHotReloadable()}">
-                    <form method="post" action="reload">
+                <j:when test="${it.isUpdateAvailable() == false}">
+                    <form method="post" action="forceReload">
                         ${%Are you sure you want to apply the Configuration Bundle?}
                         <f:submit value="${%Yes}" />
                     </form>
                 </j:when>
                 <j:otherwise>
-                    Configuration changes cannot be applied without a restart in this occasion. Please restart the
-                    instance if you want to apply changes.
+                    A bundle update is available. A force reload can not be executed if a new version is available.
                 </j:otherwise>
             </j:choose>
             <j:set var="errorMessage" value="hot_reload_error"/>

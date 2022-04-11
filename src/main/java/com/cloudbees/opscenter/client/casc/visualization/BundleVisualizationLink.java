@@ -203,6 +203,8 @@ public class BundleVisualizationLink extends ManagementLink {
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
+        } else if (req.hasParameter("force")) {
+            return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
         } else {
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
         }
