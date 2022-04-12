@@ -15,8 +15,40 @@
                 <j:choose>
                     <j:when test="${it.isBundleUsed()}">
                         <cbcipm:tabcontent
-                                class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                                class="plugin-management-content plugin-management-content--margin">
                             You are using version ${it.bundleVersion}.
+                            <j:set var="currentValidations" value="${it.bundleValidations}" />
+                            <j:if test="${not currentValidations.isEmpty()}">
+                                <j:choose>
+                                <j:when test="${currentValidations.hasErrors()}">
+                                <j:set var="class_" value="alert-danger"/>
+                                </j:when>
+                                <j:otherwise>
+                                <j:set var="class_" value="alert-warning"/>
+                                </j:otherwise>
+                                </j:choose>
+                                <div class="alert ${class_}">
+                                    <div class="alert__body">
+                                        <header>Validation output for current version</header>
+                                        <j:if test="${not empty currentValidations.warnings}">
+                                            <p class="mb-0">Warnings (${currentValidations.warnings.size()}):</p>
+                                            <ul>
+                                                <j:forEach items="${currentValidations.warnings}" var="v">
+                                                <li>${v}</li>
+                                                </j:forEach>
+                                            </ul>
+                                        </j:if>
+                                        <j:if test="${not empty currentValidations.errors}">
+                                            <p class="mb-0">Errors (${currentValidations.errors.size()}):</p>
+                                            <ul>
+                                                <j:forEach items="${currentValidations.errors}" var="v">
+                                                    <li>${v}</li>
+                                                </j:forEach>
+                                            </ul>
+                                        </j:if>
+                                    </div>
+                                </div>
+                            </j:if>
                         </cbcipm:tabcontent>
                         <j:choose>
                             <j:when test="${it.isErrorInNewVersion()}">

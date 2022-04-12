@@ -48,7 +48,7 @@
       <dependency> <!-- TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.modules</groupId>
         <artifactId>cloudbees-installation-manager</artifactId>
-        <version>2.303.0.1</version>
+        <version>2.303.0.6-20220412.080711-1</version>
       </dependency>
 
       <dependency> <!-- TODO Remove when in URR BOM -->

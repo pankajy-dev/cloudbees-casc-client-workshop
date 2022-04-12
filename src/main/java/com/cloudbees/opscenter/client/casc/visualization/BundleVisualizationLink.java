@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc.visualization;
 
 import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Configuration as Code Bundle Visualization.
@@ -182,6 +185,21 @@ public class BundleVisualizationLink extends ManagementLink {
         return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
     }
 
+    //used in jelly
+    @NonNull
+    public ValidationSection getBundleValidations() {
+        if (!ConfigurationBundleManager.isSet()) {
+            return new ValidationSection();
+        }
+        BundleUpdateLog.BundleValidationYaml currentVersionValidations = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
+        if (currentVersionValidations == null) {
+            return new ValidationSection();
+        }
+        return new ValidationSection(
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList()),
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()));
+    }
+
     /**
      * @return the Date when the last check for update was done (by default it is the jenkins startup date)
      */
@@ -320,6 +338,51 @@ public class BundleVisualizationLink extends ManagementLink {
 
             CasCFile that = (CasCFile) obj;
             return Objects.equals(this.section, that.section) && Objects.equals(this.filename, that.filename);
+        }
+    }
+
+    /**
+     * DTO containing the information regarding validations for UI
+     */
+    public static class ValidationSection {
+
+        private final List<String> warnings;
+        private final List<String> errors;
+
+        private ValidationSection() {
+            this(null, null);
+        }
+
+        private ValidationSection(List<String> warnings, List<String> errors) {
+            List<String> warnings_ = warnings != null ? new ArrayList<>(warnings) : new ArrayList<>();
+            Collections.sort(warnings_);
+            List<String> errors_ = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
+            Collections.sort(errors_);
+
+            this.warnings = Collections.unmodifiableList(warnings_);
+            this.errors = Collections.unmodifiableList(errors_);
+        }
+
+        public boolean isEmpty() {
+            return warnings.isEmpty() && errors.isEmpty();
+        }
+
+        public boolean hasErrors() {
+            return !errors.isEmpty();
+        }
+
+        public boolean hasWarnings() {
+            return !warnings.isEmpty();
+        }
+
+        @NonNull
+        public List<String> getWarnings() {
+            return warnings;
+        }
+
+        @NonNull
+        public List<String> getErrors() {
+            return errors;
         }
     }
 }
