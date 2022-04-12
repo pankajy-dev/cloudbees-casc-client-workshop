@@ -20,6 +20,7 @@ import hudson.ExtensionList;
 import hudson.model.ManagementLink;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -142,8 +143,16 @@ public class BundleVisualizationLink extends ManagementLink {
      * @return True/False if there is/isn't a new version fo the casc bundle available.
      */
     //used in jelly
-    public boolean isUpdateAvailable(){
+    public boolean isUpdateAvailable() {
         return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+    }
+
+    /**
+     * @return True/False if there is/isn't a new version that was rejected.
+     */
+    //used in jelly
+    public boolean isCandidateAvailable() {
+        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
     }
 
     /**
@@ -185,6 +194,9 @@ public class BundleVisualizationLink extends ManagementLink {
         return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
     }
 
+    /**
+     * @return The current bundle validation.
+     */
     //used in jelly
     @NonNull
     public ValidationSection getBundleValidations() {
@@ -198,6 +210,18 @@ public class BundleVisualizationLink extends ManagementLink {
         return new ValidationSection(
                 currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList()),
                 currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()));
+    }
+
+    /**
+     * @return The current candidate information.
+     */
+    // used in jelly
+    @NonNull
+    public CandidateSection getCandidate() {
+        if (!ConfigurationBundleManager.isSet()) {
+            return new CandidateSection();
+        }
+        return new CandidateSection(ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle());
     }
 
     /**
@@ -383,6 +407,46 @@ public class BundleVisualizationLink extends ManagementLink {
         @NonNull
         public List<String> getErrors() {
             return errors;
+        }
+    }
+
+    /**
+     * DTO containing the information regarding validations for UI
+     */
+    public static class CandidateSection {
+
+        private final ValidationSection validations;
+        private final String version;
+
+        private CandidateSection() {
+            this(null);
+        }
+
+        private CandidateSection(BundleUpdateLog.CandidateBundle candidate) {
+            List<String> warnings = new ArrayList<>();
+            List<String> errors = new ArrayList<>();
+            String version = null;
+            if (candidate != null) {
+                warnings = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList());
+                errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
+                version = candidate.getVersion();
+            }
+            this.validations = new ValidationSection(warnings, errors);
+            this.version = version;
+        }
+
+        @NonNull
+        public ValidationSection getValidations() {
+            return validations;
+        }
+
+        @CheckForNull
+        public String getVersion() {
+            return version;
+        }
+
+        public boolean isCandidate() {
+            return StringUtils.isNotBlank(version) || !validations.isEmpty();
         }
     }
 }
