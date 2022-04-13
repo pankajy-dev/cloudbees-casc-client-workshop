@@ -2,12 +2,15 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 
+import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
+import hudson.cli.CLICommandInvoker;
 import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +36,11 @@ import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 
+import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
+import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 public class BundleReloadActionTest extends AbstractIMTest {
@@ -74,11 +81,9 @@ public class BundleReloadActionTest extends AbstractIMTest {
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("There's no new version available", !response.getBoolean("update-available"));
 
-        // THEN User should also get a 200, no update available for the moment
+        // THEN User should also get a 403, no update available for the moment
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), plainUser, wc);
-        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
-        response = JSONObject.fromObject(resp.getContentAsString());
-        assertThat("There's no new version available", !response.getBoolean("update-available"));
+        assertThat("We should get a 403", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
 
         // WHEN Reloading if the bundle is not hot reloadable
         // THEN Admin should get the result, not possible to update
@@ -94,13 +99,26 @@ public class BundleReloadActionTest extends AbstractIMTest {
         // WHEN there's a new version of the bundle
         System.setProperty("core.casc.config.bundle", "src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog-v2");
         // THEN any user should get a 200 with update-available: true
-        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), plainUser, wc);
+
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("There's a new version available", response.getBoolean("update-available"));
+        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD", response.get("update-type")));
+
+        CLICommandInvoker.Result result =
+                new CLICommandInvoker(rule, BundleVersionCheckerCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
+        assertThat(result, allOf(succeeded(),hasNoErrorOutput()));
+        assertThat(result.stdout(), allOf(containsString("update-available"), containsString("true")));
+        assertThat(result.stdout(), allOf(containsString("update-type"), containsString("RELOAD")));
+
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("There's a new version available", response.getBoolean("update-available"));
+        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD", response.get("update-type")));
 
         // WHEN the bundle is hot reloadable
-        ConfigurationBundleManager.get().getConfigurationBundle().setHotReloadable(true);
         // THEN Admin should get a 200 with reloaded: true
         resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
         response = JSONObject.fromObject(resp.getContentAsString());
