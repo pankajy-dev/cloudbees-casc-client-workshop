@@ -1,16 +1,12 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
-import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
-import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
-import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterTask;
 import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -32,10 +28,15 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,6 +132,28 @@ public class BundleVisualizationLink extends ManagementLink {
         return HttpResponses.forwardToView(this, "_bundleupdate.jelly");
     }
 
+    public HttpResponse doUpdateLog() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        return HttpResponses.forwardToView(this, "_updateLog.jelly");
+    }
+
+    /**
+     * Used in jelly to display the Update log tab
+     * @return true if the update log is enabled
+     */
+    //used in jelly
+    public boolean withUpdateLog() {
+        return BundleUpdateLog.retentionPolicy() != 0;
+    }
+
+    /**
+     * @return the current retention policy
+     */
+    //used in jelly
+    public long getCurrentRetentionPolicy() {
+        return BundleUpdateLog.retentionPolicy();
+    }
+
     /**
      * @return true if the current controller has been configured with a CasC bundle
      */
@@ -222,6 +245,27 @@ public class BundleVisualizationLink extends ManagementLink {
             return new CandidateSection();
         }
         return new CandidateSection(ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle());
+    }
+
+    /**
+     * @return The 10 first elements of the update log registry.
+     */
+    //used in jelly
+    @NonNull
+    public List<UpdateLogRow> getTruncatedUpdateLog() {
+        return getUpdateLog().stream().limit(10).collect(Collectors.toList());
+    }
+
+    /**
+     * @return The full update log registry.
+     */
+    //used in jelly
+    @NonNull
+    public List<UpdateLogRow> getUpdateLog() {
+        if (getCurrentRetentionPolicy() == 0) {
+            return Collections.emptyList();
+        }
+        return ConfigurationBundleManager.get().getUpdateLog().getHistoricalRecords().stream().map(path -> new UpdateLogRow(BundleUpdateLog.CandidateBundle.loadCandidate(path))).filter(u -> !u.isEmpty()).collect(Collectors.toList());
     }
 
     /**
@@ -447,6 +491,56 @@ public class BundleVisualizationLink extends ManagementLink {
 
         public boolean isCandidate() {
             return StringUtils.isNotBlank(version) || !validations.isEmpty();
+        }
+    }
+
+    public static class UpdateLogRow {
+
+        private final String version;
+        private final Date date;
+        private final long errors;
+        private final long warnings;
+        private final String folder;
+
+        private UpdateLogRow(BundleUpdateLog.CandidateBundle candidate) {
+            this.folder = candidate == null ? null : candidate.getFolder();
+            this.version = candidate == null ? null : candidate.getVersion();
+            this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
+            this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+            Date d = null;
+            if (candidate != null) {
+                try {
+                    d = formatter.parse(candidate.getFolder().substring(0, candidate.getFolder().indexOf("_")));
+                } catch (ParseException e) {
+                    d = null;
+                }
+            }
+            this.date = d;
+        }
+
+        public boolean isEmpty() {
+            return StringUtils.isBlank(this.folder);
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public Date getDate() {
+            return date;
+        }
+
+        public long getErrors() {
+            return errors;
+        }
+
+        public long getWarnings() {
+            return warnings;
+        }
+
+        public String getFolder() {
+            return folder;
         }
     }
 }
