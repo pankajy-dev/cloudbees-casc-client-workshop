@@ -59,7 +59,7 @@
                                         <j:if test="${it.isCandidateAvailable()}" >
                                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                             <j:set var="candidate" value="${it.candidate}"/>
-                                            A new version of the Configuration Bundle (${candidate.version}) is available but it cannot be applied because it has validation errors.
+                                            A new version of the Configuration Bundle (${candidate.version}) is available, but it cannot be applied because it has validation errors.
                                             <cbcipm:valcontent validationObject="${candidate.validations}" bundleVersion="${candidate.version}"/>
                                         </cbcipm:tabcontent>
                                         </j:if>
