@@ -157,7 +157,10 @@ public class BundleReloadAction implements RootAction {
     @GET
     @WebMethod(name = "check-bundle-update")
     public HttpResponse doGetBundleNewerVersion() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+
         boolean update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        boolean reload = false;
         if (!update) {
             try {
                 update = ConfigurationUpdaterHelper.checkForUpdates();
@@ -166,6 +169,16 @@ public class BundleReloadAction implements RootAction {
                 return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
-        return new JsonHttpResponse(new JSONObject().accumulate("update-available", update));
+        JSONObject json = new JSONObject().accumulate("update-available", update);
+        if (update) {
+            reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+            if (reload) {
+                json.accumulate("update-type", "RELOAD");
+            } else {
+                json.accumulate("update-type", "RESTART");
+            }
+        }
+
+        return new JsonHttpResponse(json);
     }
 }
