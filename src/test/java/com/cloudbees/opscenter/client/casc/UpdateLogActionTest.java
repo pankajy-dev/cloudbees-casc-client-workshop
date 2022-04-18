@@ -18,25 +18,27 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.beer12;
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.e;
-import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.empty;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class UpdateLogActionTest extends AbstractCJPTest {
 
     @Test
     @LocalData
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/core-casc-bundle")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/instance_start_up")
     @WithEnvelope(TestEnvelope.class)
-    public void smokes() throws Exception {
+    public void instance_start_up() throws Exception {
         try (JenkinsRule.WebClient wc = rule.createWebClient()) {
             HtmlPage bundleUpdateTab = wc.goTo("casc-bundle-export-ui/bundleUpdate");
             String content = bundleUpdateTab.getWebResponse().getContentAsString();
@@ -60,7 +62,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
                     String entryName = entry.getName();
                     if ("validation.yaml".equals(entryName)) {
                         validationContent = IOUtils.toString(zipFile, StandardCharsets.UTF_8);
-                    } else if ("bundle/bundle.yaml".equals(entryName)) {
+                    } else if (entryName.endsWith("bundle.yaml")) {
                         descriptorContent = IOUtils.toString(zipFile, StandardCharsets.UTF_8);
                     } else if (".candidate".equals(entryName)) {
                         isCandidate = true;
@@ -77,6 +79,72 @@ public class UpdateLogActionTest extends AbstractCJPTest {
             assertThat("ConfigurationBundleManager has version 4 as current validated", updateLog.getCurrentVersionValidations().getValidations(), not(empty()));
             assertThat("ConfigurationBundleManager has version 5 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("5"));
         }
+    }
+
+    @Test
+    @WithEnvelope(TestEnvelope.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-1.zip")
+    public void update_bundles() throws Exception {
+        // Instance started up with version 1 - Valid
+        ConfigurationBundleManager cbm = ConfigurationBundleManager.get();
+        BundleUpdateLog updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 1 as current", cbm.getConfigurationBundle().getVersion(), is("1"));
+        assertThat("ConfigurationBundleManager has version 1 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
+
+        // Updated to version 2 - Valid
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-2.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
+
+        // Updated to version 3 - Without version - Ignored
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-3.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
+
+        // Updated to version 4 - Invalid
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-4.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 4 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("4"));
+
+        // Updated to version 5 - Valid but with warnings
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-5.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 5 as current", cbm.getConfigurationBundle().getVersion(), is("5"));
+        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations(), not(empty()));
+        assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
+
+        // Updated to version 6 - Invalid
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-6.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 5 as current", cbm.getConfigurationBundle().getVersion(), is("5"));
+        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations(), not(empty()));
+        assertThat("ConfigurationBundleManager has version 6 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("6"));
+
+        // Updated to version 7 - Valid
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-7.zip").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        cbm = ConfigurationBundleManager.get();
+        updateLog = cbm.getUpdateLog();
+        assertThat("ConfigurationBundleManager has version 7 as current", cbm.getConfigurationBundle().getVersion(), is("7"));
+        assertThat("ConfigurationBundleManager has version 7 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
     }
 
     public static final class TestEnvelope implements TestEnvelopeProvider {
