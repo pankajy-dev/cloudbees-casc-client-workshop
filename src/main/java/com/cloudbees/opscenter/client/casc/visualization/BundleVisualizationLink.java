@@ -141,7 +141,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public boolean withUpdateLog() {
-        return BundleUpdateLog.retentionPolicy() != 0;
+        return isBundleUsed() && BundleUpdateLog.retentionPolicy() != 0;
     }
 
     /**
@@ -525,6 +525,7 @@ public class BundleVisualizationLink extends ManagementLink {
             return version;
         }
 
+        @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "False positive")
         public Date getDate() {
             return date;
         }

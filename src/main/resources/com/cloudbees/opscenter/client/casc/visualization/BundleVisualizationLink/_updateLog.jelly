@@ -13,10 +13,10 @@
                 <td class="table__column table__column--errors">${errors}</td>
                 <td class="table__column table__column--warnings">${warnings}</td>
                 <td class="table__column table__column--actions">
-                    <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log-export/validation/${folder}" target="_blank">
+                    <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank">
                         <i class="fa fa-eye" title="Visualize"/>
                     </a>
-                    <a id="copy-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log-export/validation/${folder}" target="_blank"
+                    <a id="copy-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank"
                        data-action="copy-in-clipboard"
                        data-success-message="${%Copied(version)}"
                        data-error-message="${%CopyError(version)}"
@@ -24,7 +24,7 @@
                     >
                         <i class="fa fa-copy" title="Copy content"/>
                     </a>
-                    <a id="download-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log-export/download/${folder}" download="${folder}.zip" target="_.blank">
+                    <a id="download-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/download/${folder}" download="${folder}.zip" target="_.blank">
                         <i class="fa fa-download" title="Download version"/>
                     </a>
                 </td>
@@ -34,6 +34,7 @@
 
     <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}" type="one-column">
     <l:header>
+        <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
         <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
         <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
     </l:header>
@@ -60,6 +61,9 @@
                     </ul>
                     </header>
                     <j:choose>
+                        <j:when test="${not it.isBundleUsed()}">
+                            This instance is not using a CasC bundle.
+                        </j:when>
                         <j:when test="${it.withUpdateLog()}">
                             <p><strong>This instance has configured a retention policy of ${it.currentRetentionPolicy}</strong></p>
                             <j:if test="${it.currentRetentionPolicy gt 10}">
