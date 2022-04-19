@@ -16,7 +16,7 @@
                     <j:when test="${it.isBundleUsed()}">
                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                             You are using version ${it.bundleVersion}.
-                            <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.bundleVersion}"/>
+                            <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleVersion}"/>
                         </cbcipm:tabcontent>
                         <j:choose>
                             <j:when test="${it.isErrorInNewVersion()}">

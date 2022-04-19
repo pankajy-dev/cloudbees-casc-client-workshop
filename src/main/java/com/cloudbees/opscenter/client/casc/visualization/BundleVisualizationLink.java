@@ -216,6 +216,17 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     /**
+     * While {@link BundleVisualizationLink#getBundleVersion()} returns the installed version, this method returns the downloaded
+     * version, i.e., the installed version or the new downloaded version if the new version still has to be applied.
+     * @return the version of the currently downloaded bundle, or null if there is no downloaded bundle
+     */
+    //used in jelly
+    @CheckForNull
+    public String getDownloadedBundleVersion(){
+        return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+    }
+
+    /**
      * @return The current bundle validation.
      */
     //used in jelly
