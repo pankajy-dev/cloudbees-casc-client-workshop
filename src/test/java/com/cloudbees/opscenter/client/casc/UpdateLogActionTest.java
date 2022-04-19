@@ -46,12 +46,13 @@ public class UpdateLogActionTest extends AbstractCJPTest {
             assertThat("Current version with validations", content, containsString("Validation output for version 4"));
             assertThat("Expected version 5 was rejected", content, containsString("A new version of the Configuration Bundle (5) is available, but it cannot be applied because it has validation errors"));
 
+            String newest = new BundleUpdateLog().getHistoricalRecords().get(0).toFile().getName(); // folder for newest depends on the test execution date, so reading the newest folder
             HtmlPage updateLogTab = wc.goTo("casc-bundle-export-ui/updateLog");
-            HtmlAnchor link = (HtmlAnchor) updateLogTab.getElementById("view-20220418_00005");
+            HtmlAnchor link = (HtmlAnchor) updateLogTab.getElementById("view-" + newest);
             TextPage yamlPage = link.click();
             content = yamlPage.getWebResponse().getContentAsString();
-            assertThat("Expected error in 20220418_00005", content, containsString("message: '''apiVersion'' property in the bundle.yaml file must be an integer.'"));
-            link = (HtmlAnchor) updateLogTab.getElementById("download-20220418_00005");
+            assertThat("Expected error in " + newest, content, containsString("message: '''apiVersion'' property in the bundle.yaml file must be an integer.'"));
+            link = (HtmlAnchor) updateLogTab.getElementById("download-" + newest);
             UnexpectedPage zipContent = link.click();
             String validationContent = null;
             String descriptorContent = null;
@@ -69,9 +70,9 @@ public class UpdateLogActionTest extends AbstractCJPTest {
                     }
                 }
             }
-            assertThat("Expected error in 20220418_00005", validationContent, containsString("message: '''apiVersion'' property in the bundle.yaml file must be an integer.'"));
-            assertThat("Expected version 5 in 20220418_00005", descriptorContent, containsString("version: \"5\""));
-            assertTrue("Version 5 should be marked as candidate in 20220418_00005", isCandidate);
+            assertThat("Expected error in " + newest, validationContent, containsString("message: '''apiVersion'' property in the bundle.yaml file must be an integer.'"));
+            assertThat("Expected version 5 in " + newest, descriptorContent, containsString("version: \"5\""));
+            assertTrue("Version 5 should be marked as candidate in " + newest, isCandidate);
 
             ConfigurationBundleManager cbm = ConfigurationBundleManager.get();
             BundleUpdateLog updateLog = cbm.getUpdateLog();
