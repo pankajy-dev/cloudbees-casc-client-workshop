@@ -19,6 +19,7 @@
                         <i class="fa fa-bell primary-text" aria-hidden="true"></i>
                     </j:if>
                 </cbcipm:tab>
+                <cbcipm:tab title="${%UpdateLog}" href="${rootURL}/casc-bundle-export-ui/updateLog">${%UpdateLog}</cbcipm:tab>
             </cbcipm:tabbar>
             <d:invokeBody/>
         </cbcipm:layout>

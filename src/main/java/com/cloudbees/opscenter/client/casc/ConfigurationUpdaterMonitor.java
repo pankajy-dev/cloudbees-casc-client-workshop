@@ -1,6 +1,7 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
 import jenkins.model.Jenkins;
@@ -20,7 +21,26 @@ import java.io.IOException;
 public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     @Override
     public boolean isActivated() {
+        return isUpdateAvailable() || isCandidateAvailable();
+    }
+
+    public boolean isUpdateAvailable() {
         return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+    }
+
+    public boolean isCandidateAvailable() {
+        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
+    }
+
+    public String getCandidateVersion() {
+        if (!ConfigurationBundleManager.isSet()) {
+            return null;
+        }
+        BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+        if (candidateBundle == null) {
+            return null;
+        }
+        return candidateBundle.getVersion();
     }
 
     @Override

@@ -1,0 +1,99 @@
+<?jelly escape-by-default='true'?>
+<!--
+    Table with the list of validated bundle versions.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:i="jelly:fmt"
+         xmlns:cbcipm="/lib/cbci/pluginManagement"
+         xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
+    <d:taglib uri="local">
+        <d:tag name="row">
+            <tr>
+                <td class="table__column table__column--version"><pre>${version}</pre></td>
+                <td class="table__column table__column--date"><i:formatDate value="${date}" type="date" dateStyle="long"/></td>
+                <td class="table__column table__column--errors">${errors}</td>
+                <td class="table__column table__column--warnings">${warnings}</td>
+                <td class="table__column table__column--actions">
+                    <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank">
+                        <i class="fa fa-eye" title="Visualize"/>
+                    </a>
+                    <a id="copy-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank"
+                       data-action="copy-in-clipboard"
+                       data-success-message="${%Copied(version)}"
+                       data-error-message="${%CopyError(version)}"
+                       data-empty-file-message="${%Empty(version)}"
+                    >
+                        <i class="fa fa-copy" title="Copy content"/>
+                    </a>
+                    <a id="download-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/download/${folder}" download="${folder}.zip" target="_.blank">
+                        <i class="fa fa-download" title="Download version"/>
+                    </a>
+                </td>
+            </tr>
+        </d:tag>
+    </d:taglib>
+
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}" type="one-column">
+    <l:header>
+        <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
+        <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
+        <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+    </l:header>
+    <l:main-panel>
+    <common:layout>
+        <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
+            <div class="alert alert-info">
+                <div class="alert__body">
+                    <header>
+                    <p style="color: var(--alert-info-text-color)">
+                        This instance can store the different bundle versions applied. By default, a maximum of 5 versions are stored, but
+                        it can be configured by setting the following system properties:
+                    </p>
+                    <ul>
+                        <li><i>-Dcore.casc.config.retention.disabled=true</i> will disable the update log.</li>
+                        <li>
+                            <i>-Dcore.casc.config.retention=X</i> will set the number of stored versions, where <i>X</i> can be:
+                            <ul>
+                                <li>Bigger than 0: Number of stored versions</li>
+                                <li>Equal to 0: Disable the update log. It is equivalent to <i>-Dcore.casc.config.retention.disabled=true</i></li>
+                                <li>Less than 0: All versions are stored. <strong>This retention policy is strongly discouraged if there is no external retention mechanism</strong>. Otherwise, the performance of the instance can be compromised.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    </header>
+                    <j:choose>
+                        <j:when test="${not it.isBundleUsed()}">
+                            This instance is not using a CasC bundle.
+                        </j:when>
+                        <j:when test="${it.withUpdateLog()}">
+                            <p><strong>This instance has configured a retention policy of ${it.currentRetentionPolicy}</strong></p>
+                            <j:if test="${it.currentRetentionPolicy gt 10}">
+                                <p>A maximum of 10 rows are displayed in this page. You can find all entries in the <i>JENKINS_HOME/core-casc-bundle-log</i> folder.</p>
+                            </j:if>
+                        </j:when>
+                        <j:otherwise>
+                            <p><strong>This instance has the update log disabled.</strong></p>
+                        </j:otherwise>
+                    </j:choose>
+                </div>
+            </div>
+        </cbcipm:tabcontent>
+        <j:if test="${it.withUpdateLog()}">
+        <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
+            <table id="casc-bundle-files-table" class="pane bigtable" xmlns:local="local">
+                <tr>
+                    <td class="table__header table__header--version">${%version}</td>
+                    <td class="table__header table__header--date">${%date}</td>
+                    <td class="table__header table__header--errors">${%errors}</td>
+                    <td class="table__header table__header--warnings">${%warnings}</td>
+                    <th class="table__header table__header--actions"/>
+                </tr>
+                <j:forEach items="${it.truncatedUpdateLog}" var="u">
+                    <local:row version="${u.version}" date="${u.date}" errors="${u.errors}" warnings="${u.warnings}" folder="${u.folder}"/>
+                </j:forEach>
+            </table>
+        </cbcipm:tabcontent>
+        </j:if>
+    </common:layout>
+    </l:main-panel>
+    </l:layout>
+</j:jelly>

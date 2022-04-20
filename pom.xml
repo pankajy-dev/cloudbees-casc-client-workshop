@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>126</version>
+    <version>129</version>
     <relativePath />
   </parent>
 
@@ -21,13 +21,12 @@
   <url>https://docs.cloudbees.com/docs/release-notes/latest/plugins/${project.artifactId}-plugin</url>
 
   <properties>
-    <cloudbees-installation-manager.version>2.303.0.1</cloudbees-installation-manager.version> <!-- Not in URR yet -->
-    <powermock.version>2.0.9</powermock.version>
     <node.version>12.18.3</node.version>
     <npm.version>6.14.6</npm.version>
     <frontend-version>1.10.0</frontend-version>
     <useBeta>true</useBeta> <!-- Jenkins.MANAGE is still Beta.class -->
     <no-test-jar>false</no-test-jar> <!-- to allow other plugins to extend abstract test classes like ProjectItem.java -->
+    <jenkins.version>2.332.2-cb-1</jenkins.version> <!-- Forced by cloudbees-installation-manager:2.303.0.7 . TODO Remove after next URR BOM -->
   </properties>
 
   <scm>
@@ -47,15 +46,16 @@
         <type>pom</type>
       </dependency>
 
-      <dependency> <!-- TODO Remove when in URR BOM. This version prevents "Banned property" for async-http-client -->
-        <groupId>com.cloudbees.jenkins.plugins</groupId>
-        <artifactId>cloudbees-assurance</artifactId>
-        <version>2.276.0.9</version>
-      </dependency>
       <dependency> <!-- TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.modules</groupId>
         <artifactId>cloudbees-installation-manager</artifactId>
-        <version>${cloudbees-installation-manager.version}</version>
+        <version>2.303.0.7</version>
+      </dependency>
+
+      <dependency> <!-- TODO Remove when in URR BOM -->
+        <groupId>com.cloudbees.jenkins.plugins</groupId>
+        <artifactId>cloudbees-casc-items-api</artifactId>
+        <version>1.17</version>
       </dependency>
 
       <dependency>
@@ -68,22 +68,6 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>4.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-api-mockito2</artifactId>
-        <version>${powermock.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-module-junit4</artifactId>
-        <version>${powermock.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.kohsuke</groupId>
-        <artifactId>access-modifier-suppressions</artifactId>
-        <version>1.27</version>
       </dependency>
 
       <dependency>
@@ -102,9 +86,14 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.kohsuke</groupId>
+      <artifactId>access-modifier-suppressions</artifactId>
+      <version>1.27</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-api</artifactId>
-      <version>1.17</version>
     </dependency>
 
     <dependency>
@@ -166,16 +155,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito2</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>

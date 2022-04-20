@@ -18,6 +18,10 @@ public enum ConfigurationStatus {
      */
     private boolean updateAvailable = false;
     /**
+     * True means there is a new version that was rejected.
+     */
+    private boolean candidateAvailable = false;
+    /**
      *  The last time when the OC was checked for a newer version of the bundle.
      */
     @NonNull
@@ -54,6 +58,23 @@ public enum ConfigurationStatus {
     @SuppressWarnings("ME_ENUM_FIELD_SETTER")
     public void setUpdateAvailable(boolean updateAvailable) {
         this.updateAvailable = updateAvailable;
+    }
+
+    /**
+     * Returns true if there is a new version that was rejected.
+     * @return True/False if there is/isn't a new version that was rejected.
+     */
+    public boolean isCandidateAvailable(){
+        return candidateAvailable;
+    }
+
+    /**
+     * Set the existence of a new version that has been rejected.
+     * @param candidateAvailable boolean for setting the candidate availability.
+     */
+    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    public void setCandidateAvailable(boolean candidateAvailable) {
+        this.candidateAvailable = candidateAvailable;
     }
 
     /**

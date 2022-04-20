@@ -3,6 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import hudson.ExtensionList;
 
 import java.util.Date;
@@ -29,9 +30,13 @@ public final class ConfigurationUpdaterHelper {
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                    boolean newVersionIsValid = newCandidate == null;
+
                     LOGGER.log(Level.INFO, () -> String.format("New Configuration Bundle available, version [%s]",
-                            ConfigurationBundleManager.get().getConfigurationBundle().getVersion()));
-                    ConfigurationStatus.INSTANCE.setUpdateAvailable(true);
+                            newVersionIsValid ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
+                    ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionIsValid);
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionIsValid);
 
                     if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
                         // If there is no previous known version, store it
@@ -48,6 +53,11 @@ public final class ConfigurationUpdaterHelper {
                     }
 
                     return true;
+                } else {
+                    // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
+                    // accessing the first time to Bundle update tab
+                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(newCandidate != null);
                 }
             }
 

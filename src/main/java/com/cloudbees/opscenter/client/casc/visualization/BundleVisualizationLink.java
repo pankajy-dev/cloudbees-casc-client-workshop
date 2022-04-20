@@ -1,14 +1,12 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
-import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
-import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterTask;
 import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -18,6 +16,7 @@ import hudson.ExtensionList;
 import hudson.model.ManagementLink;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -29,13 +28,17 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Configuration as Code Bundle Visualization.
@@ -127,6 +130,28 @@ public class BundleVisualizationLink extends ManagementLink {
         return HttpResponses.forwardToView(this, "_bundleupdate.jelly");
     }
 
+    public HttpResponse doUpdateLog() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        return HttpResponses.forwardToView(this, "_updateLog.jelly");
+    }
+
+    /**
+     * Used in jelly to display the Update log tab
+     * @return true if the update log is enabled
+     */
+    //used in jelly
+    public boolean withUpdateLog() {
+        return isBundleUsed() && BundleUpdateLog.retentionPolicy() != 0;
+    }
+
+    /**
+     * @return the current retention policy
+     */
+    //used in jelly
+    public long getCurrentRetentionPolicy() {
+        return BundleUpdateLog.retentionPolicy();
+    }
+
     /**
      * @return true if the current controller has been configured with a CasC bundle
      */
@@ -139,8 +164,16 @@ public class BundleVisualizationLink extends ManagementLink {
      * @return True/False if there is/isn't a new version fo the casc bundle available.
      */
     //used in jelly
-    public boolean isUpdateAvailable(){
+    public boolean isUpdateAvailable() {
         return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+    }
+
+    /**
+     * @return True/False if there is/isn't a new version that was rejected.
+     */
+    //used in jelly
+    public boolean isCandidateAvailable() {
+        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
     }
 
     /**
@@ -180,6 +213,68 @@ public class BundleVisualizationLink extends ManagementLink {
             return ConfigurationStatus.INSTANCE.getOutdatedVersion();
         }
         return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+    }
+
+    /**
+     * While {@link BundleVisualizationLink#getBundleVersion()} returns the installed version, this method returns the downloaded
+     * version, i.e., the installed version or the new downloaded version if the new version still has to be applied.
+     * @return the version of the currently downloaded bundle, or null if there is no downloaded bundle
+     */
+    //used in jelly
+    @CheckForNull
+    public String getDownloadedBundleVersion(){
+        return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+    }
+
+    /**
+     * @return The current bundle validation.
+     */
+    //used in jelly
+    @NonNull
+    public ValidationSection getBundleValidations() {
+        if (!ConfigurationBundleManager.isSet()) {
+            return new ValidationSection();
+        }
+        BundleUpdateLog.BundleValidationYaml currentVersionValidations = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
+        if (currentVersionValidations == null) {
+            return new ValidationSection();
+        }
+        return new ValidationSection(
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList()),
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()));
+    }
+
+    /**
+     * @return The current candidate information.
+     */
+    // used in jelly
+    @NonNull
+    public CandidateSection getCandidate() {
+        if (!ConfigurationBundleManager.isSet()) {
+            return new CandidateSection();
+        }
+        return new CandidateSection(ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle());
+    }
+
+    /**
+     * @return The 10 first elements of the update log registry.
+     */
+    //used in jelly
+    @NonNull
+    public List<UpdateLogRow> getTruncatedUpdateLog() {
+        return getUpdateLog().stream().limit(10).collect(Collectors.toList());
+    }
+
+    /**
+     * @return The full update log registry.
+     */
+    //used in jelly
+    @NonNull
+    public List<UpdateLogRow> getUpdateLog() {
+        if (getCurrentRetentionPolicy() == 0) {
+            return Collections.emptyList();
+        }
+        return ConfigurationBundleManager.get().getUpdateLog().getHistoricalRecords().stream().map(path -> new UpdateLogRow(BundleUpdateLog.CandidateBundle.loadCandidate(path))).filter(u -> !u.isEmpty()).collect(Collectors.toList());
     }
 
     /**
@@ -320,6 +415,142 @@ public class BundleVisualizationLink extends ManagementLink {
 
             CasCFile that = (CasCFile) obj;
             return Objects.equals(this.section, that.section) && Objects.equals(this.filename, that.filename);
+        }
+    }
+
+    /**
+     * DTO containing the information regarding validations for UI
+     */
+    public static class ValidationSection {
+
+        private final List<String> warnings;
+        private final List<String> errors;
+
+        private ValidationSection() {
+            this(null, null);
+        }
+
+        private ValidationSection(List<String> warnings, List<String> errors) {
+            List<String> warnings_ = warnings != null ? new ArrayList<>(warnings) : new ArrayList<>();
+            Collections.sort(warnings_);
+            List<String> errors_ = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
+            Collections.sort(errors_);
+
+            this.warnings = Collections.unmodifiableList(warnings_);
+            this.errors = Collections.unmodifiableList(errors_);
+        }
+
+        public boolean isEmpty() {
+            return warnings.isEmpty() && errors.isEmpty();
+        }
+
+        public boolean hasErrors() {
+            return !errors.isEmpty();
+        }
+
+        public boolean hasWarnings() {
+            return !warnings.isEmpty();
+        }
+
+        @NonNull
+        public List<String> getWarnings() {
+            return warnings;
+        }
+
+        @NonNull
+        public List<String> getErrors() {
+            return errors;
+        }
+    }
+
+    /**
+     * DTO containing the information regarding validations for UI
+     */
+    public static class CandidateSection {
+
+        private final ValidationSection validations;
+        private final String version;
+
+        private CandidateSection() {
+            this(null);
+        }
+
+        private CandidateSection(BundleUpdateLog.CandidateBundle candidate) {
+            List<String> warnings = new ArrayList<>();
+            List<String> errors = new ArrayList<>();
+            String version = null;
+            if (candidate != null) {
+                warnings = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList());
+                errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
+                version = candidate.getVersion();
+            }
+            this.validations = new ValidationSection(warnings, errors);
+            this.version = version;
+        }
+
+        @NonNull
+        public ValidationSection getValidations() {
+            return validations;
+        }
+
+        @CheckForNull
+        public String getVersion() {
+            return version;
+        }
+
+        public boolean isCandidate() {
+            return StringUtils.isNotBlank(version) || !validations.isEmpty();
+        }
+    }
+
+    public static class UpdateLogRow {
+
+        private final String version;
+        private final Date date;
+        private final long errors;
+        private final long warnings;
+        private final String folder;
+
+        private UpdateLogRow(BundleUpdateLog.CandidateBundle candidate) {
+            this.folder = candidate == null ? null : candidate.getFolder();
+            this.version = candidate == null ? null : candidate.getVersion();
+            this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
+            this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+            Date d = null;
+            if (candidate != null) {
+                try {
+                    d = formatter.parse(candidate.getFolder().substring(0, candidate.getFolder().indexOf("_")));
+                } catch (ParseException e) {
+                    d = null;
+                }
+            }
+            this.date = d;
+        }
+
+        public boolean isEmpty() {
+            return StringUtils.isBlank(this.folder);
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "False positive")
+        public Date getDate() {
+            return date;
+        }
+
+        public long getErrors() {
+            return errors;
+        }
+
+        public long getWarnings() {
+            return warnings;
+        }
+
+        public String getFolder() {
+            return folder;
         }
     }
 }

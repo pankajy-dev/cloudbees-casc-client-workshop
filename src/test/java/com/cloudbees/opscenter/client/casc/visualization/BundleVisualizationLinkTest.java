@@ -3,6 +3,7 @@ package com.cloudbees.opscenter.client.casc.visualization;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.ExtensionList;
@@ -78,6 +79,9 @@ public class BundleVisualizationLinkTest {
             when(mockedBundle.getVersion()).thenReturn("2");
             when(mockedBundle.getPlugins()).thenReturn(Collections.emptySet());
             when(mockedConfManager.getConfigurationBundle()).thenReturn(mockedBundle);
+            BundleUpdateLog mockedUpdateLog = mock(BundleUpdateLog.class);
+            when(mockedUpdateLog.getCandidateBundle()).thenReturn(null);
+            when(mockedConfManager.getUpdateLog()).thenReturn(mockedUpdateLog);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 
             BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
