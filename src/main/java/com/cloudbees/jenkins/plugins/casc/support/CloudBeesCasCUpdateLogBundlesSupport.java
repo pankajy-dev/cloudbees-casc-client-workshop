@@ -50,7 +50,7 @@ public class CloudBeesCasCUpdateLogBundlesSupport extends Component {
                     container.add(new NotAvailable());
                 } else {
                     final File[] listFiles = cascUpdateLogDir.toFile().listFiles((file, s) -> s.endsWith(BundleUpdateLog.BUNDLE_UPDATE_LOG_CSV));
-                    if (listFiles.length > 0) {
+                    if (listFiles != null && listFiles.length > 0) {
                         container.add(new UpdateLogContent(listFiles));
                         for (File f : listFiles) {
                             container.add(new FileContent(BundleUpdateLog.CASC_BUNDLE_HISTORICAL_RECORDS_DIR + "/" + f.getName(), cascUpdateLogDir.resolve(f.getName()).toFile()));
