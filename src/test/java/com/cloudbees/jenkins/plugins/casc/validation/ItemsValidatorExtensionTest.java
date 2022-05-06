@@ -24,8 +24,6 @@ import static org.hamcrest.Matchers.not;
 public class ItemsValidatorExtensionTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
-    @Rule
-    public TestName testName = new TestName();
 
     @Test
     public void smokes() {
@@ -49,7 +47,7 @@ public class ItemsValidatorExtensionTest {
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/ItemsValidatorExtensionTest/with-items/"));
         assertThat("We should get validation results containing an entry", validations, hasSize(1));
         assertThat("It should be a warning", validations.get(0).getLevel(), is(Validation.Level.WARNING));
-        assertThat("It should be a warning", validations.get(0).getValidationCode(), is(ValidationCode.ITEMS_DEFINITION));
+        assertThat("It should be a ITEMS warning", validations.get(0).getValidationCode(), is(ValidationCode.ITEMS_DEFINITION));
         assertThat("It should contain all not valid items", validations.get(0).getMessage(), allOf(containsString("pipeline"), containsString("clientController"),
                                                                                               containsString("not-a-valid-type")));
         assertThat("It should not contain allowed items", validations.get(0).getMessage(), not(anyOf(containsString("freeStyle"), containsString("folder"))));
