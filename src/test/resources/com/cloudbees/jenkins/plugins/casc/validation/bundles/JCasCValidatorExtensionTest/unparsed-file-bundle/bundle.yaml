@@ -4,3 +4,5 @@ description: "This is a config bundle"
 version: "1"
 jcasc:
   - "jenkins.yaml"
+items:
+  - "items.yaml"
