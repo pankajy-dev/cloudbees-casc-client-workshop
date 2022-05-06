@@ -1,0 +1,4 @@
+plugins:
+- id: "cloudbees-assurance"
+- id: "credentials"
+- id: "cloudbees-casc-items-api"
