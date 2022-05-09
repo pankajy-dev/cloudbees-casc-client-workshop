@@ -126,6 +126,11 @@
       <artifactId>support-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-analytics</artifactId>
+    </dependency>
+
     <!-- Optional dependencies -->
     <dependency>
       <groupId>io.jenkins</groupId>
@@ -155,6 +160,13 @@
     </dependency>
 
     <!-- Test -->
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-analytics</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-commons</artifactId>

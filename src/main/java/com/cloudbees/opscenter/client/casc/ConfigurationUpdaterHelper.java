@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import hudson.ExtensionList;
 
@@ -54,6 +55,16 @@ public final class ConfigurationUpdaterHelper {
 
                     if (newVersionIsValid) {
                         ConfigurationBundleManager.promote();
+                        // Send validation errors from promoted version
+                        BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
+                        if (vYaml != null) {
+                            List<Validation> validations = vYaml.getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                            new BundleValidationErrorGatherer(validations).send();
+                        }
+                    } else {
+                        // Send validation errors from invalid candidate
+                        List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                        new BundleValidationErrorGatherer(validations).send();
                     }
 
                     LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
@@ -86,6 +97,7 @@ public final class ConfigurationUpdaterHelper {
 
             return false;
         } catch (RuntimeException e) {
+            e.printStackTrace();
             // Thrown by com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager#failBundleLoading
             // Generally RuntimeException > InvalidBundleException > Real cause
             Throwable cause = e.getCause();

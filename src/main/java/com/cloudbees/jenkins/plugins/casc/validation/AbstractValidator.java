@@ -159,7 +159,6 @@ public abstract class AbstractValidator implements ExtensionPoint {
             validations.addAll(validator.validate(path));
         }
         if (!validations.isEmpty()) {
-            // TODO send event to segment - Maybe when CheckForUpdate?
             throw new InvalidBundleException(validations);
         }
     }
