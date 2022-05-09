@@ -79,11 +79,12 @@ public class ItemsValidatorExtension extends AbstractValidator{
         }
         if (!filesNotFound.isEmpty()) {
             String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Items section that cannot be found. Impossible to validate items.", notFound)));
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Items section that cannot be found. Impossible to validate items.", notFound)));
         }
         if (!filesUnparseable.isEmpty()) {
             String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Items section that is empty or has an invalid yaml format. Impossible to validate items.", unparseable)));
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Items section that is empty or has an invalid yaml format. Impossible to validate items.",
+                                       unparseable)));
         }
 
         if (!errors.isEmpty()) {

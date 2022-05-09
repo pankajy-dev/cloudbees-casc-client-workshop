@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import hudson.ExtensionList;
@@ -29,17 +28,16 @@ public class ItemsValidatorExtensionTest {
     public void smokes() {
         ItemsValidatorExtension validator = ExtensionList.lookupSingleton(ItemsValidatorExtension.class);
 
-        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/missing-file"
-                                                          + "-bundle"));
+        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.ITEMS_DEFINITION));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[ITEMS] - The bundle.yaml file references items.yaml in the Items section that "
                                                                                           + "cannot be found. Impossible to validate items."));
 
-        validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/unparsed-file-bundle"));
+        validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.ITEMS_DEFINITION));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[ITEMS] - The bundle.yaml file references items.yaml in the Items section that is "
                                                                                            + "empty or has an invalid yaml format. Impossible to validate items."));

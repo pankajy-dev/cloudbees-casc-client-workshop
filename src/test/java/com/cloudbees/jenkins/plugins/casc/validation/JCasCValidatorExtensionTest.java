@@ -26,13 +26,13 @@ public class JCasCValidatorExtensionTest {
     public void smokes() {
         JCasCValidatorExtension validator = ExtensionList.lookupSingleton(JCasCValidatorExtension.class);
 
-        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/missing-file-bundle"));
+        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
         assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that cannot be found. Impossible to validate the Jenkins configuration."));
 
-        validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/unparsed-file-bundle"));
+        validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));

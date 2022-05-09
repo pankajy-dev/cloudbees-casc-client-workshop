@@ -19,24 +19,19 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLoader;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
-import com.cloudbees.jenkins.plugins.casc.rbac.validation.RbacValidator;
 
 /**
- * Performs validations on RBAC in a running instance.
- * <ul>
- * <li>The authorization strategy must be {@link nectar.plugins.rbac.strategy.RoleMatrixAuthorizationStrategy}. This will generate an error since it is a requirement to configure RBAC</li>
- * <li>All permissions defined for a role must exist in the instance. This will generate an error since when the role is created we get an error if the permissions do not exist.</li>
- * </ul>
+ * Performs validations on items to create / update in a running instance
  */
 @OptionalExtension(requirePlugins = "configuration-as-code")
 @SuppressRestrictedWarnings(value = { BundleLoader.class})
-public class RbacValidatorExtension extends AbstractValidator{
+public class PluginCatalogValidatorExtension extends AbstractValidator{
 
-    private static final Logger LOGGER = Logger.getLogger(RbacValidatorExtension.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(PluginCatalogValidatorExtension.class.getName());
 
     @Override
     public ValidationCode getCode() {
-        return ValidationCode.RBAC_CONFIGURATION;
+        return ValidationCode.PLUGIN_CATALOG;
     }
 
     @Override
@@ -58,15 +53,15 @@ public class RbacValidatorExtension extends AbstractValidator{
             return Collections.singletonList(error("The bundle.yaml file seems to be empty. Validations cannot be performed."));
         }
 
-        List<String> rbac = descriptor.getRbac();
-        if (rbac == null || rbac.isEmpty()) {
+        List<String> catalog = descriptor.getCatalog();
+        if (catalog == null || catalog.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Validation> errors = new ArrayList<>();
         List<String> filesNotFound = new ArrayList<>();
         List<String> filesUnparseable = new ArrayList<>();
-        for (String file : rbac) {
+        for (String file : catalog) {
             Path path = bundlePath.resolve(file);
             if (!Files.exists(path)) {
                 filesNotFound.add(file);
@@ -83,22 +78,23 @@ public class RbacValidatorExtension extends AbstractValidator{
         }
         if (!filesNotFound.isEmpty()) {
             String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the RBAC section that cannot be found. Impossible to validate RBAC.", notFound)));
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Catalog section that cannot be found. Impossible to validate plugin catalog.", notFound)));
         }
         if (!filesUnparseable.isEmpty()) {
             String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the RBAC section that is empty or has an invalid yaml format. Impossible to validate RBAC.",
-                                           unparseable)));
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Catalog section that is empty or has an invalid yaml format. Impossible to validate plugin catalog.",
+                                       unparseable)));
         }
 
         if (!errors.isEmpty()) {
             return Collections.unmodifiableList(errors);
         }
 
-        RbacValidator validator = new RbacValidator();
+        PluginCatalogValidator validator = new PluginCatalogValidator();
         Collection<Validation> validations = validator.validate(new PathPlainBundle(bundlePath));
         if (!validations.isEmpty()) {
-            LOGGER.log(Level.WARNING, String.format("Problems when processing RBAC detected: %s", validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
+            LOGGER.log(Level.WARNING, String.format("Some plugins in the catalog were not added to the envelope: %s",
+                                                    validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
         }
         return validations.stream().collect(Collectors.toList());
     }

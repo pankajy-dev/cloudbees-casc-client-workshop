@@ -20,7 +20,6 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
-import com.cloudbees.jenkins.plugins.casc.items.validation.ItemsValidator;
 
 /**
  * Performs validations on plugins to install. This validation will generate only warnings, never errors
@@ -80,11 +79,11 @@ public class PluginsValidatorExtension extends AbstractValidator{
         }
         if (!filesNotFound.isEmpty()) {
             String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Plugins section that cannot be found. Impossible to validate plugins.", notFound)));
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Plugins section that cannot be found. Impossible to validate plugins.", notFound)));
         }
         if (!filesUnparseable.isEmpty()) {
             String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Plugins section that is empty or has an invalid yaml format. Impossible to validate plugins.",
+            errors.add(warning(String.format("The bundle.yaml file references %s in the Plugins section that is empty or has an invalid yaml format. Impossible to validate plugins.",
                                            unparseable)));
         }
 
