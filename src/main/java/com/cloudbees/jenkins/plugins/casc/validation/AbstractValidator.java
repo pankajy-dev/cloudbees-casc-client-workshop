@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class for those validator classes. The implementing classes extending this abstract class must be {@link hudson.Extension}
@@ -161,5 +162,36 @@ public abstract class AbstractValidator implements ExtensionPoint {
             // TODO send event to segment - Maybe when CheckForUpdate?
             throw new InvalidBundleException(validations);
         }
+    }
+
+    protected List<Validation> checkFiles(List<String> files, Path bundlePath, String section) {
+        List<Validation> errors = new ArrayList<>();
+        List<String> filesNotFound = new ArrayList<>();
+        List<String> filesUnparseable = new ArrayList<>();
+        for (String file : files) {
+            Path path = bundlePath.resolve(file);
+            if (!Files.exists(path)) {
+                filesNotFound.add(file);
+            } else {
+                try {
+                    Map<String, Object> parsed = parseYaml(path);
+                    if (parsed == null || parsed.isEmpty()) {
+                        filesUnparseable.add(file);
+                    }
+                } catch (IOException e) {
+                    filesUnparseable.add(file);
+                }
+            }
+        }
+        if (!filesNotFound.isEmpty()) {
+            String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
+            errors.add(error(String.format("The bundle.yaml file references %s in the %s section that cannot be found. Impossible to validate %s.", notFound, section, section)));
+        }
+        if (!filesUnparseable.isEmpty()) {
+            String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
+            errors.add(error(String.format("The bundle.yaml file references %s in the %s section that is empty or has an invalid yaml format. Impossible to validate %s.",
+                                             unparseable, section, section)));
+        }
+        return errors;
     }
 }

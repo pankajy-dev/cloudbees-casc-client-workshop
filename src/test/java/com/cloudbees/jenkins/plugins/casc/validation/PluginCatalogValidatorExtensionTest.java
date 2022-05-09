@@ -44,17 +44,17 @@ public class PluginCatalogValidatorExtensionTest extends AbstractIMTest {
 
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_CATALOG));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[CATALOGVAL] - The bundle.yaml file references plugin-catalog.yaml in the Catalog "
-                                                                                          + "section that cannot be found. Impossible to validate plugin catalog."));
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[CATALOGVAL] - The bundle.yaml file references plugin-catalog.yaml in the plugin "
+                                                                                          + "catalog section that cannot be found. Impossible to validate plugin catalog."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_CATALOG));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[CATALOGVAL] - The bundle.yaml file references plugin-catalog.yaml in the Catalog section "
-                                                                                           + "that is empty or has an invalid yaml format. Impossible to validate plugin catalog."));
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[CATALOGVAL] - The bundle.yaml file references plugin-catalog.yaml in the "
+                                                                                           + "plugin catalog section that is empty or has an invalid yaml format. Impossible to validate plugin catalog."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/invalidCatalog/"));
         assertThat("We should get validation results containing an entry", validations, hasSize(1));

@@ -58,33 +58,7 @@ public class PluginCatalogValidatorExtension extends AbstractValidator{
             return Collections.emptyList();
         }
 
-        List<Validation> errors = new ArrayList<>();
-        List<String> filesNotFound = new ArrayList<>();
-        List<String> filesUnparseable = new ArrayList<>();
-        for (String file : catalog) {
-            Path path = bundlePath.resolve(file);
-            if (!Files.exists(path)) {
-                filesNotFound.add(file);
-            } else {
-                try {
-                    Map<String, Object> parsed = parseYaml(path);
-                    if (parsed == null || parsed.isEmpty()) {
-                        filesUnparseable.add(file);
-                    }
-                } catch (IOException e) {
-                    filesUnparseable.add(file);
-                }
-            }
-        }
-        if (!filesNotFound.isEmpty()) {
-            String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
-            errors.add(warning(String.format("The bundle.yaml file references %s in the Catalog section that cannot be found. Impossible to validate plugin catalog.", notFound)));
-        }
-        if (!filesUnparseable.isEmpty()) {
-            String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
-            errors.add(warning(String.format("The bundle.yaml file references %s in the Catalog section that is empty or has an invalid yaml format. Impossible to validate plugin catalog.",
-                                       unparseable)));
-        }
+        List<Validation> errors = checkFiles(catalog, bundlePath, "plugin catalog");
 
         if (!errors.isEmpty()) {
             return Collections.unmodifiableList(errors);

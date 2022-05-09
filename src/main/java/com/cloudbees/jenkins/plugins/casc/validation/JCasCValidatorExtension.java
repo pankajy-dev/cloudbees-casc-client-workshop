@@ -67,32 +67,7 @@ public class JCasCValidatorExtension extends AbstractValidator {
             return Collections.emptyList();
         }
 
-        List<Validation> errors = new ArrayList<>();
-        List<String> filesNotFound = new ArrayList<>();
-        List<String> filesUnparseable = new ArrayList<>();
-        for (String file : jcasc) {
-            Path path = bundlePath.resolve(file);
-            if (!Files.exists(path)) {
-                filesNotFound.add(file);
-            } else {
-                try {
-                    Map<String, Object> parsed = parseYaml(path);
-                    if (parsed == null || parsed.isEmpty()) {
-                        filesUnparseable.add(file);
-                    }
-                } catch (IOException e) {
-                    filesUnparseable.add(file);
-                }
-            }
-        }
-        if (!filesNotFound.isEmpty()) {
-            String notFound = filesNotFound.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Jenkins Configuration as Code section that cannot be found. Impossible to validate the Jenkins configuration.", notFound)));
-        }
-        if (!filesUnparseable.isEmpty()) {
-            String unparseable = filesUnparseable.stream().collect(Collectors.joining(", "));
-            errors.add(error(String.format("The bundle.yaml file references %s in the Jenkins Configuration as Code section that is empty or has an invalid yaml format. Impossible to validate the Jenkins configuration.", unparseable)));
-        }
+        List<Validation> errors = checkFiles(jcasc, bundlePath, "Jenkins Configuration as Code");
 
         if (!errors.isEmpty()) {
             return Collections.unmodifiableList(errors);
