@@ -130,7 +130,7 @@ public abstract class AbstractValidator implements ExtensionPoint {
             return;
         }
 
-        final Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidateBundle.getFolder());
+        final Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidateBundle.getFolder()).resolve("bundle");
         if (!Files.exists(candidatePath)) {
             return;
         }

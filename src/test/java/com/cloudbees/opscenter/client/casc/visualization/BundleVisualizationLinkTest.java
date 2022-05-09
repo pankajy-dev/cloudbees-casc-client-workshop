@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
+import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.ExtensionList;
 import hudson.model.User;
@@ -71,7 +72,9 @@ public class BundleVisualizationLinkTest {
 
     @Test
     public void checkUpdate() throws Exception {
-        try (ACLContext ctx = ACL.as(adminUser); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class)) {
+        try (ACLContext ctx = ACL.as(adminUser); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class);
+             MockedStatic<AbstractValidator> abstractValidatorMockedStatic = mockStatic(AbstractValidator.class)) {
+            abstractValidatorMockedStatic.when(AbstractValidator::validateCandidateBundle).thenAnswer(invocationOnMock -> null);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
             ConfigurationBundleManager mockedConfManager = mock(ConfigurationBundleManager.class);
             when(mockedConfManager.downloadIfNewVersionIsAvailable()).thenReturn(true);
@@ -80,7 +83,12 @@ public class BundleVisualizationLinkTest {
             when(mockedBundle.getPlugins()).thenReturn(Collections.emptySet());
             when(mockedConfManager.getConfigurationBundle()).thenReturn(mockedBundle);
             BundleUpdateLog mockedUpdateLog = mock(BundleUpdateLog.class);
-            when(mockedUpdateLog.getCandidateBundle()).thenReturn(null);
+            BundleUpdateLog.CandidateBundle mockedCandidate = mock(BundleUpdateLog.CandidateBundle.class);
+            when(mockedCandidate.getVersion()).thenReturn("3");
+            BundleUpdateLog.BundleValidationYaml mockedValidations = mock(BundleUpdateLog.BundleValidationYaml.class);
+            when(mockedValidations.getValidations()).thenReturn(Collections.emptyList());
+            when(mockedCandidate.getValidations()).thenReturn(mockedValidations);
+            when(mockedUpdateLog.getCandidateBundle()).thenReturn(mockedCandidate);
             when(mockedConfManager.getUpdateLog()).thenReturn(mockedUpdateLog);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 

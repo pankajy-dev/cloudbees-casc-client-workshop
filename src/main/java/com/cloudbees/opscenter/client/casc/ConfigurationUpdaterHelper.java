@@ -4,13 +4,18 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import hudson.ExtensionList;
 
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public final class ConfigurationUpdaterHelper {
     private static final Logger LOGGER = Logger.getLogger(ConfigurationUpdaterHelper.class.getName());
@@ -31,9 +36,27 @@ public final class ConfigurationUpdaterHelper {
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
-                    boolean newVersionIsValid = newCandidate == null;
+                    boolean newVersionIsValid = newCandidate != null && newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
 
-                    LOGGER.log(Level.INFO, () -> String.format("New Configuration Bundle available, version [%s]",
+                    if (newVersionIsValid) {
+                        // Runtime validations
+                        try {
+                            AbstractValidator.validateCandidateBundle();
+                        } catch (InvalidBundleException e) {
+                            // With errors or warnings
+                            List<Validation> validations = e.getValidationResult();
+                            newCandidate.getValidations().addValidations(validations.stream().map(v -> v.serialize()).collect(Collectors.toList()));
+                            Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
+                            newCandidate.getValidations().update(candidatePath.resolve(BundleUpdateLog.VALIDATIONS_FILE));
+                            newVersionIsValid = newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
+                        }
+                    }
+
+                    if (newVersionIsValid) {
+                        ConfigurationBundleManager.promote();
+                    }
+
+                    LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
                             newVersionIsValid ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
                     ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionIsValid);
                     ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionIsValid);
