@@ -46,16 +46,16 @@ public class PluginsValidatorExtensionTest extends AbstractIMTest {
 
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the Plugins section that "
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section that "
                                                                                           + "cannot be found. Impossible to validate plugins."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.WARNING));
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the Plugins section "
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section "
                                                                                            + "that is empty or has an invalid yaml format. Impossible to validate plugins."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/invalid/"));

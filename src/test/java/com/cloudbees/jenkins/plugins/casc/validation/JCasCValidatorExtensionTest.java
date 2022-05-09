@@ -30,13 +30,13 @@ public class JCasCValidatorExtensionTest {
         Validation v = validations.get(0);
         assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that cannot be found. Impossible to validate the Jenkins configuration."));
+        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that cannot be found. Impossible to validate Jenkins Configuration as Code."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that is empty or has an invalid yaml format. Impossible to validate the Jenkins configuration."));
+        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that is empty or has an invalid yaml format. Impossible to validate Jenkins Configuration as Code."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-valid-jcasc-bundle"));
         assertThat("with-valid-jcasc-bundle: should not have errors or warnings", validations, empty());
