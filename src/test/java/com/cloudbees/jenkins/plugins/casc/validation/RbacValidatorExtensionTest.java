@@ -28,16 +28,16 @@ public class RbacValidatorExtensionTest {
 
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.RBAC_CONFIGURATION));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[RBAC] - The bundle.yaml file references rbac.yaml in the RBAC section that "
+        assertThat("missing-file-bundle: should be an error in RBAC", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("missing-file-bundle: should be an error in RBAC", v.getValidationCode(), is(ValidationCode.RBAC_CONFIGURATION));
+        assertThat("missing-file-bundle: should be an error in RBAC", v.getMessage(), is("[RBAC] - The bundle.yaml file references rbac.yaml in the RBAC section that "
                                                                                           + "cannot be found. Impossible to validate RBAC."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.RBAC_CONFIGURATION));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[RBAC] - The bundle.yaml file references rbac.yaml in the RBAC section that is "
+        assertThat("unparsed-file-bundle: should be an error in RBAC", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("unparsed-file-bundle: should be an error in RBAC", v.getValidationCode(), is(ValidationCode.RBAC_CONFIGURATION));
+        assertThat("unparsed-file-bundle: should be an error in RBAC", v.getMessage(), is("[RBAC] - The bundle.yaml file references rbac.yaml in the RBAC section that is "
                                                                                            + "empty or has an invalid yaml format. Impossible to validate RBAC."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/RbacValidatorExtensionTest/invalid-strategy/"));

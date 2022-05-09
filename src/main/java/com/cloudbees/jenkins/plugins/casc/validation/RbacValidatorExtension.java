@@ -1,25 +1,21 @@
 package com.cloudbees.jenkins.plugins.casc.validation;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.jenkinsci.plugins.variant.OptionalExtension;
-import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
-
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLoader;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.jenkins.plugins.casc.rbac.validation.RbacValidator;
+import org.jenkinsci.plugins.variant.OptionalExtension;
+import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Performs validations on RBAC in a running instance.
@@ -28,7 +24,7 @@ import com.cloudbees.jenkins.plugins.casc.rbac.validation.RbacValidator;
  * <li>All permissions defined for a role must exist in the instance. This will generate an error since when the role is created we get an error if the permissions do not exist.</li>
  * </ul>
  */
-@OptionalExtension(requirePlugins = "configuration-as-code")
+@OptionalExtension(requirePlugins = "cloudbees-casc-items-api")
 @SuppressRestrictedWarnings(value = { BundleLoader.class})
 public class RbacValidatorExtension extends AbstractValidator{
 

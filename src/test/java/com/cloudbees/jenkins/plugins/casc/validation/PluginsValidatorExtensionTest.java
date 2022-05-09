@@ -46,22 +46,22 @@ public class PluginsValidatorExtensionTest extends AbstractIMTest {
 
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/missing-file-bundle"));
         Validation v = validations.get(0);
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
-        assertThat("missing-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section that "
+        assertThat("missing-file-bundle: should be an error in plugins", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("missing-file-bundle: should be an error in plugins", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
+        assertThat("missing-file-bundle: should be an error in plugins", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section that "
                                                                                           + "cannot be found. Impossible to validate plugins."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bad-files/unparsed-file-bundle"));
         v = validations.get(0);
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
-        assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section "
+        assertThat("unparsed-file-bundle: should be an error in plugins", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("unparsed-file-bundle: should be an error in plugins", v.getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
+        assertThat("unparsed-file-bundle: should be an error in plugins", v.getMessage(), is("[PLUGINVAL] - The bundle.yaml file references plugins.yaml in the plugins section "
                                                                                            + "that is empty or has an invalid yaml format. Impossible to validate plugins."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/invalid/"));
         assertThat("We should get validation results containing an entry", validations, hasSize(1));
         assertThat("It should be a warning", validations.get(0).getLevel(), is(Validation.Level.WARNING));
-        assertThat("It should be a PLUGINS warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
+        assertThat("It should be a plugins warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
         assertThat("It should contain not valid plugins", validations.get(0).getMessage(), containsString("beer"));
         assertThat("It should not contain valid plugins", validations.get(0).getMessage(), not(anyOf(
                 containsString("cloudbees-casc-items-api"), containsString("credentials"), containsString("cloudbees-assurance"))));
@@ -75,7 +75,7 @@ public class PluginsValidatorExtensionTest extends AbstractIMTest {
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/invalid-with-catalog/"));
         assertThat("We should get validation results containing an entry", validations, hasSize(1));
         assertThat("It should be a warning", validations.get(0).getLevel(), is(Validation.Level.WARNING));
-        assertThat("It should be a PLUGINS warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
+        assertThat("It should be a plugins warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
         assertThat("It should contain not valid plugins", validations.get(0).getMessage(), containsString("chucknorris"));
         assertThat("It should not contain valid plugins", validations.get(0).getMessage(), not(anyOf(
                 containsString("cloudbees-casc-items-api"), containsString("credentials"), containsString("cloudbees-assurance"))));

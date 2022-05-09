@@ -1,29 +1,25 @@
 package com.cloudbees.jenkins.plugins.casc.validation;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.jenkinsci.plugins.variant.OptionalExtension;
-import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
-
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLoader;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
+import org.jenkinsci.plugins.variant.OptionalExtension;
+import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Performs validations on items to create / update in a running instance
  */
-@OptionalExtension(requirePlugins = "configuration-as-code")
+@OptionalExtension(requirePlugins = "cloudbees-assurance")
 @SuppressRestrictedWarnings(value = { BundleLoader.class})
 public class PluginCatalogValidatorExtension extends AbstractValidator{
 
