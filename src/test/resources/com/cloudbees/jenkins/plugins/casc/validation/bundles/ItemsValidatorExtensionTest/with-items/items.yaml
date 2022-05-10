@@ -1,0 +1,25 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+# Only freestyle and folders are allowed in test instance
+items:
+  - kind: "folder"
+    name: "folder"
+    displayName: "Folder"
+    description: "This should be created"
+  - kind: pipeline
+    name: "pipeline-job"
+    displayName: "Pipeline"
+    description: "This should be not be created, as pipelines are not available"
+  - kind: not-a-valid-type
+    name: failing
+    displayName: "None"
+    description: "This should raise a warning"
+  - kind: clientController
+    displayName: "client-controller"
+    name: "client-controller"
+    description: "This should not be created"
+  - kind: freeStyle
+    displayName: "Freestyle"
+    name: "freestyle"
+    description: "This should be created"

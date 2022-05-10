@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 
@@ -97,7 +98,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 403", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
 
         // WHEN there's a new version of the bundle
-        System.setProperty("core.casc.config.bundle", "src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog-v2");
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog-v2").toFile().getAbsolutePath());
         // THEN any user should get a 200 with update-available: true
 
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);

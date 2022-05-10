@@ -1,0 +1,6 @@
+id: "my-bundle"
+version: "1"
+apiVersion: "1"
+description: "With invalid plugins"
+plugins:
+  - "plugins.yaml"
