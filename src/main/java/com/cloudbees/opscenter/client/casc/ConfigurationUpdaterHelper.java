@@ -14,10 +14,12 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -170,7 +172,7 @@ public final class ConfigurationUpdaterHelper {
         JSONObject currentBundle = new JSONObject();
         currentBundle.accumulate("version", StringUtils.defaultString(bundleInfo.getBundleVersion(), "N/A"));
         JSONArray currentValidations = new JSONArray();
-        if (bundleInfo.getBundleVersion().equals(bundleInfo.getDownloadedBundleVersion())) {
+        if (Objects.equals(bundleInfo.getBundleVersion(), bundleInfo.getDownloadedBundleVersion())) {
             currentValidations.addAll(getValidations(bundleInfo.getBundleValidations()));
         }
         currentBundle.accumulate("validations", currentValidations);
@@ -214,4 +216,93 @@ public final class ConfigurationUpdaterHelper {
         return list;
     }
 
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint with detailed information about the update log.
+     * <strong>CasC disabled</strong>
+     * {
+     *     "update-log-status": "CASC_DISABLED"
+     * }
+     * <strong>Update log disabled</strong>
+     * {
+     *     "update-log-status": "DISABLED"
+     * }
+     * <strong>Update log enabled</strong>
+     * {
+     *     "update-log-status": "ENABLED",
+     *     "retention-policy": 10,
+     *     "versions": [
+     *         {
+     *             "version": "6",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00006"
+     *         },
+     *         {
+     *             "version": "5",
+     *             "date": "09 May 2022",
+     *             "errors": 1,
+     *             "warnings": 0,
+     *             "folder": "20220509_00005"
+     *         },
+     *         {
+     *             "version": "4",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00004"
+     *         },
+     *         {
+     *             "version": "3",
+     *             "date": "09 May 2022",
+     *             "errors": 1,
+     *             "warnings": 0,
+     *             "folder": "20220509_00003"
+     *         },
+     *         {
+     *             "version": "2",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00002"
+     *         },
+     *         {
+     *             "version": "1",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00001"
+     *         }
+     *     ]
+     * }
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     */
+    public static JSONObject getUpdateLog() {
+        // Using BundleVisualizationLink so information is the same as in UI
+        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+
+        JSONObject json = new JSONObject();
+
+        if (!bundleInfo.isBundleUsed()) {
+            json.accumulate("update-log-status", "CASC_DISABLED");
+        } else if (bundleInfo.withUpdateLog()) {
+            json.accumulate("update-log-status", "ENABLED");
+            json.accumulate("retention-policy", bundleInfo.getCurrentRetentionPolicy());
+            JSONArray logs = new JSONArray();
+            bundleInfo.getUpdateLog().forEach(updateLogRow -> {
+                JSONObject row = new JSONObject();
+                row.accumulate("version", updateLogRow.getVersion());
+                row.accumulate("date", new SimpleDateFormat("dd MMMM yyyy").format(updateLogRow.getDate()));
+                row.accumulate("errors", updateLogRow.getErrors());
+                row.accumulate("warnings", updateLogRow.getWarnings());
+                row.accumulate("folder", updateLogRow.getFolder());
+                logs.add(row);
+            });
+            json.accumulate("versions", logs);
+        } else {
+            json.accumulate("update-log-status", "DISABLED");
+        }
+
+        return json;
+    }
 }

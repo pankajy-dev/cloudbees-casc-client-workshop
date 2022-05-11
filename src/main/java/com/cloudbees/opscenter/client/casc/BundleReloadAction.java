@@ -172,4 +172,29 @@ public class BundleReloadAction implements RootAction {
 
         return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
     }
+
+    /**
+     * Return information about the update log
+     * <p>
+     * {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-update-log }
+     * Permission required: MANAGE (as UI)
+     * </p>
+     * @return 200 and a JSON object with the update log
+     */
+    @GET
+    @WebMethod(name = "casc-bundle-update-log")
+    public HttpResponse doGetBundleUpdateLog() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        try {
+            return new JsonHttpResponse(getBundleUpdateLog());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error reading the Bundle update log", e);
+            return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Visible for testing
+    JSONObject getBundleUpdateLog() {
+        return ConfigurationUpdaterHelper.getUpdateLog();
+    }
 }

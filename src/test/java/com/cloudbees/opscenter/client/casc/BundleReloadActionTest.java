@@ -1,41 +1,36 @@
 package com.cloudbees.opscenter.client.casc;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.Objects;
-import javax.servlet.http.HttpServletResponse;
-
+import com.cloudbees.jenkins.cjp.installmanager.AbstractIMTest;
+import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
+import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
+import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
+import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
+import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
-import hudson.cli.CLICommandInvoker;
-import org.junit.AfterClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.FlagRule;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-import nectar.plugins.rbac.strategy.RoleMatrixAuthorizationStrategyImpl;
-import net.sf.json.JSONObject;
-
+import hudson.cli.CLICommandInvoker;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.Permission;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
+import net.sf.json.JSONObject;
+import org.junit.AfterClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 
-import com.cloudbees.jenkins.cjp.installmanager.AbstractIMTest;
-import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
-import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
-import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
-import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
-import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
