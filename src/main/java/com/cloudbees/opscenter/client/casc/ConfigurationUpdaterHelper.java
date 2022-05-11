@@ -7,9 +7,14 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import hudson.ExtensionList;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -130,6 +135,84 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return filtered;
+    }
+
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * {
+     *     "update-available": true,
+     *     "versions": {
+     *         "current-bundle": {
+     *             "version": "2",
+     *             "validations": []
+     *         },
+     *         "new-version": {
+     *             "version": "5",
+     *             "valid": true,
+     *             "validations": [
+     *                 "WARNING - [CATALOGVAL] - More than one plugin catalog file used in zip-core-casc-1652255664849. Using only first read file."
+     *             ]
+     *         }
+     *     },
+     *     "update-type": "RELOAD"
+     * }
+     * @param update true if there is a new version available suitable for installation.
+     * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     */
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
+        JSONObject json = new JSONObject();
+        json.accumulate("update-available", update);
+
+        // Using BundleVisualizationLink so information is the same as in UI
+        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        JSONObject versionSummary = new JSONObject();
+
+        JSONObject currentBundle = new JSONObject();
+        currentBundle.accumulate("version", StringUtils.defaultString(bundleInfo.getBundleVersion(), "N/A"));
+        JSONArray currentValidations = new JSONArray();
+        if (bundleInfo.getBundleVersion().equals(bundleInfo.getDownloadedBundleVersion())) {
+            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations()));
+        }
+        currentBundle.accumulate("validations", currentValidations);
+
+        versionSummary.accumulate("current-bundle", currentBundle);
+        if (update || bundleInfo.isCandidateAvailable()) {
+            JSONObject newAvailable = new JSONObject();
+            final boolean valid = !bundleInfo.isCandidateAvailable();
+            newAvailable.accumulate("version", valid
+                    ? StringUtils.defaultString(bundleInfo.getDownloadedBundleVersion(), "N/A")
+                    : StringUtils.defaultString(bundleInfo.getCandidate().getVersion(), "N/A"));
+            newAvailable.accumulate("valid", valid);
+            BundleVisualizationLink.ValidationSection validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
+            JSONArray newValidations = new JSONArray();
+            newValidations.addAll(getValidations(validations));
+            newAvailable.accumulate("validations", newValidations);
+            versionSummary.accumulate("new-version", newAvailable);
+        }
+        json.accumulate("versions", versionSummary);
+
+        if (update && !bundleInfo.isCandidateAvailable()) {
+            if (isHotReload) {
+                json.accumulate("update-type", "RELOAD");
+            } else {
+                json.accumulate("update-type", "RESTART");
+            }
+        }
+
+        return json;
+    }
+
+    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs) {
+        List<String> list = new ArrayList<>();
+        if (vs.hasErrors()) {
+            list.addAll(vs.getErrors().stream().map(s -> Validation.Level.ERROR + " - " + s).collect(Collectors.toList()));
+        }
+        if (vs.hasWarnings()) {
+            list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
+        }
+
+        return list;
     }
 
 }
