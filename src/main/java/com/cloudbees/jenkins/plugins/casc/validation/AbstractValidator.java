@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.apache.commons.io.FileUtils;
@@ -152,7 +153,17 @@ public abstract class AbstractValidator implements ExtensionPoint {
         performValidations(ConfigurationBundleManager.getBundleFolder());
     }
 
-    private static void performValidations(Path path) throws InvalidBundleException {
+    /**
+     * Perform the validation from all the validator extensions loaded in the instance on the current located in a concrete path.
+     * If the bundle does not exist, then the validations are not executed.
+     * This method is thought to be used by the CLI and the HTTP Endpoint.
+     * @param path to find the bundle to validate
+     * @throws InvalidBundleException if any validator find a warning or error.
+     */
+    public static void performValidations(@NonNull Path path) throws InvalidBundleException {
+        if (!Files.exists(path)) {
+            return;
+        }
 
         List<Validation> validations = new ArrayList<>();
         for(AbstractValidator validator : ExtensionList.lookup(AbstractValidator.class)) {
