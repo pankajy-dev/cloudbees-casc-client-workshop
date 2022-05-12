@@ -3,16 +3,10 @@ package com.cloudbees.opscenter.client.casc.cli;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
-import hudson.Extension;
-import hudson.ExtensionList;
-import hudson.cli.CLICommand;
-
-import jenkins.model.Jenkins;
-
-import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import com.cloudbees.opscenter.client.casc.HotReloadAction;
-import net.sf.json.JSONObject;
+import hudson.Extension;
+import hudson.cli.CLICommand;
+import jenkins.model.Jenkins;
 
 @Extension
 public class BundleVersionCheckerCommand extends CLICommand {
@@ -46,27 +40,12 @@ public class BundleVersionCheckerCommand extends CLICommand {
                 reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
             }
 
-            stdout.println(createJson(update, reload));
+            stdout.println(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
         } catch (CheckNewBundleVersionException e) {
             stderr.println("Error checking the new bundle version: " + e.getMessage());
             return 1;
         }
         return 0;
-    }
-
-    private JSONObject createJson(boolean update, boolean reload) {
-        JSONObject json = new JSONObject();
-        json.accumulate("update-available", update);
-
-        if (update) {
-            if (reload) {
-                json.accumulate("update-type", "RELOAD");
-            } else {
-                json.accumulate("update-type", "RESTART");
-            }
-        }
-
-        return json;
     }
 
 }

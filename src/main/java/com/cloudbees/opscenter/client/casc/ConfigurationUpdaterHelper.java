@@ -7,12 +7,19 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import hudson.ExtensionList;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,4 +138,171 @@ public final class ConfigurationUpdaterHelper {
         return filtered;
     }
 
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * {
+     *     "update-available": true,
+     *     "versions": {
+     *         "current-bundle": {
+     *             "version": "2",
+     *             "validations": []
+     *         },
+     *         "new-version": {
+     *             "version": "5",
+     *             "valid": true,
+     *             "validations": [
+     *                 "WARNING - [CATALOGVAL] - More than one plugin catalog file used in zip-core-casc-1652255664849. Using only first read file."
+     *             ]
+     *         }
+     *     },
+     *     "update-type": "RELOAD"
+     * }
+     * @param update true if there is a new version available suitable for installation.
+     * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     */
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
+        JSONObject json = new JSONObject();
+        json.accumulate("update-available", update);
+
+        // Using BundleVisualizationLink so information is the same as in UI
+        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        JSONObject versionSummary = new JSONObject();
+
+        JSONObject currentBundle = new JSONObject();
+        currentBundle.accumulate("version", StringUtils.defaultString(bundleInfo.getBundleVersion(), "N/A"));
+        JSONArray currentValidations = new JSONArray();
+        if (Objects.equals(bundleInfo.getBundleVersion(), bundleInfo.getDownloadedBundleVersion())) {
+            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations()));
+        }
+        currentBundle.accumulate("validations", currentValidations);
+
+        versionSummary.accumulate("current-bundle", currentBundle);
+        if (update || bundleInfo.isCandidateAvailable()) {
+            JSONObject newAvailable = new JSONObject();
+            final boolean valid = !bundleInfo.isCandidateAvailable();
+            newAvailable.accumulate("version", valid
+                    ? StringUtils.defaultString(bundleInfo.getDownloadedBundleVersion(), "N/A")
+                    : StringUtils.defaultString(bundleInfo.getCandidate().getVersion(), "N/A"));
+            newAvailable.accumulate("valid", valid);
+            BundleVisualizationLink.ValidationSection validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
+            JSONArray newValidations = new JSONArray();
+            newValidations.addAll(getValidations(validations));
+            newAvailable.accumulate("validations", newValidations);
+            versionSummary.accumulate("new-version", newAvailable);
+        }
+        json.accumulate("versions", versionSummary);
+
+        if (update && !bundleInfo.isCandidateAvailable()) {
+            if (isHotReload) {
+                json.accumulate("update-type", "RELOAD");
+            } else {
+                json.accumulate("update-type", "RESTART");
+            }
+        }
+
+        return json;
+    }
+
+    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs) {
+        List<String> list = new ArrayList<>();
+        if (vs.hasErrors()) {
+            list.addAll(vs.getErrors().stream().map(s -> Validation.Level.ERROR + " - " + s).collect(Collectors.toList()));
+        }
+        if (vs.hasWarnings()) {
+            list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
+        }
+
+        return list;
+    }
+
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint with detailed information about the update log.
+     * <strong>CasC disabled</strong>
+     * {
+     *     "update-log-status": "CASC_DISABLED"
+     * }
+     * <strong>Update log disabled</strong>
+     * {
+     *     "update-log-status": "DISABLED"
+     * }
+     * <strong>Update log enabled</strong>
+     * {
+     *     "update-log-status": "ENABLED",
+     *     "retention-policy": 10,
+     *     "versions": [
+     *         {
+     *             "version": "6",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00006"
+     *         },
+     *         {
+     *             "version": "5",
+     *             "date": "09 May 2022",
+     *             "errors": 1,
+     *             "warnings": 0,
+     *             "folder": "20220509_00005"
+     *         },
+     *         {
+     *             "version": "4",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00004"
+     *         },
+     *         {
+     *             "version": "3",
+     *             "date": "09 May 2022",
+     *             "errors": 1,
+     *             "warnings": 0,
+     *             "folder": "20220509_00003"
+     *         },
+     *         {
+     *             "version": "2",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00002"
+     *         },
+     *         {
+     *             "version": "1",
+     *             "date": "09 May 2022",
+     *             "errors": 0,
+     *             "warnings": 0,
+     *             "folder": "20220509_00001"
+     *         }
+     *     ]
+     * }
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     */
+    public static JSONObject getUpdateLog() {
+        // Using BundleVisualizationLink so information is the same as in UI
+        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+
+        JSONObject json = new JSONObject();
+
+        if (!bundleInfo.isBundleUsed()) {
+            json.accumulate("update-log-status", "CASC_DISABLED");
+        } else if (bundleInfo.withUpdateLog()) {
+            json.accumulate("update-log-status", "ENABLED");
+            json.accumulate("retention-policy", bundleInfo.getCurrentRetentionPolicy());
+            JSONArray logs = new JSONArray();
+            bundleInfo.getUpdateLog().forEach(updateLogRow -> {
+                JSONObject row = new JSONObject();
+                row.accumulate("version", updateLogRow.getVersion());
+                row.accumulate("date", new SimpleDateFormat("dd MMMM yyyy").format(updateLogRow.getDate()));
+                row.accumulate("errors", updateLogRow.getErrors());
+                row.accumulate("warnings", updateLogRow.getWarnings());
+                row.accumulate("folder", updateLogRow.getFolder());
+                logs.add(row);
+            });
+            json.accumulate("versions", logs);
+        } else {
+            json.accumulate("update-log-status", "DISABLED");
+        }
+
+        return json;
+    }
 }

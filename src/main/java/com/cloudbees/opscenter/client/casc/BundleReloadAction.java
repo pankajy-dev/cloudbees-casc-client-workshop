@@ -1,27 +1,24 @@
 package com.cloudbees.opscenter.client.casc;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
-import javax.servlet.http.HttpServletResponse;
-
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.casc.CasCException;
+import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.model.RootAction;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.json.JsonHttpResponse;
 import org.kohsuke.stapler.verb.GET;
 import org.kohsuke.stapler.verb.POST;
-import net.sf.json.JSONObject;
 
-import hudson.Extension;
-import hudson.ExtensionList;
-import hudson.model.RootAction;
-
-import jenkins.model.Jenkins;
-
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.plugins.casc.CasCException;
+import javax.annotation.CheckForNull;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class BundleReloadAction implements RootAction {
@@ -169,16 +166,35 @@ public class BundleReloadAction implements RootAction {
                 return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
-        JSONObject json = new JSONObject().accumulate("update-available", update);
         if (update) {
             reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
-            if (reload) {
-                json.accumulate("update-type", "RELOAD");
-            } else {
-                json.accumulate("update-type", "RESTART");
-            }
         }
 
-        return new JsonHttpResponse(json);
+        return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
+    }
+
+    /**
+     * Return information about the update log
+     * <p>
+     * {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-update-log }
+     * Permission required: MANAGE (as UI)
+     * </p>
+     * @return 200 and a JSON object with the update log
+     */
+    @GET
+    @WebMethod(name = "casc-bundle-update-log")
+    public HttpResponse doGetBundleUpdateLog() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        try {
+            return new JsonHttpResponse(getBundleUpdateLog());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error reading the Bundle update log", e);
+            return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Visible for testing
+    JSONObject getBundleUpdateLog() {
+        return ConfigurationUpdaterHelper.getUpdateLog();
     }
 }
