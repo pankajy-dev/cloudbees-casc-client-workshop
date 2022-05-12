@@ -108,12 +108,6 @@ public class BundleValidatorCommandTest {
         assertThat("bundle.yaml is not a zip", result.returnCode(), is(3));
         assertThat("bundle.yaml is not a zip", result.stderr(), containsString("ERROR: Invalid zip file"));
 
-        result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("folder-bundle")))
-                .asUser(admin.getId()).invoke();
-        assertThat("bundle.yaml is not a zip", result.returnCode(), is(3));
-        assertThat("bundle.yaml is not a zip", result.stderr(), containsString("ERROR: Invalid zip file"));
-
         // Without descriptor
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("without-descriptor.zip")))
