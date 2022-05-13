@@ -7,11 +7,9 @@ import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
-import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.nio.file.Files;
@@ -29,8 +27,6 @@ public class BundleValidatorCommandTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
 
     private User admin;
     private User user;
@@ -55,22 +51,20 @@ public class BundleValidatorCommandTest {
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         user.addProperty(new ApiTokenProperty());
         user.getProperty(ApiTokenProperty.class).changeApiToken();
-
-        FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/").toFile(), tmp.getRoot());
     }
 
     @Test
     public void smokes() throws Exception {
         // Without permissions
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("valid-bundle.zip")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(user.getId()).invoke();
         assertThat("User user does not have permissions", result.returnCode(), is(6));
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
 
         // Valid without warnings
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("valid-bundle.zip")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(admin.getId()).invoke();
         assertThat("User admin should have permissions", result.returnCode(), is(0));
         JSONObject response = JSONObject.fromObject(result.stdout());
@@ -79,7 +73,7 @@ public class BundleValidatorCommandTest {
 
         // Valid but with warnings
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("only-with-warnings.zip")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/only-with-warnings.zip")))
                 .asUser(admin.getId()).invoke();
         assertThat("User admin should have permissions", result.returnCode(), is(0));
         response = JSONObject.fromObject(result.stdout());
@@ -89,7 +83,7 @@ public class BundleValidatorCommandTest {
 
         // No valid
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("invalid-bundle.zip")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/invalid-bundle.zip")))
                 .asUser(admin.getId()).invoke();
         assertThat("User admin should have permissions", result.returnCode(), is(0));
         response = JSONObject.fromObject(result.stdout());
@@ -103,16 +97,16 @@ public class BundleValidatorCommandTest {
 
         // Not a zip file
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("bundle.yaml")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/bundle.yaml")))
                 .asUser(admin.getId()).invoke();
         assertThat("bundle.yaml is not a zip", result.returnCode(), is(3));
         assertThat("bundle.yaml is not a zip", result.stderr(), containsString("ERROR: Invalid zip file"));
 
         // Without descriptor
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
-                .withStdin(Files.newInputStream(tmp.getRoot().toPath().resolve("without-descriptor.zip")))
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/without-descriptor.zip")))
                 .asUser(admin.getId()).invoke();
-        assertThat("bundle.yaml is not a zip", result.returnCode(), is(3));
-        assertThat("bundle.yaml is not a zip", result.stderr(), containsString("ERROR: Invalid bundle - Missing descriptor"));
+        assertThat("without-descriptor.zip should not have descriptor", result.returnCode(), is(3));
+        assertThat("without-descriptor.zip should not have descriptor", result.stderr(), containsString("ERROR: Invalid bundle - Missing descriptor"));
     }
 }

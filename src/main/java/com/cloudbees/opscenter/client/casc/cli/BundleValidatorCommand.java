@@ -2,7 +2,6 @@ package com.cloudbees.opscenter.client.casc.cli;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.cli.CLICommand;
@@ -30,8 +29,14 @@ public class BundleValidatorCommand extends CLICommand {
     }
 
     /**
-     * Validates a bundle. If validation goes as expected, {@link CLICommand#stdout} will display a JSON output following:
-     * TODO add formatted output
+     * Validates a bundle. If validation goes as expected, {@link CLICommand#stdout} will display a JSON output as following:
+     * {
+     *     "valid": false,
+     *     "validation-messages": [
+     *         "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
+     *         "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
+     *     ]
+     * }
      * @return
      *      <table>
      *      <caption>Validation result</caption>
@@ -45,16 +50,15 @@ public class BundleValidatorCommand extends CLICommand {
      * @throws AccessDeniedException If the user does not have {@link Jenkins#MANAGE} permission
      */
     @Override
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/756")
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         Path tempFolder = null;
         try {
             tempFolder = ConfigurationUpdaterHelper.createTemporaryFolder();
             Path bundleDir = null;
             try (BufferedInputStream in = new BufferedInputStream(stdin)) {
-                // Copy zip from stdin
+                // Copy zip from request
                 Path zipSrc = tempFolder.resolve("bundle.zip");
                 FileUtils.copyInputStreamToFile(in, zipSrc.toFile());
 
@@ -62,7 +66,6 @@ public class BundleValidatorCommand extends CLICommand {
                     throw new IllegalArgumentException("Invalid zip file");
                 }
 
-                // Unzip bundle - TODO See if possible to move to Helper
                 bundleDir = tempFolder.resolve("bundle");
                 FilePath zipFile = new FilePath(zipSrc.toFile());
                 FilePath dst = new FilePath(bundleDir.toFile());
@@ -71,7 +74,7 @@ public class BundleValidatorCommand extends CLICommand {
                 throw new IllegalArgumentException("Invalid zip file");
             }
 
-            if (bundleDir == null || !Files.exists(bundleDir)) {
+            if (!Files.exists(bundleDir)) {
                 throw new IOException("Error unzipping the bundle");
             }
 
