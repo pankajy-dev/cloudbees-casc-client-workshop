@@ -4,16 +4,39 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ContentBundleValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.DescriptorValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.FileSystemBundleValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.MultipleCatalogFilesValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PlainBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginCatalogInOCValidator;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
+import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -301,6 +324,182 @@ public final class ConfigurationUpdaterHelper {
             json.accumulate("versions", logs);
         } else {
             json.accumulate("update-log-status", "DISABLED");
+        }
+
+        return json;
+    }
+
+    // Bundle Validation CLI/Endpoint
+
+    /**
+     * Creates a temporary folder within JENKINS_HOME with permissions check (just rwx for the owner)
+     * @return Path to the temporary folder
+     * @throws IOException if the folder cannot be created
+     */
+    public static Path createTemporaryFolder() throws IOException {
+        return createTemporaryFolder(null);
+    }
+
+    /**
+     * Creates a temporary folder within JENKINS_HOME with permissions check (just rwx for the owner)
+     * @param prefix to add to the temporary folder
+     * @return Path to the temporary folder
+     * @throws IOException if the folder cannot be created
+     */
+    public static Path createTemporaryFolder(String prefix) throws IOException {
+        String folderName = StringUtils.isNotBlank(prefix) ? prefix + "-" + "cloudbees-casc-client-" : "cloudbees-casc-client-";
+        Path tempFolder = Jenkins.get().getRootDir().toPath().resolve(folderName + System.currentTimeMillis());
+        LOGGER.log(Level.FINER, "Creating temp folder at {0}", tempFolder);
+        return createDirectories(tempFolder);
+    }
+
+    /**
+     * Creates the folders until path with just rwx for the owner
+     * @param path Path to be created
+     * @return The path
+     * @throws IOException If there are issues creating the folder or setting permissions
+     */
+    public static Path createDirectories(Path path) throws IOException {
+        Set<String> supported = path.getFileSystem().supportedFileAttributeViews();
+
+        if (supported.contains("posix")) {
+            Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwx------");
+            FileAttribute<Set<PosixFilePermission>> attr =
+                    PosixFilePermissions.asFileAttribute(perms);
+
+            Files.createDirectories(path, attr);
+        } else if (!supported.contains("posix") && supported.contains("acl")){
+            Files.createDirectories(path);
+            setACLOwnerOnlyPermissions(path);
+        } else {
+            Files.createDirectories(path);
+            setBasicOwnerOnlyPermissions(path.toFile());
+        }
+
+        return path;
+    }
+
+    /**
+     * Set owner only ACL permissions to an already created file/folder.
+     * It doesn't check if ACL is supported or not.
+     * @param path The path to the folder/file
+     * @throws IOException if such an exception happens when getting the owner of the file.
+     */
+    private static void setACLOwnerOnlyPermissions(Path path) throws IOException {
+        AclFileAttributeView aclFileView = Files.getFileAttributeView(path, AclFileAttributeView.class);
+        final UserPrincipal owner = aclFileView.getOwner();
+
+        List<AclEntry> permissions = Lists.newArrayListWithCapacity(2);
+        permissions.add(AclEntry.newBuilder()
+                .setType(AclEntryType.ALLOW)
+                .setPrincipal(owner)
+                .setPermissions(AclEntryPermission.READ_ATTRIBUTES,
+                        AclEntryPermission.READ_NAMED_ATTRS,
+                        AclEntryPermission.READ_DATA,
+                        AclEntryPermission.WRITE_DATA,
+                        AclEntryPermission.WRITE_ATTRIBUTES,
+                        AclEntryPermission.WRITE_NAMED_ATTRS,
+                        AclEntryPermission.WRITE_OWNER,
+                        AclEntryPermission.APPEND_DATA,
+                        AclEntryPermission.DELETE,
+                        AclEntryPermission.DELETE_CHILD,
+                        AclEntryPermission.SYNCHRONIZE,
+                        AclEntryPermission.READ_ACL,
+                        AclEntryPermission.WRITE_ACL,
+                        AclEntryPermission.ADD_FILE,
+                        AclEntryPermission.ADD_SUBDIRECTORY,
+                        AclEntryPermission.LIST_DIRECTORY,
+                        AclEntryPermission.EXECUTE)
+                .build()
+        );
+
+        try {
+            UserPrincipal others = path.getFileSystem().getUserPrincipalLookupService()
+                    .lookupPrincipalByName("EVERYONE@");
+
+            permissions.add(AclEntry.newBuilder()
+                    .setType(AclEntryType.DENY)
+                    .setPrincipal(others)
+                    .setPermissions(AclEntryPermission.READ_ATTRIBUTES,
+                            AclEntryPermission.READ_DATA,
+                            AclEntryPermission.WRITE_DATA,
+                            AclEntryPermission.WRITE_ATTRIBUTES,
+                            AclEntryPermission.APPEND_DATA,
+                            AclEntryPermission.DELETE,
+                            AclEntryPermission.DELETE_CHILD,
+                            AclEntryPermission.SYNCHRONIZE)
+                    .build()
+            );
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "EVERYONE@ cannot be lookup for {0}", path);
+        }
+
+        aclFileView.setAcl(permissions);
+    }
+
+    /**
+     * Set owner only permissions for the file
+     * @param file The file
+     */
+    private static void setBasicOwnerOnlyPermissions(File file) {
+        if (!file.setExecutable(false, false) || !file.setExecutable(true, true)) {
+            // executable permission is not available in windows.
+            LOGGER.log(Level.FINE, "Probably the OS doesn't support executable permission on {0}", file);
+        }
+
+        if (!file.setWritable(false, false) || !file.setWritable(true, true)) {
+            LOGGER.log(Level.WARNING, "Writable permissions cannot be set on {0}", file);
+        }
+
+        if (!file.setReadable(false, false) || !file.setReadable(true, true)) {
+            LOGGER.log(Level.WARNING, "Readable permissions cannot be set on {0}", file);
+        }
+    }
+
+    /**
+     * Make a full validation of the bundle: structural and runtime validations
+     * @param bundleDir Path to the bundle to validate
+     * @return List of validation messages
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir) {
+        List<Validation> validations = new ArrayList<>();
+
+        // Structural validations
+        PlainBundle bundle = new PathPlainBundle(bundleDir);
+        BundleValidator validator = new BundleValidator.Builder().withBundle(bundle)
+                .addValidator(new FileSystemBundleValidator())
+                .addValidator(new DescriptorValidator())
+                .addValidator(new ContentBundleValidator())
+                .addValidator(new PluginCatalogInOCValidator())
+                .addValidator(new PluginsToInstallValidator())
+                .addValidator(new MultipleCatalogFilesValidator())
+                .build();
+        validations.addAll(validator.validate().getValidations());
+
+        // Runtime validations
+        try {
+            AbstractValidator.performValidations(bundleDir);
+        } catch (InvalidBundleException e) {
+            validations.addAll(e.getValidationResult());
+        }
+
+        // Send event to Segment
+        new BundleValidationErrorGatherer(validations).send();
+
+        return validations;
+    }
+
+    public static JSONObject getValidationJSON(@NonNull List<Validation> validations) {
+        JSONObject json = new JSONObject();
+
+        boolean valid = validations.stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
+        json.accumulate("valid", valid);
+
+        if (!validations.isEmpty()) {
+            JSONArray array = new JSONArray();
+            array.addAll(validations.stream().map(v -> v.toString()).collect(Collectors.toList()));
+            json.accumulate("validation-messages", array);
         }
 
         return json;

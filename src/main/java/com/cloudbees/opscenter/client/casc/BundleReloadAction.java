@@ -2,13 +2,17 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.FilePath;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.json.JsonHttpResponse;
 import org.kohsuke.stapler.verb.GET;
@@ -16,7 +20,11 @@ import org.kohsuke.stapler.verb.POST;
 
 import javax.annotation.CheckForNull;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -98,7 +106,7 @@ public class BundleReloadAction implements RootAction {
         String username = Jenkins.getAuthentication2().getName();
         if (tryReload()) {
             return new JSONObject().accumulate("reloaded", true);
-        }else {
+        } else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
         }
@@ -197,4 +205,90 @@ public class BundleReloadAction implements RootAction {
     JSONObject getBundleUpdateLog() {
         return ConfigurationUpdaterHelper.getUpdateLog();
     }
+
+    /**
+     * Validates a bundle. If validation goes as expected, the method will return a JSON output as following:
+     * {
+     *     "valid": false,
+     *     "validation-messages": [
+     *         "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
+     *         "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
+     *     ]
+     * }
+     * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
+     * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
+     * Permission required: MANAGE
+     * @return
+     *      <table>
+     *      <caption>Validation result</caption>
+     *      <tr><th>Code</th><th>Output</th></tr>
+     *      <tr><td>200</td><td>JSON output with the validation result</td></tr>
+     *      <tr><td>500</td><td>The input is not a valid zip.</td></tr>
+     *      <tr><td>403</td><td>User does not have {@link Jenkins#MANAGE} permission</td></tr>
+     *      </table>
+     */
+    @POST
+    @WebMethod(name = "casc-bundle-validate")
+    public HttpResponse doBundleValidate(StaplerRequest req) {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+
+        Path tempFolder = null;
+        try {
+            tempFolder = ConfigurationUpdaterHelper.createTemporaryFolder();
+            Path bundleDir = null;
+            try (BufferedInputStream in = new BufferedInputStream(req.getInputStream())) {
+                // Copy zip from stdin
+                Path zipSrc = tempFolder.resolve("bundle.zip");
+                FileUtils.copyInputStreamToFile(in, zipSrc.toFile());
+
+                if (!Files.exists(zipSrc)) {
+                    LOGGER.log(Level.WARNING, "Invalid zip file: Zip file cannot be found in HTTP request");
+                    JSONObject error = new JSONObject();
+                    error.accumulate("error", "Invalid zip file: Zip file cannot be found in HTTP request");
+                    return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+
+                bundleDir = tempFolder.resolve("bundle");
+                FilePath zipFile = new FilePath(zipSrc.toFile());
+                FilePath dst = new FilePath(bundleDir.toFile());
+                zipFile.unzip(dst);
+            } catch (IOException | InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Invalid zip file", e);
+                JSONObject error = new JSONObject();
+                error.accumulate("error", "Invalid zip file: Cannot be unzipped");
+                error.accumulate("details", e.getMessage());
+                return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+
+            if (!Files.exists(bundleDir)) {
+                LOGGER.log(Level.WARNING, "Invalid zip file. Bundle dir does not exist");
+                JSONObject error = new JSONObject();
+                error.accumulate("error", "Error unzipping the file");
+                return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+
+            if (!Files.exists(bundleDir.resolve("bundle.yaml"))) {
+                LOGGER.log(Level.WARNING, "Invalid bundle - Missing descriptor");
+                JSONObject error = new JSONObject();
+                error.accumulate("error", "Invalid bundle - Missing descriptor");
+                return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir);
+            return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations));
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error reading the zip file", e);
+            return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } finally {
+            if (tempFolder != null && Files.exists(tempFolder)) {
+                try {
+                    FileUtils.deleteDirectory(tempFolder.toFile());
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Error deleting temporary files", e);
+                    return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            }
+        }
+    }
+
 }
