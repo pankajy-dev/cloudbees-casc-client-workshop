@@ -157,6 +157,10 @@ public class ConfigurationBundleService {
     public void reload(ConfigurationBundle bundle) throws IOException, CasCException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
+            String jcascMergeStrategy = bundle.getJcascMergeStrategy();
+            if (jcascMergeStrategy != null) {
+                System.setProperty("casc.merge.strategy", jcascMergeStrategy);
+            }
             for (BundleReload bundleReload : BundleReload.all()) {
                 bundleReload.doReload(bundle);
             }
