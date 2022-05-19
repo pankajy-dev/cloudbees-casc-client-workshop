@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.awaitility.Awaitility.await;
@@ -74,6 +75,8 @@ public class HotReloadTest extends AbstractIMTest {
                     Jenkins.get().getPlugin("beer"), notNullValue());
 
             Assert.assertTrue(Jenkins.get().getPlugin("beer").getWrapper().isActive());
+            Assert.assertTrue(Jenkins.get().getNumExecutors() == 2);
+            Assert.assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
         }
     }
 
@@ -100,6 +103,8 @@ public class HotReloadTest extends AbstractIMTest {
             await().atMost(Duration.ofSeconds(120)).until(() ->
                     BeekeeperRemote.get().getStatus().getExtension(), nullValue());
 
+            Assert.assertTrue(Jenkins.get().getNumExecutors() == 2);
+            Assert.assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
         }
     }
 
@@ -117,7 +122,7 @@ public class HotReloadTest extends AbstractIMTest {
                 .setVersion("new")
                 .setCatalog(null)
                 .setItems(listOf(folder, "items/items.yaml"))
-                .setJcasc(listOf(folder, "jcasc/jenkins.yaml"))
+                .setJcasc(listOf(folder, "jcasc/01_jenkins.yaml", "jcasc/02_jenkins.yaml"))
                 .setRbac(listOf(folder, "rbac/rbac.yaml"))
                 .setPlugins(plugins)
                 .build();
@@ -139,10 +144,11 @@ public class HotReloadTest extends AbstractIMTest {
                 .build();
     }
 
-    private List<TextFile> listOf(Path folder, String file) {
+    private List<TextFile> listOf(Path folder, String ... files) {
         List<TextFile> list = new ArrayList<>();
-        list.add(TextFile.of(folder.resolve(file)));
-
+        for (String file : files) {
+            list.add(TextFile.of(folder.resolve(file)));
+        }
         return list;
     }
 
