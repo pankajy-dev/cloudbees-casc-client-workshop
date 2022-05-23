@@ -14,7 +14,7 @@
         <j:when test="${validationObject.hasErrors()}">
             <j:set var="class_" value="alert-danger"/>
         </j:when>
-        <j:when test="${validationObject.hasErrors()}">
+        <j:when test="${validationObject.hasWarnings()}">
             <j:set var="class_" value="alert-warning"/>
         </j:when>
         <j:otherwise>
