@@ -35,9 +35,10 @@
                                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                             <div class="alert alert-info">
                                                 <div class="alert__body">
-                                                    <header>A new version of the <b>Configuration Bundle</b> is available
-                                                        <!--(version ${it.getUpdateVersion()})-->
-                                                    </header>
+                                                    <j:if test="${it.getUpdateVersion() != null}">
+                                                        <j:set var="version" value="(${it.getUpdateVersion()}) "/>
+                                                    </j:if>
+                                                    <header>A new version of the <b>Configuration Bundle ${version}</b>is available</header>
                                                     <p class="mb-0">You can perform a restart now to apply the new Configuration
                                                         Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
                                                     <j:if test="${it.isHotReloadable()}">

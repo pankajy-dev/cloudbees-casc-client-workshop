@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
 import jenkins.model.Jenkins;
@@ -50,6 +51,17 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
 
     public boolean isHotReloadable() {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+    }
+
+    /**
+     * @return the version of the incoming bundle.
+     */
+    @CheckForNull
+    public String getUpdateVersion(){
+        if(isUpdateAvailable()) {
+            return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+        }
+        return null;
     }
 
     @RequirePOST

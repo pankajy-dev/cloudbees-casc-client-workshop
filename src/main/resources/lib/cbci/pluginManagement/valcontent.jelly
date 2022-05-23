@@ -10,37 +10,43 @@
         </st:attribute>
     </st:documentation>
 
-    <j:if test="${not empty validationObject}" >
-        <j:if test="${not validationObject.isEmpty()}">
+    <j:choose>
+        <j:when test="${validationObject.hasErrors()}">
+            <j:set var="class_" value="alert-danger"/>
+        </j:when>
+        <j:when test="${validationObject.hasWarnings()}">
+            <j:set var="class_" value="alert-warning"/>
+        </j:when>
+        <j:otherwise>
+            <j:set var="class_" value="alert-info"/>
+        </j:otherwise>
+    </j:choose>
+    <div class="alert ${class_}">
+        <div class="alert__body">
+            <header>Validation output for version ${bundleVersion}</header>
             <j:choose>
-                <j:when test="${validationObject.hasErrors()}">
-                    <j:set var="class_" value="alert-danger"/>
-                </j:when>
-                <j:otherwise>
-                    <j:set var="class_" value="alert-warning"/>
-                </j:otherwise>
+            <j:when test="${not validationObject.isEmpty()}">
+                <j:if test="${not empty validationObject.warnings}">
+                    <p class="mb-0">Warnings (${validationObject.warnings.size()}):</p>
+                    <ul>
+                        <j:forEach items="${validationObject.warnings}" var="v">
+                            <li>${v}</li>
+                        </j:forEach>
+                    </ul>
+                </j:if>
+                <j:if test="${not empty validationObject.errors}">
+                    <p class="mb-0">Errors (${validationObject.errors.size()}):</p>
+                    <ul>
+                        <j:forEach items="${validationObject.errors}" var="v">
+                            <li>${v}</li>
+                        </j:forEach>
+                    </ul>
+                </j:if>
+            </j:when>
+            <j:otherwise>
+                <p class="mb-0">This version has no errors or warnings</p>
+            </j:otherwise>
             </j:choose>
-            <div class="alert ${class_}">
-                <div class="alert__body">
-                    <header>Validation output for version ${bundleVersion}</header>
-                    <j:if test="${not empty validationObject.warnings}">
-                        <p class="mb-0">Warnings (${validationObject.warnings.size()}):</p>
-                        <ul>
-                            <j:forEach items="${validationObject.warnings}" var="v">
-                                <li>${v}</li>
-                            </j:forEach>
-                        </ul>
-                    </j:if>
-                    <j:if test="${not empty validationObject.errors}">
-                        <p class="mb-0">Errors (${validationObject.errors.size()}):</p>
-                        <ul>
-                            <j:forEach items="${validationObject.errors}" var="v">
-                                <li>${v}</li>
-                            </j:forEach>
-                        </ul>
-                    </j:if>
-                </div>
-            </div>
-        </j:if>
-    </j:if>
+        </div>
+    </div>
 </j:jelly>
