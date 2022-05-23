@@ -8,7 +8,10 @@
                 <f:submit name="restart" value="Safe Restart"/>
                 <j:if test="${it.isHotReloadable()}"><f:submit name="reload" value="Reload Configuration"/></j:if>
             </form>
-            <header>A new version of the <b>Configuration Bundle</b> is available.</header>
+            <j:if test="${it.getUpdateVersion() != null}">
+                <j:set var="version" value="(${it.getUpdateVersion()}) "/>
+            </j:if>
+            <header>A new version of the <b>Configuration Bundle ${version}</b> is available.</header>
             <p>You can perform a restart now to apply the new Configuration Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
             <j:if test="${it.isHotReloadable()}"><p>You can also apply the new Configuration Bundle without restarting, using the "Reload Configuration" button.</p></j:if>
         </div>
