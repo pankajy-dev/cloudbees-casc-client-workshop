@@ -67,8 +67,8 @@ public final class ConfigurationUpdaterHelper {
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
-                BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
 
                     if (newVersionIsValid) {
@@ -90,7 +90,8 @@ public final class ConfigurationUpdaterHelper {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath);
                             ConfigurationStatus.INSTANCE.setChangesInNewVersion(result);
-                        } catch (IOException e) {
+                        } catch (IllegalArgumentException | IOException e) {
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                             LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
                         }
 
@@ -103,8 +104,10 @@ public final class ConfigurationUpdaterHelper {
                         }
                     } else {
                         // Send validation errors from invalid candidate
-                        List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
-                        new BundleValidationErrorGatherer(validations).send();
+                        if (newCandidate != null) {
+                            List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                            new BundleValidationErrorGatherer(validations).send();
+                        }
                     }
 
                     LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
@@ -130,6 +133,7 @@ public final class ConfigurationUpdaterHelper {
                 } else {
                     // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
                     // accessing the first time to Bundle update tab
+                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     ConfigurationStatus.INSTANCE.setCandidateAvailable(newCandidate != null);
                 }
             }

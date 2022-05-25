@@ -3,7 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
@@ -61,7 +61,7 @@ public enum ConfigurationStatus {
      * Set the availability of a new version of the configuration bundle.
      * @param updateAvailable boolean for setting the update availability.
      */
-    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setUpdateAvailable(boolean updateAvailable) {
         this.updateAvailable = updateAvailable;
     }
@@ -78,7 +78,7 @@ public enum ConfigurationStatus {
      * Set the existence of a new version that has been rejected.
      * @param candidateAvailable boolean for setting the candidate availability.
      */
-    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setCandidateAvailable(boolean candidateAvailable) {
         this.candidateAvailable = candidateAvailable;
     }
@@ -111,7 +111,7 @@ public enum ConfigurationStatus {
      * Set the version of the current bundle before downloading a new version
      * @param outdatedVersion null if there is no new version
      */
-    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedVersion(@CheckForNull String outdatedVersion) {
         this.outdatedVersion = outdatedVersion;
     }
@@ -127,7 +127,7 @@ public enum ConfigurationStatus {
      * Set if an error happened when the new version of the bundle was checked or downloaded.
      * @param errorInNewVersion true if an error happened when the new version of the bundle was checked or downloaded. false otherwise.
      */
-    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorInNewVersion(boolean errorInNewVersion) {
         this.errorInNewVersion = errorInNewVersion;
     }
@@ -146,7 +146,7 @@ public enum ConfigurationStatus {
      * Set the error message
      * @param errorMessage null if errorInNewVersion is false
      */
-    @SuppressWarnings("ME_ENUM_FIELD_SETTER")
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
@@ -155,6 +155,7 @@ public enum ConfigurationStatus {
      * Set the result of comparing the new available version to the current version
      * @param changesInNewVersion
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setChangesInNewVersion(BundleComparator.Result changesInNewVersion) {
         this.changesInNewVersion = changesInNewVersion;
     }
