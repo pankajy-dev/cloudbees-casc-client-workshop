@@ -1,0 +1,9 @@
+type: "plugin-catalog"
+version: "1"
+name: "java-catalog"
+displayName: "Java Testing Catalog"
+configurations:
+- description: "Assembla"
+  includePlugins:
+    my-jenkins-plugin:
+      url: "https://nexus3.beescloud.com/repository/maven-releases/io/jenkins/plugins/my-jenkins-plugin/1.1/my-jenkins-plugin-1.1.hpi"

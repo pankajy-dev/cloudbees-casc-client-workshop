@@ -1,0 +1,11 @@
+removeStrategy:
+  rbac: "sync"
+
+roles:
+  - permissions:
+      - hudson.model.Hudson.Administer
+    name: administer
+  - filterable: 'true'
+    permissions:
+      - hudson.model.Hudson.Read
+    name: browser

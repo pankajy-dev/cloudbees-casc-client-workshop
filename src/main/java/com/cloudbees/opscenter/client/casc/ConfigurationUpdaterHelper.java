@@ -15,6 +15,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginCatalogInO
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -62,11 +63,12 @@ public final class ConfigurationUpdaterHelper {
             ConfigurationStatus.INSTANCE.setErrorMessage(null);
             if (ConfigurationBundleManager.isSet()) {
                 ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
+                ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+                BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
-                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
 
                     if (newVersionIsValid) {
@@ -84,6 +86,14 @@ public final class ConfigurationUpdaterHelper {
                     }
 
                     if (newVersionIsValid) {
+                        try {
+                            Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
+                            BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath);
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(result);
+                        } catch (IOException e) {
+                            LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
+                        }
+
                         ConfigurationBundleManager.promote();
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
@@ -120,7 +130,6 @@ public final class ConfigurationUpdaterHelper {
                 } else {
                     // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
                     // accessing the first time to Bundle update tab
-                    BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     ConfigurationStatus.INSTANCE.setCandidateAvailable(newCandidate != null);
                 }
             }

@@ -1,0 +1,21 @@
+apiVersion: "1"
+id: "my-config-bundle"
+description: "This is a config bundle"
+version: "1"
+plugins:
+  - "plugins2.yaml"
+  - "plugins3.yaml"
+jcasc:
+  - "jenkins.yaml"
+  - "tool.yaml"
+catalog:
+  - "plugin-catalog.yaml"
+items:
+  - "items2.yaml"
+  - "items3.yaml"
+rbac:
+  - "rbac2.yaml"
+  - "rbac3.yaml"
+variables:
+  - "variables2.yaml"
+  - "variables3.yaml"

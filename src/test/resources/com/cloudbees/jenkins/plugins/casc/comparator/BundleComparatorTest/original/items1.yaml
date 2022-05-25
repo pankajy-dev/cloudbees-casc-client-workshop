@@ -1,0 +1,8 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "my-folder"
+    description: "A folder"

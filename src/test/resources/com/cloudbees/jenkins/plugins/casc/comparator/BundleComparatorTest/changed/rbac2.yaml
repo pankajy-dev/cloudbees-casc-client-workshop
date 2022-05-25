@@ -1,0 +1,14 @@
+removeStrategy:
+  rbac: "sync"
+
+roles:
+  - filterable: 'true'
+    permissions:
+      - hudson.model.Hudson.Read
+      - hudson.model.Item.Configure
+    name: developer
+  - filterable: 'true'
+    permissions:
+      - hudson.model.Hudson.Read
+      - hudson.model.Item.Configure
+    name: other

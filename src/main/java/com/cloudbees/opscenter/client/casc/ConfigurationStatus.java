@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -42,6 +43,11 @@ public enum ConfigurationStatus {
      * Message after an error happened when the new version of the bundle was checked or downloaded.
      */
     private String errorMessage;
+
+    /**
+     * Result of comparing the new version available and the current version. Set only if the version is valid
+     */
+    private BundleComparator.Result changesInNewVersion;
 
     /**
      * Returns true if there is a new version available.
@@ -143,5 +149,22 @@ public enum ConfigurationStatus {
     @SuppressWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    /**
+     * Set the result of comparing the new available version to the current version
+     * @param changesInNewVersion
+     */
+    public void setChangesInNewVersion(BundleComparator.Result changesInNewVersion) {
+        this.changesInNewVersion = changesInNewVersion;
+    }
+
+    /**
+     * Get the result of comparing the new available version to the current version
+     * @return the result of comparing the new available version to the current version. It might be null.
+     */
+    @CheckForNull
+    public BundleComparator.Result getChangesInNewVersion() {
+        return this.changesInNewVersion;
     }
 }
