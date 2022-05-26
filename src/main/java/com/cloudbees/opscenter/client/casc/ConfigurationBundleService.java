@@ -161,8 +161,12 @@ public class ConfigurationBundleService {
             if (jcascMergeStrategy != null) {
                 System.setProperty("casc.merge.strategy", jcascMergeStrategy);
             }
-            for (BundleReload bundleReload : BundleReload.all()) {
-                bundleReload.doReload(bundle);
+            try {
+                BundleReload.reload(bundle);
+            } finally {
+                // If an error happens during the reload process and it has to happen again, let's force a full reload
+                // for security
+                ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
             }
         }
     }

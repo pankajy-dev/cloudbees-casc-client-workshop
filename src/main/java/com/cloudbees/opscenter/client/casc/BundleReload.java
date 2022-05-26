@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -39,10 +40,36 @@ public abstract class BundleReload implements ExtensionPoint {
     }
 
     /**
+     * Check if the bundle can be partially reloaded. If so, then only those sections with changes will be reloaded.
+     * If the differences between the new version and the current installed version cannot be calculated ({@link ConfigurationStatus#getChangesInNewVersion()} returns null)
+     * or if there are changes in the variables, then the partial reload is not allowed and a full reload is performed.
+     * @param bundle to reload
+     * @throws CasCException if an error happens when reloading a section
+     */
+    public static void reload(ConfigurationBundle bundle) throws CasCException {
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        boolean fullReload = comparisonResult == null || comparisonResult.getVariables().withChanges();
+        for (BundleReload bundleReload : BundleReload.all()) {
+            if (fullReload || bundleReload.isReloadable()) {
+                bundleReload.doReload(bundle);
+            }
+        }
+    }
+
+    /**
      * Reload the bundle section
      * @param bundle to reload
      */
     public abstract void doReload(ConfigurationBundle bundle) throws CasCException;
+
+    /**
+     * Method to check if the section has to be reloaded
+     * Thought to be overridden, returns true by default
+     * @return true if the section must be reloaded, false otherwise.
+     */
+    public boolean isReloadable() {
+        return true;
+    }
 
     /**
      * Reload / Install the plugins
@@ -80,6 +107,12 @@ public abstract class BundleReload implements ExtensionPoint {
             }
         }
 
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            return comparisonResult != null && comparisonResult.getPlugins().withChanges();
+        }
+
         private void updateDirectlyUpdateSites() {
             Jenkins.get().getUpdateCenter().getSites().stream().map(s -> s.updateDirectly()).collect(Collectors.toList()).stream().forEach(f -> {
                 try {
@@ -113,6 +146,14 @@ public abstract class BundleReload implements ExtensionPoint {
                     throw new CasCException("Configuration as Code items processing failed", e);
                 }
             }
+        }
+
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            boolean itemsHasChanges = comparisonResult != null && comparisonResult.getItems().withChanges();
+            boolean rbacHasChanges = comparisonResult != null && comparisonResult.getRbac().withChanges();
+            return itemsHasChanges || rbacHasChanges;
         }
     }
 

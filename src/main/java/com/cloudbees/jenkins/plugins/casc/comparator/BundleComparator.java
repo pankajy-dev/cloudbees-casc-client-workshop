@@ -58,10 +58,12 @@ public class BundleComparator {
             this.sameBundles = checkSameBundles();
         }
 
+        @NonNull
         public PathPlainBundle getOrigin() {
             return origin;
         }
 
+        @NonNull
         public PathPlainBundle getOther() {
             return other;
         }
@@ -70,26 +72,32 @@ public class BundleComparator {
             return sameBundles;
         }
 
+        @NonNull
         public SectionDiff getJcasc() {
             return jcasc;
         }
 
+        @NonNull
         public SectionDiff getItems() {
             return items;
         }
 
+        @NonNull
         public SectionDiff getRbac() {
             return rbac;
         }
 
+        @NonNull
         public SectionDiff getCatalog() {
             return catalog;
         }
 
+        @NonNull
         public SectionDiff getPlugins() {
             return plugins;
         }
 
+        @NonNull
         public SectionDiff getVariables() {
             return variables;
         }
