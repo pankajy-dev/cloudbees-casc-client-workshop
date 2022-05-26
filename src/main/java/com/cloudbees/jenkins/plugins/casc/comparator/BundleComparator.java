@@ -20,7 +20,15 @@ import java.util.stream.Collectors;
 // TODO See if it should go into another repository to be available in other plugins.
 public class BundleComparator {
 
-    public static Result compare(@NonNull Path origin, @NonNull Path other) throws IOException {
+    /**
+     * Compare two bundles
+     * @param origin Path to the reference bundle
+     * @param other Path to the bundle to compare to origin
+     * @return {@link Result} object with the result of the comparison
+     * @throws IOException if there is an error reading the bundles
+     * @throws IllegalArgumentException if any of the paths does not exist
+     */
+    public static Result compare(@NonNull Path origin, @NonNull Path other) throws IOException, IllegalArgumentException {
         if (!Files.exists(origin)) {
             throw new IllegalArgumentException(origin + " does not exist");
         }
@@ -34,6 +42,12 @@ public class BundleComparator {
         return new Result(originBundle, otherBundle);
     }
 
+    /**
+     * Class to store of the result of the comparison:
+     * - Compared bundles
+     * - boolean saying if the bundles are the same
+     * - differences found in every section
+     */
     public static class Result {
 
         private final PathPlainBundle origin;
@@ -58,45 +72,73 @@ public class BundleComparator {
             this.sameBundles = checkSameBundles();
         }
 
+        /**
+         * Return the reference bundle
+         */
         @NonNull
         public PathPlainBundle getOrigin() {
             return origin;
         }
 
+        /**
+         * Return the bundle compared to the reference
+         */
         @NonNull
         public PathPlainBundle getOther() {
             return other;
         }
 
+        /**
+         * Flag to say if the bundles are the same
+         * @return true if the bundles are the same, false if they are different
+         */
         public boolean sameBundles() {
             return sameBundles;
         }
 
+        /**
+         * Return the differences in the JCasC section
+         */
         @NonNull
         public SectionDiff getJcasc() {
             return jcasc;
         }
 
+        /**
+         * Return the differences in the items section
+         */
         @NonNull
         public SectionDiff getItems() {
             return items;
         }
 
+        /**
+         * Return the differences in the RBAC section
+         */
         @NonNull
         public SectionDiff getRbac() {
             return rbac;
         }
 
+        /**
+         * Return the differences in the plugin catalog section
+         */
         @NonNull
         public SectionDiff getCatalog() {
             return catalog;
         }
 
+        /**
+         * Return the differences in the plugins section
+         */
         @NonNull
         public SectionDiff getPlugins() {
             return plugins;
         }
 
+        /**
+         * Return the differences in the variables section
+         */
         @NonNull
         public SectionDiff getVariables() {
             return variables;
@@ -119,6 +161,13 @@ public class BundleComparator {
         }
     }
 
+    /**
+     * Class to store the differences in a section of the bundle:
+     * - boolean saying if there are differences
+     * - New files compared to reference bundle (Not found in origin)
+     * - Deleted files compared to reference bundle (Not found in the other bundle)
+     * - Changed files (files with the same name but different content)
+     */
     @SuppressRestrictedWarnings(value = { BundleLoader.class})
     public static class SectionDiff {
 
@@ -160,18 +209,30 @@ public class BundleComparator {
             }
         }
 
+        /**
+         * Flag to say if there are differences in this bundle section
+         */
         public boolean withChanges() {
             return !newFiles.isEmpty() || !deletedFiles.isEmpty() || !updatedFiles.isEmpty();
         }
 
+        /**
+         * Files found in the second bundle but not in the reference bundle
+         */
         public List<String> getNewFiles() {
             return Collections.unmodifiableList(newFiles);
         }
 
+        /**
+         * Files found in the reference bundle but not in the other bundle
+         */
         public List<String> getDeletedFiles() {
             return Collections.unmodifiableList(deletedFiles);
         }
 
+        /**
+         * Files with the same name but different content
+         */
         public List<String> getUpdatedFiles() {
             return Collections.unmodifiableList(updatedFiles);
         }
