@@ -1,0 +1,2 @@
+jenkins:
+  systemMessage: "New System message: ${JENKINS_DESCRIPTION}"

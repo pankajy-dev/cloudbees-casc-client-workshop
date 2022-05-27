@@ -88,7 +88,7 @@ public final class ConfigurationUpdaterHelper {
                     if (newVersionIsValid) {
                         try {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
-                            BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath);
+                            BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath.resolve("bundle"));
                             ConfigurationStatus.INSTANCE.setChangesInNewVersion(result);
                         } catch (IllegalArgumentException | IOException e) {
                             ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);

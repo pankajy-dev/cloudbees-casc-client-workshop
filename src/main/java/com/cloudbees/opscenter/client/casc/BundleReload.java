@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
 @Restricted(NoExternalUse.class)
 public abstract class BundleReload implements ExtensionPoint {
 
+    private static final Logger LOGGER = Logger.getLogger(BundleReload.class.getName());
+
     public static List<BundleReload> all() {
         return ExtensionList.lookup(BundleReload.class);
     }
@@ -51,6 +53,7 @@ public abstract class BundleReload implements ExtensionPoint {
         boolean fullReload = comparisonResult == null || comparisonResult.getVariables().withChanges();
         for (BundleReload bundleReload : BundleReload.all()) {
             if (fullReload || bundleReload.isReloadable()) {
+                LOGGER.fine("Reloading bundle section " + bundleReload.getClass().getName());
                 bundleReload.doReload(bundle);
             }
         }

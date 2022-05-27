@@ -13,40 +13,51 @@ import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
-
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.LoggerRule;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.jvnet.hudson.test.LoggerRule.recorded;
 
 public class HotReloadTest extends AbstractIMTest {
 
     @Rule
     public final CJPRule rule;
+    @Rule
+    public LoggerRule loggerRule;
+
     public HotReloadTest() {
         this.rule = new CJPRule(this.tmp);
+        this.loggerRule = new LoggerRule().record(BundleReload.class, Level.FINE);
     }
 
     @Override
@@ -60,23 +71,23 @@ public class HotReloadTest extends AbstractIMTest {
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle")
     @Test
     public void reloadTest() throws IOException, CasCException {
-        Assert.assertTrue(ConfigurationBundleManager.isSet());
+        assertTrue(ConfigurationBundleManager.isSet());
 
         ConfigurationBundle bundle = update(ConfigurationBundleManager.get().getConfigurationBundle());
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
 
         try (ACLContext a = ACL.as(User.getById("manager", false))) {
-            Assert.assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
-            Assert.assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
+            assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
 
             service.reloadIfIsHotReloadable(bundle);
 
             await().atMost(Duration.ofSeconds(120)).until(() ->
                     Jenkins.get().getPlugin("beer"), notNullValue());
 
-            Assert.assertTrue(Jenkins.get().getPlugin("beer").getWrapper().isActive());
-            Assert.assertTrue(Jenkins.get().getNumExecutors() == 2);
-            Assert.assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
+            assertTrue(Jenkins.get().getPlugin("beer").getWrapper().isActive());
+            assertTrue(Jenkins.get().getNumExecutors() == 2);
+            assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
         }
     }
 
@@ -85,14 +96,14 @@ public class HotReloadTest extends AbstractIMTest {
     @WithEnvelope(TwoPluginsV2dot289.class) //We need a fairly recent version
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog")
     public void pluginCatalogRemovalTest() throws IOException, CasCException {
-        Assert.assertTrue(ConfigurationBundleManager.isSet());
+        assertTrue(ConfigurationBundleManager.isSet());
 
         ConfigurationBundle bundle = noPluginsUpdate(ConfigurationBundleManager.get().getConfigurationBundle());
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
 
         try (ACLContext a = ACL.as(User.getById("manager", false))) {
-            Assert.assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
-            Assert.assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
+            assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
 
             Status status = BeekeeperRemote.get().getStatus();
 
@@ -103,9 +114,44 @@ public class HotReloadTest extends AbstractIMTest {
             await().atMost(Duration.ofSeconds(120)).until(() ->
                     BeekeeperRemote.get().getStatus().getExtension(), nullValue());
 
-            Assert.assertTrue(Jenkins.get().getNumExecutors() == 2);
-            Assert.assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
+            assertTrue(Jenkins.get().getNumExecutors() == 2);
+            assertTrue(Objects.equals(Jenkins.get().getSystemMessage(), "From 01_jenkins.yaml"));
         }
+    }
+
+    @Test
+    @Issue("BEE-15460")
+    @WithEnvelope(TwoPluginsV2dot289.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-1")
+    public void partialAndFullReload() throws Exception {
+        assertTrue(ConfigurationBundleManager.isSet());
+
+        // Variables, so full reload
+        loggerRule.capture(10); // Initialize capture
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-2").toFile().getAbsolutePath());
+        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        boolean reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
+        assertTrue(reloaded);
+        assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
+        assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName())));
+
+        // Only jcasc, so partial reload
+        loggerRule.capture(10); // Initialize capture
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-3").toFile().getAbsolutePath());
+        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
+        assertTrue(reloaded);
+        assertThat("Only JCasC has changed, thus partial reload. Expected JCasCReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
+        assertThat("Only JCasC has changed, thus partial reload. Not expected ItemsAndRbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName()))));
+
+        // Only items, so partial reload
+        loggerRule.capture(10); // Initialize capture
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-4").toFile().getAbsolutePath());
+        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
+        assertTrue(reloaded);
+        assertThat("Only items has changed, thus partial reload. Not expected JCasCReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName()))));
+        assertThat("Only items has changed, thus partial reload. Expected ItemsAndRbacReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName())));
     }
 
     @AfterClass
