@@ -133,7 +133,8 @@ public class HotReloadTest extends AbstractIMTest {
         boolean reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
-        assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName())));
+        assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
+        assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName())));
 
         // Only jcasc, so partial reload
         loggerRule.capture(10); // Initialize capture
@@ -142,7 +143,8 @@ public class HotReloadTest extends AbstractIMTest {
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Only JCasC has changed, thus partial reload. Expected JCasCReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
-        assertThat("Only JCasC has changed, thus partial reload. Not expected ItemsAndRbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName()))));
+        assertThat("Only JCasC has changed, thus partial reload. Not expected ItemsReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName()))));
+        assertThat("Only JCasC has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));
 
         // Only items, so partial reload
         loggerRule.capture(10); // Initialize capture
@@ -151,7 +153,8 @@ public class HotReloadTest extends AbstractIMTest {
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Only items has changed, thus partial reload. Not expected JCasCReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName()))));
-        assertThat("Only items has changed, thus partial reload. Expected ItemsAndRbacReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsAndRbacReload.class.getName())));
+        assertThat("Only items has changed, thus partial reload. Expected ItemsAndRbacReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
+        assertThat("Only items has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));
     }
 
     @AfterClass

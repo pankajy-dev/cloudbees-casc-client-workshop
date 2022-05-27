@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * Reload JCasC configuration.
  */
-@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 4)
+@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 3)
 public final class JCasCReload extends BundleReload {
 
     private static final Logger LOGGER = Logger.getLogger(JCasCReload.class.getName());

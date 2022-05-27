@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * Reload the plugin catalog
  */
 @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
-@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 5)
+@OptionalExtension(requirePlugins = {"cloudbees-assurance"}, ordinal = 5)
 public final class PluginCatalogReload extends BundleReload {
 
     private static final Logger LOGGER = Logger.getLogger(PluginCatalogReload.class.getName());

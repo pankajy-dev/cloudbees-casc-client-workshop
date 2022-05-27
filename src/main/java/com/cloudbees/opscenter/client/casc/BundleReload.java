@@ -78,7 +78,7 @@ public abstract class BundleReload implements ExtensionPoint {
      * Reload / Install the plugins
      */
     @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
-    @Extension(ordinal = 5)
+    @Extension(ordinal = 4)
     public static final class PluginsReload extends BundleReload {
 
         private static final Logger LOGGER = Logger.getLogger(PluginsReload.class.getName());
@@ -133,16 +133,44 @@ public abstract class BundleReload implements ExtensionPoint {
     /**
      * Reload Items and RBAC.
      */
-    @Extension(ordinal = 3)
-    public static final class ItemsAndRbacReload extends BundleReload {
+    @Extension(ordinal = 2)
+    public static final class RbacReload extends BundleReload {
 
-        private static final Logger LOGGER = Logger.getLogger(ItemsAndRbacReload.class.getName());
+        private static final Logger LOGGER = Logger.getLogger(RbacReload.class.getName());
 
         @Override
         public void doReload(ConfigurationBundle bundle) throws CasCException {
             if (bundle.hasItems() || bundle.getRbac() != null) {
                 try {
-                    Bootstrap.initialize();
+                    Bootstrap.initializeRbac();
+                } catch (IOException | CasCException e) {
+                    // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
+                    LOGGER.log(Level.SEVERE, "Configuration as Code RBAC processing failed: {0}", e);
+                    throw new CasCException("Configuration as Code RBAC processing failed", e);
+                }
+            }
+        }
+
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            return comparisonResult != null && comparisonResult.getRbac().withChanges();
+        }
+    }
+
+    /**
+     * Reload Items and RBAC.
+     */
+    @Extension(ordinal = 1)
+    public static final class ItemsReload extends BundleReload {
+
+        private static final Logger LOGGER = Logger.getLogger(ItemsReload.class.getName());
+
+        @Override
+        public void doReload(ConfigurationBundle bundle) throws CasCException {
+            if (bundle.hasItems() || bundle.getRbac() != null) {
+                try {
+                    Bootstrap.initializeItems();
                 } catch (IOException | CasCException e) {
                     // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
                     LOGGER.log(Level.SEVERE, "Configuration as Code items processing failed: {0}", e);
@@ -154,9 +182,7 @@ public abstract class BundleReload implements ExtensionPoint {
         @Override
         public boolean isReloadable() {
             BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
-            boolean itemsHasChanges = comparisonResult != null && comparisonResult.getItems().withChanges();
-            boolean rbacHasChanges = comparisonResult != null && comparisonResult.getRbac().withChanges();
-            return itemsHasChanges || rbacHasChanges;
+            return comparisonResult != null && comparisonResult.getItems().withChanges();
         }
     }
 
