@@ -32,8 +32,8 @@ public class BundleComparator {
         if (!Files.exists(origin)) {
             throw new IllegalArgumentException(origin + " does not exist");
         }
-        if (!Files.exists(origin)) {
-            throw new IllegalArgumentException(origin + " does not exist");
+        if (!Files.exists(other)) {
+            throw new IllegalArgumentException(other + " does not exist");
         }
 
         final PathPlainBundle originBundle = new PathPlainBundle(origin);
