@@ -15,6 +15,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginCatalogInO
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -62,6 +63,7 @@ public final class ConfigurationUpdaterHelper {
             ConfigurationStatus.INSTANCE.setErrorMessage(null);
             if (ConfigurationBundleManager.isSet()) {
                 ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
+                ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
@@ -84,6 +86,15 @@ public final class ConfigurationUpdaterHelper {
                     }
 
                     if (newVersionIsValid) {
+                        try {
+                            Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
+                            BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath.resolve("bundle"));
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(result);
+                        } catch (IllegalArgumentException | IOException e) {
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
+                            LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
+                        }
+
                         ConfigurationBundleManager.promote();
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
@@ -93,8 +104,10 @@ public final class ConfigurationUpdaterHelper {
                         }
                     } else {
                         // Send validation errors from invalid candidate
-                        List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
-                        new BundleValidationErrorGatherer(validations).send();
+                        if (newCandidate != null) {
+                            List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                            new BundleValidationErrorGatherer(validations).send();
+                        }
                     }
 
                     LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",

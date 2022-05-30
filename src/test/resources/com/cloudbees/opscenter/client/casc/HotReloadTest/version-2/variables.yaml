@@ -1,0 +1,4 @@
+variables:
+  - JENKINS_DESCRIPTION: 'Jenkins configured using CasC after version 2'
+  - JOB_NAME: 'test'
+  - JOB_DESCRIPTION: 'job description'

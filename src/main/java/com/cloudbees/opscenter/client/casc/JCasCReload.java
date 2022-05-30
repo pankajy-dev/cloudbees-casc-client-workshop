@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import io.jenkins.plugins.casc.ConfigurationAsCode;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import org.jenkinsci.plugins.variant.OptionalExtension;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * Reload JCasC configuration.
  */
-@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 4)
+@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 3)
 public final class JCasCReload extends BundleReload {
 
     private static final Logger LOGGER = Logger.getLogger(JCasCReload.class.getName());
@@ -31,6 +32,12 @@ public final class JCasCReload extends BundleReload {
             }
         }
 
+    }
+
+    @Override
+    public boolean isReloadable() {
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        return comparisonResult != null && comparisonResult.getJcasc().withChanges();
     }
 
     private void setCasCPath(Path jCasCFilePath) {

@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
 import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  * Reload the plugin catalog
  */
 @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
-@OptionalExtension(requirePlugins = {"configuration-as-code"}, ordinal = 5)
+@OptionalExtension(requirePlugins = {"cloudbees-assurance"}, ordinal = 5)
 public final class PluginCatalogReload extends BundleReload {
 
     private static final Logger LOGGER = Logger.getLogger(PluginCatalogReload.class.getName());
@@ -45,6 +46,12 @@ public final class PluginCatalogReload extends BundleReload {
             }
         }
         installCatalog(bundle.getEnvelopeExtension());
+    }
+
+    @Override
+    public boolean isReloadable() {
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        return comparisonResult != null && comparisonResult.getCatalog().withChanges();
     }
 
     /**

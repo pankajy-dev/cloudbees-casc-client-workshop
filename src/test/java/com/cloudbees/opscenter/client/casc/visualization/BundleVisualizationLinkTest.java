@@ -23,6 +23,8 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -88,9 +90,11 @@ public class BundleVisualizationLinkTest {
             BundleUpdateLog.BundleValidationYaml mockedValidations = mock(BundleUpdateLog.BundleValidationYaml.class);
             when(mockedValidations.getValidations()).thenReturn(Collections.emptyList());
             when(mockedCandidate.getValidations()).thenReturn(mockedValidations);
+            when(mockedCandidate.getFolder()).thenReturn(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "_00001");
             when(mockedUpdateLog.getCandidateBundle()).thenReturn(mockedCandidate);
             when(mockedConfManager.getUpdateLog()).thenReturn(mockedUpdateLog);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
+            configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::getBundleFolder).thenCallRealMethod();
 
             BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
             bundleVisualizationLink.doBundleUpdate();

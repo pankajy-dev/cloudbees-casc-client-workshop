@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -34,8 +35,28 @@ import java.util.stream.Collectors;
 @Restricted(NoExternalUse.class)
 public abstract class BundleReload implements ExtensionPoint {
 
+    private static final Logger LOGGER = Logger.getLogger(BundleReload.class.getName());
+
     public static List<BundleReload> all() {
         return ExtensionList.lookup(BundleReload.class);
+    }
+
+    /**
+     * Check if the bundle can be partially reloaded. If so, then only those sections with changes will be reloaded.
+     * If the differences between the new version and the current installed version cannot be calculated ({@link ConfigurationStatus#getChangesInNewVersion()} returns null)
+     * or if there are changes in the variables, then the partial reload is not allowed and a full reload is performed.
+     * @param bundle to reload
+     * @throws CasCException if an error happens when reloading a section
+     */
+    public static void reload(ConfigurationBundle bundle) throws CasCException {
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        boolean fullReload = comparisonResult == null || comparisonResult.getVariables().withChanges();
+        for (BundleReload bundleReload : BundleReload.all()) {
+            if (fullReload || bundleReload.isReloadable()) {
+                LOGGER.fine("Reloading bundle section " + bundleReload.getClass().getName());
+                bundleReload.doReload(bundle);
+            }
+        }
     }
 
     /**
@@ -45,10 +66,19 @@ public abstract class BundleReload implements ExtensionPoint {
     public abstract void doReload(ConfigurationBundle bundle) throws CasCException;
 
     /**
+     * Method to check if the section has to be reloaded
+     * Thought to be overridden, returns true by default
+     * @return true if the section must be reloaded, false otherwise.
+     */
+    public boolean isReloadable() {
+        return true;
+    }
+
+    /**
      * Reload / Install the plugins
      */
     @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
-    @Extension(ordinal = 5)
+    @Extension(ordinal = 4)
     public static final class PluginsReload extends BundleReload {
 
         private static final Logger LOGGER = Logger.getLogger(PluginsReload.class.getName());
@@ -80,6 +110,12 @@ public abstract class BundleReload implements ExtensionPoint {
             }
         }
 
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            return comparisonResult != null && comparisonResult.getPlugins().withChanges();
+        }
+
         private void updateDirectlyUpdateSites() {
             Jenkins.get().getUpdateCenter().getSites().stream().map(s -> s.updateDirectly()).collect(Collectors.toList()).stream().forEach(f -> {
                 try {
@@ -97,22 +133,56 @@ public abstract class BundleReload implements ExtensionPoint {
     /**
      * Reload Items and RBAC.
      */
-    @Extension(ordinal = 3)
-    public static final class ItemsAndRbacReload extends BundleReload {
+    @Extension(ordinal = 2)
+    public static final class RbacReload extends BundleReload {
 
-        private static final Logger LOGGER = Logger.getLogger(ItemsAndRbacReload.class.getName());
+        private static final Logger LOGGER = Logger.getLogger(RbacReload.class.getName());
 
         @Override
         public void doReload(ConfigurationBundle bundle) throws CasCException {
             if (bundle.hasItems() || bundle.getRbac() != null) {
                 try {
-                    Bootstrap.initialize();
+                    Bootstrap.initializeRbac();
+                } catch (IOException | CasCException e) {
+                    // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
+                    LOGGER.log(Level.SEVERE, "Configuration as Code RBAC processing failed: {0}", e);
+                    throw new CasCException("Configuration as Code RBAC processing failed", e);
+                }
+            }
+        }
+
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            return comparisonResult != null && comparisonResult.getRbac().withChanges();
+        }
+    }
+
+    /**
+     * Reload Items and RBAC.
+     */
+    @Extension(ordinal = 1)
+    public static final class ItemsReload extends BundleReload {
+
+        private static final Logger LOGGER = Logger.getLogger(ItemsReload.class.getName());
+
+        @Override
+        public void doReload(ConfigurationBundle bundle) throws CasCException {
+            if (bundle.hasItems() || bundle.getRbac() != null) {
+                try {
+                    Bootstrap.initializeItems();
                 } catch (IOException | CasCException e) {
                     // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
                     LOGGER.log(Level.SEVERE, "Configuration as Code items processing failed: {0}", e);
                     throw new CasCException("Configuration as Code items processing failed", e);
                 }
             }
+        }
+
+        @Override
+        public boolean isReloadable() {
+            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            return comparisonResult != null && comparisonResult.getItems().withChanges();
         }
     }
 
