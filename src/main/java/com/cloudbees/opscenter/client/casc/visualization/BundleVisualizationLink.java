@@ -290,6 +290,11 @@ public class BundleVisualizationLink extends ManagementLink {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
+    // used in jelly
+    public boolean withDiff() {
+        return ConfigurationStatus.INSTANCE.getChangesInNewVersion() != null;
+    }
+
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
