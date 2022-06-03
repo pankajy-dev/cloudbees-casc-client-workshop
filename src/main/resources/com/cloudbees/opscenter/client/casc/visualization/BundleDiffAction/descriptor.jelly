@@ -17,8 +17,8 @@
                         <j:if test="${not empty difftext}">
                             <table class="rounded-border diff-table">
                                 <tr class="diff-table-header">
-                                    <td class="header diff-table-border-bottom diff-table-border-right">Version ${currentVersion}</td>
-                                    <td class="header diff-table-border-bottom">Version ${newVersion}</td>
+                                    <td class="header diff-table-border-bottom diff-table-border-right">Current version (${currentVersion})</td>
+                                    <td class="header diff-table-border-bottom">New version (${newVersion})</td>
                                 </tr>
                                 <j:forEach items="${difftext}" var="line">
                                     <tr>
