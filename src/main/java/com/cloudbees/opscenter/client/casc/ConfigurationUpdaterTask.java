@@ -3,9 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.json.JsonHttpResponse;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
