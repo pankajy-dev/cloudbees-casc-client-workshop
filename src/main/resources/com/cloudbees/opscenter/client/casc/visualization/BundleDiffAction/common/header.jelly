@@ -1,0 +1,55 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" >
+    <l:header>
+        <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
+        <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
+        <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+        <style>
+            html{
+            scroll-behavior:smooth
+            }
+            .rounded-border {
+            border: 1px solid #ccc!important;
+            border-radius: 16px;
+            padding: 16px 16px;
+            }
+            .bundle-section {
+            padding-left: 1.6rem;
+            }
+            .arrow {
+            border: solid black;
+            border-width: 0 3px 3px 0;
+            display: inline-block;
+            padding: 3px;
+            transform: rotate(-45deg);
+            -webkit-transform: rotate(-45deg);
+            margin-right: 0.16rem;
+            }
+            .diff-table {
+            width: 100%;
+            }
+            .diff-table-header {
+            text-align: center;
+            }
+            .diff-table-border-bottom {
+            border-bottom: 1px solid #ccc!important;
+            }
+            .diff-table-border-right {
+            border-right: 1px outset #ccc!important;
+            }
+            .file-content {
+            padding: 0.5rem;
+            }
+            td.header {
+            width: 50%;
+            }
+            td.editOldInline span {
+            background-color: #FFEBE9
+            }
+            td.editNewInline span {
+            font-weight: bold;
+            background-color: #E6FFEC
+            }
+        </style>
+    </l:header>
+</j:jelly>

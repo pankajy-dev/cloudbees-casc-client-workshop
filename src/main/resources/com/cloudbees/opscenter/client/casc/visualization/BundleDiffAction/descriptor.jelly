@@ -1,0 +1,44 @@
+<?jelly escape-by-default='true'?>
+<!--
+    View of the CloudBees CasC Bundle where the user can see or download the bundle files.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler"
+         xmlns:cbcipm="/lib/cbci/pluginManagement"
+         xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleDiffAction/common">
+
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.ADMINISTER}">
+        <common:header/>
+        <common:back/>
+        <l:main-panel>
+            <common:layout>
+                <cbcipm:tabcontent class="plugin-management-content--margin">
+                    <div class="files-section">
+                        <j:set var="difftext" value="${it.getBundleDescriptorDifferences()}"/>
+                        <j:if test="${not empty difftext}">
+                            <table class="rounded-border diff-table">
+                                <tr class="diff-table-header">
+                                    <td class="header diff-table-border-bottom diff-table-border-right">Version ${currentVersion}</td>
+                                    <td class="header diff-table-border-bottom">Version ${newVersion}</td>
+                                </tr>
+                                <j:forEach items="${difftext}" var="line">
+                                    <tr>
+                                        <j:set var="classOld" value=""/>
+                                        <j:if test="${it.oldWithChanges(line.oldLine)}">
+                                            <j:set var="classOld" value=" editOldInline"/>
+                                        </j:if>
+                                        <td class="diff-table-border-right file-content${classOld}"><pre><span>${it.escapeLine(line.oldLine)}</span></pre></td>
+                                        <j:set var="classNew" value=""/>
+                                        <j:if test="${it.newWithChanges(line.newLine)}">
+                                            <j:set var="classNew" value=" editNewInline"/>
+                                        </j:if>
+                                        <td class="file-content${classNew}"><pre><span>${it.escapeLine(line.newLine)}</span></pre></td>
+                                    </tr>
+                                </j:forEach>
+                            </table>
+                        </j:if>
+                    </div>
+                </cbcipm:tabcontent>
+            </common:layout>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

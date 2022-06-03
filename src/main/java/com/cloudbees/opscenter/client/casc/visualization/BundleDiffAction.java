@@ -1,7 +1,6 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLoader;
-import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PathPlainBundle;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.github.difflib.text.DiffRow;
@@ -12,7 +11,6 @@ import hudson.ExtensionList;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.text.StringEscapeUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
@@ -21,7 +19,6 @@ import org.kohsuke.stapler.HttpResponses;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Action to display the differences between the current bundle and the new available version
@@ -51,17 +48,111 @@ public class BundleDiffAction implements RootAction {
     }
 
     /**
-     * Visualize the differences between current bundle and new version bundle available.
+     * Visualize the differences in the bundle descriptor between current bundle and new version bundle available.
      * @return 200 - Show the differences between bundle versions.
      *         403 - Not authorized. Manage permission required.
      *         404 - No differences available
      */
     public HttpResponse doIndex() {
+        return doDescriptor();
+    }
+
+    /**
+     * Visualize the differences in the bundle descriptor between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doDescriptor() {
         checkPermissions();
         if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
-        return HttpResponses.forwardToView(this, "index.jelly");
+        return HttpResponses.forwardToView(this, "descriptor.jelly");
+    }
+
+    /**
+     * Visualize the differences in the jcasc section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doJcasc() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "jcasc.jelly");
+    }
+
+    /**
+     * Visualize the differences in the RBAC section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doRbac() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "rbac.jelly");
+    }
+
+    /**
+     * Visualize the differences in the items section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doItems() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "items.jelly");
+    }
+
+    /**
+     * Visualize the differences in the plugin catalog section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doCatalog() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "catalog.jelly");
+    }
+
+    /**
+     * Visualize the differences in the jcasc section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doPlugins() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "plugins.jelly");
+    }
+
+    /**
+     * Visualize the differences in the jcasc section between current bundle and new version bundle available.
+     * @return 200 - Show the differences between bundle versions.
+     *         403 - Not authorized. Manage permission required.
+     *         404 - No differences available
+     */
+    public HttpResponse doVariables() {
+        checkPermissions();
+        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+            return HttpResponses.notFound();
+        }
+        return HttpResponses.forwardToView(this, "variables.jelly");
     }
 
     /**
