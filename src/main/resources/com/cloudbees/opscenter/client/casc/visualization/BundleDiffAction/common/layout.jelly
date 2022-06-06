@@ -1,0 +1,41 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement">
+
+    <div id="cbci-casc-bundle-visualization" class="cbci-casc-bundle-diff-visualization">
+        <j:set var="currentVersion" value="${it.currentVersion}" />
+        <j:set var="newVersion" value="${it.newVersion}" />
+        <j:set var="subtitle">Differences between the current version (${currentVersion}) and the new available version (${newVersion})</j:set>
+        <j:set var="diff" value="${it.bundleDiff}" />
+        <cbcipm:layout
+                feedbackHref="${%feedbackUrl}"
+                learnMoreHref="${%learnMoreUrl}"
+                logoSrc="${resURL}/plugin/cloudbees-casc-client/images/CasC-Export.svg"
+                logoAlt="${%logoAlt}"
+                title="Configuration as Code Bundle"
+                subtitle="${subtitle}"
+                sectionClass="doNotLimitWidth">
+            <cbcipm:tabbar>
+                <cbcipm:tab title="Bundle descriptor" href="${rootURL}/bundle-diff-visualization/descriptor" permission="${app.MANAGE}">Bundle descriptor</cbcipm:tab>
+                <j:if test="${diff.jcasc.withChanges()}">
+                    <cbcipm:tab title="Jenkins configuration as code" href="${rootURL}/bundle-diff-visualization/jcasc" permission="${app.MANAGE}">Jenkins configuration as code</cbcipm:tab>
+                </j:if>
+                <j:if test="${diff.rbac.withChanges()}">
+                    <cbcipm:tab title="RBAC configuration" href="${rootURL}/bundle-diff-visualization/rbac" permission="${app.MANAGE}">RBAC configuration</cbcipm:tab>
+                </j:if>
+                <j:if test="${diff.items.withChanges()}">
+                    <cbcipm:tab title="Items configuration" href="${rootURL}/bundle-diff-visualization/items" permission="${app.MANAGE}">Items configuration</cbcipm:tab>
+                </j:if>
+                <j:if test="${diff.catalog.withChanges()}">
+                    <cbcipm:tab title="Plugin catalog" href="${rootURL}/bundle-diff-visualization/catalog" permission="${app.MANAGE}">Plugin catalog</cbcipm:tab>
+                </j:if>
+                <j:if test="${diff.plugins.withChanges()}">
+                    <cbcipm:tab title="Plugin installation" href="${rootURL}/bundle-diff-visualization/plugins" permission="${app.MANAGE}">Plugin installation</cbcipm:tab>
+                </j:if>
+                <j:if test="${diff.variables.withChanges()}">
+                    <cbcipm:tab title="Variables" href="${rootURL}/bundle-diff-visualization/variables" permission="${app.MANAGE}">Variables</cbcipm:tab>
+                </j:if>
+            </cbcipm:tabbar>
+            <d:invokeBody/>
+        </cbcipm:layout>
+    </div>
+</j:jelly>

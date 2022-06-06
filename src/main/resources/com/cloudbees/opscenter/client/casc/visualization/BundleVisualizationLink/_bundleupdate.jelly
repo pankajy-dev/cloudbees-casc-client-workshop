@@ -46,6 +46,12 @@
                                                             restarting,
                                                             using the "Reload Configuration" button.</p>
                                                     </j:if>
+                                                    <j:if test="${it.withDiff()}">
+                                                        <p class="mb-0">See the differences with the current version.</p>
+                                                        <a id="diff" class="yui-button icon-button" href="${rootURL}/bundle-diff-visualization/descriptor">
+                                                            <i class="fa fa-columns" title="See differences"/>
+                                                        </a>
+                                                    </j:if>
                                                 </div>
                                                 <div class="alert__form">
                                                     <f:form method="post" action="act" name="act-update-bundle">

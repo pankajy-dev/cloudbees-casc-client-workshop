@@ -1,0 +1,21 @@
+<?jelly escape-by-default='true'?>
+<!--
+    View of the CloudBees CasC Bundle where the user can see or download the bundle files.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler"
+         xmlns:cbcipm="/lib/cbci/pluginManagement"
+         xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleDiffAction/common">
+
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}">
+        <common:header/>
+        <common:back/>
+        <l:main-panel>
+            <common:layout>
+                <cbcipm:tabcontent class="plugin-management-content--margin">
+                    <j:set var="diff" value="${it.bundleDiff}" />
+                    <common:diffsection differences="${diff.catalog}" />
+                </cbcipm:tabcontent>
+            </common:layout>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

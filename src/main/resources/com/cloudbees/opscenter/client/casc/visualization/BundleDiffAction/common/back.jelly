@@ -1,0 +1,8 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" >
+    <l:side-panel>
+        <l:tasks>
+            <l:task icon="up" href="${rootURL}/casc-bundle-export-ui/bundleUpdate" title="${%Back to Bundle update}" />
+        </l:tasks>
+    </l:side-panel>
+</j:jelly>

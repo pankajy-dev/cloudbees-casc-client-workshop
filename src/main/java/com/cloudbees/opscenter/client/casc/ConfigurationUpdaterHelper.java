@@ -63,11 +63,11 @@ public final class ConfigurationUpdaterHelper {
             ConfigurationStatus.INSTANCE.setErrorMessage(null);
             if (ConfigurationBundleManager.isSet()) {
                 ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
-                ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
 

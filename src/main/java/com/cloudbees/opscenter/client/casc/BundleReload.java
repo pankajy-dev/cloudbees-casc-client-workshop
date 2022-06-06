@@ -42,6 +42,15 @@ public abstract class BundleReload implements ExtensionPoint {
     }
 
     /**
+     * Performs a full reload of the bundle ignoring if the bundle can be partially reloaded.
+     * @param bundle to reload
+     * @throws CasCException if an error happens when reloading a section
+     */
+    public static void fullReload(ConfigurationBundle bundle) throws CasCException {
+        reload(bundle, true);
+    }
+
+    /**
      * Check if the bundle can be partially reloaded. If so, then only those sections with changes will be reloaded.
      * If the differences between the new version and the current installed version cannot be calculated ({@link ConfigurationStatus#getChangesInNewVersion()} returns null)
      * or if there are changes in the variables, then the partial reload is not allowed and a full reload is performed.
@@ -51,6 +60,10 @@ public abstract class BundleReload implements ExtensionPoint {
     public static void reload(ConfigurationBundle bundle) throws CasCException {
         BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         boolean fullReload = comparisonResult == null || comparisonResult.getVariables().withChanges();
+        reload(bundle, fullReload);
+    }
+
+    private static void reload(ConfigurationBundle bundle, boolean fullReload) throws CasCException {
         for (BundleReload bundleReload : BundleReload.all()) {
             if (fullReload || bundleReload.isReloadable()) {
                 LOGGER.fine("Reloading bundle section " + bundleReload.getClass().getName());

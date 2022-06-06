@@ -28,13 +28,19 @@
         <st:attribute name="displayError">
             Error message to display as an alert. Use it to show an error after submitting a form or any other interaction.
         </st:attribute>
+        <st:attribute name="class" >
+            Classes to add to the tag
+        </st:attribute>
+        <st:attribute name="sectionClass" >
+            Classes to add to the body of the tag
+        </st:attribute>
     </st:documentation>
     <f:prepareDatabinding />
 
     <j:set var="instance" value="${it}"/>
     <j:set var="descriptor" value="${it.descriptor}"/>
 
-    <div class="plugin-management" data-global-error="${displayError}">
+    <div class="plugin-management ${class}" data-global-error="${displayError}">
         <aside class="plugin-management-side-bar">
             <img class="plugin-management-side-bar__element
                         plugin-management-side-bar__element--logo"
@@ -44,7 +50,7 @@
             <a class="yui-button plugin-management-side-bar__element" target="_blank" href="${learnMoreHref}">${%Learn More}</a>
             <a class="yui-button plugin-management-side-bar__element" target="_blank" href="${feedbackHref}">${%Feedback}</a>
         </aside>
-        <section class="plugin-management-body">
+        <section class="plugin-management-body ${sectionClass}">
             <header class="plugin-management-header">
                 <h1 class="h2 plugin-management-header__title">${title}</h1>
                 <h3 class="h5 plugin-management-header__subtitle">${subtitle}</h3>

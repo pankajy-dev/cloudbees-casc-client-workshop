@@ -143,7 +143,7 @@ public class ConfigurationBundleService {
     public void reloadIfIsHotReloadable(ConfigurationBundle bundle) throws IOException, CasCException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         if(isHotReloadable(bundle)) {
-            reload(bundle);
+            reload(bundle, false);
         }
     }
 
@@ -155,6 +155,10 @@ public class ConfigurationBundleService {
      * @throws CasCException if the issue is related to bundle itself
      */
     public void reload(ConfigurationBundle bundle) throws IOException, CasCException {
+        reload(bundle, true);
+    }
+
+    private void reload(ConfigurationBundle bundle, boolean forceFull) throws IOException, CasCException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
             String jcascMergeStrategy = bundle.getJcascMergeStrategy();
@@ -162,10 +166,15 @@ public class ConfigurationBundleService {
                 System.setProperty("casc.merge.strategy", jcascMergeStrategy);
             }
             try {
-                BundleReload.reload(bundle);
+                if (forceFull) {
+                    BundleReload.fullReload(bundle);
+                } else {
+                    BundleReload.reload(bundle);
+                }
             } finally {
-                // If an error happens during the reload process and it has to happen again, let's force a full reload
-                // for security
+                // Differences are not valid anymore if:
+                //   1. bundle is reloaded
+                //   2. an error happens during the reload process and it has to happen again, so let's force a full reload for security
                 ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
             }
         }
