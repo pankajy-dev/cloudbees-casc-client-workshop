@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+/**
+ * Entry point of the styles of the Bundle Diff Visualization view.
+ */
+.cbci-casc-bundle-diff-visualization {
+    .rounded-border {
+        border: 1px solid #ccc!important;
+        border-radius: 16px;
+        padding: 16px 16px;
+    }
+
+    .bundle-section {
+        padding-left: 1.6rem;
+    }
+
+    .arrow {
+        border: solid black;
+        border-width: 0 3px 3px 0;
+        display: inline-block;
+        padding: 3px;
+        transform: rotate(-45deg);
+        -webkit-transform: rotate(-45deg);
+        margin-right: 0.16rem;
+    }
+
+    .diff-table {
+        width: 100%;
+    }
+
+    .diff-table-header {
+        text-align: center;
+    }
+
+    .diff-table-border-bottom {
+        border-bottom: 1px solid #ccc!important;
+    }
+
+    .diff-table-border-right {
+        border-right: 1px outset #ccc!important;
+    }
+
+    .file-content {
+        padding: 0.5rem;
+    }
+
+    td.header {
+        width: 50%;
+    }
+
+    td.editOldInline span {
+        background-color: #FFEBE9;
+    }
+
+    td.editNewInline span {
+        font-weight: bold;
+        background-color: #E6FFEC;
+    }
+}

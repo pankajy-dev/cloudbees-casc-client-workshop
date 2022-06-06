@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement">
 
-    <div id="cbci-casc-bundle-visualization">
+    <div id="cbci-casc-bundle-visualization" class="cbci-casc-bundle-diff-visualization">
         <j:set var="currentVersion" value="${it.currentVersion}" />
         <j:set var="newVersion" value="${it.newVersion}" />
         <j:set var="subtitle">Differences between the current version (${currentVersion}) and the new available version (${newVersion})</j:set>

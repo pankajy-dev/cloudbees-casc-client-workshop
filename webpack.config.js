@@ -15,6 +15,9 @@ module.exports = {
     "bundleVisualizationManagementLink": [
       path.join(__dirname, "src/main/less/bundleVisualizationManagementLink.less"),
     ],
+    "bundleDiffVisualization": [
+      path.join(__dirname, "src/main/less/bundleDiffVisualization.less")
+    ]
   },
   output: {
     path: path.join(__dirname, "src/main/webapp/jsbundles"),
