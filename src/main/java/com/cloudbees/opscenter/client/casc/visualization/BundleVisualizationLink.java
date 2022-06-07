@@ -53,7 +53,7 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     @Override
     public String getIconFileName() {
-        return "/plugin/cloudbees-casc-client/images/CasC-Export.svg";
+        return "/plugin/cloudbees-casc-client/images/CB_CasC_UpDown.svg";
     }
 
     @CheckForNull
