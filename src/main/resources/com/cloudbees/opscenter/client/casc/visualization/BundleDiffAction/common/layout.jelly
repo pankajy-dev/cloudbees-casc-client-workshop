@@ -9,7 +9,7 @@
         <cbcipm:layout
                 feedbackHref="${%feedbackUrl}"
                 learnMoreHref="${%learnMoreUrl}"
-                logoSrc="${resURL}/plugin/cloudbees-casc-client/images/CasC-Export.svg"
+                logoSrc="${resURL}/plugin/cloudbees-casc-client/images/CB_CasC_UpDown.svg"
                 logoAlt="${%logoAlt}"
                 title="Configuration as Code Bundle"
                 subtitle="${subtitle}"
