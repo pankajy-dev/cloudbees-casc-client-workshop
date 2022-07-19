@@ -142,7 +142,7 @@ public final class ConfigurationUpdaterHelper {
         } catch (RuntimeException e) {
             // Thrown by com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager#failBundleLoading
             // Generally RuntimeException > InvalidBundleException > Real cause
-            Throwable cause = e.getCause();
+            Throwable cause = e.getCause() != null ? e.getCause() : e; // If e is a NPE, then the cause is null
             if (cause instanceof InvalidBundleException) {
                 cause = cause.getCause();
             }
