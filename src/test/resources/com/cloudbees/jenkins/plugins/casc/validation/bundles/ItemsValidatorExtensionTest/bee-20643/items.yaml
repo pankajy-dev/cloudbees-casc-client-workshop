@@ -1,0 +1,22 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+# Only freestyle and folders are allowed in test instance
+items:
+  - kind: "organizationFolder"
+    name: "bee-20643-org-folder"
+    navigators:
+      - github:
+          repoOwner: "cloudbees"
+    groups:
+      - name: "Administrators"
+        members:
+          users:
+            - "simon"
+        roles:
+          - name: "administer"
+            grantedAt: "current"
+            propagates: "true"
+    filteredRoles:
+      - "developer"
+      - "reader"

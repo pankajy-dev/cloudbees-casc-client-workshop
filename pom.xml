@@ -45,10 +45,15 @@
         <type>pom</type>
       </dependency>
 
-      <dependency> <!-- TODO Remove when in URR BOM -->
+      <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
+        <groupId>com.cloudbees.jenkins.plugins</groupId>
+        <artifactId>cloudbees-casc-items-commons</artifactId>
+        <version>1.16</version>
+      </dependency>
+      <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.plugins</groupId>
         <artifactId>cloudbees-casc-items-api</artifactId>
-        <version>1.25</version>
+        <version>1.26</version>
       </dependency>
 
       <dependency>
@@ -205,6 +210,22 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- BEE-20643 -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>github-branch-source</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>branch-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-casc-items-controller</artifactId>
       <scope>test</scope>
     </dependency>
 
