@@ -1,0 +1,10 @@
+id: "my-bundle"
+version: "1"
+apiVersion: "1"
+description: "With invalid permissions"
+jcasc:
+  - "jenkins.yaml"
+rbac:
+  - "rbac.yaml"
+items:
+  - "items.yaml"

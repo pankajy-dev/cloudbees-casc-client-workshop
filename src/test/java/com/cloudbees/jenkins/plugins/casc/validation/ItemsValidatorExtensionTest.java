@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import hudson.ExtensionList;
@@ -16,6 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -50,5 +52,13 @@ public class ItemsValidatorExtensionTest {
         assertThat("It should contain all not valid items", validations.get(0).getMessage(), allOf(containsString("pipeline"), containsString("clientController"),
                                                                                               containsString("not-a-valid-type")));
         assertThat("It should not contain allowed items", validations.get(0).getMessage(), not(anyOf(containsString("freeStyle"), containsString("folder"))));
+    }
+
+    @Issue("BEE-20643")
+    @Test
+    public void computed_folder_without_disabled_does_not_throw_exception() {
+        ItemsValidatorExtension validator = ExtensionList.lookupSingleton(ItemsValidatorExtension.class);
+        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/ItemsValidatorExtensionTest/bee-20643"));
+        assertThat("Validation does not throw an NPE", validations, empty());
     }
 }
