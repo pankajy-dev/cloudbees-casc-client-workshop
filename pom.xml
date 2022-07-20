@@ -48,7 +48,7 @@
       <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.plugins</groupId>
         <artifactId>cloudbees-casc-items-commons</artifactId>
-        <version>1.16-20220720.093219-1</version>
+        <version>1.16</version>
       </dependency>
       <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
         <groupId>com.cloudbees.jenkins.plugins</groupId>
