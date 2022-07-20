@@ -226,6 +226,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-controller</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
