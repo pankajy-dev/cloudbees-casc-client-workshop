@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 /**
  * Configuration as Code Bundle Visualization.
  */
-@IgnoreJRERequirement // this is local to the controller, no need to get it signature checked.
+@IgnoreJRERequirement // this is local to the instance, no need to get it signature checked.
 @Restricted(NoExternalUse.class)
 @Extension
 public class BundleVisualizationLink extends ManagementLink {
@@ -153,7 +153,7 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     /**
-     * @return true if the current controller has been configured with a CasC bundle
+     * @return true if the current instance has been configured with a CasC bundle
      */
     //used in jelly
     public boolean isBundleUsed(){
@@ -329,13 +329,13 @@ public class BundleVisualizationLink extends ManagementLink {
             } else if (section.startsWith("jenkins") || section.startsWith("jcasc")) {
                 description = "Jenkins configuration as defined by OSS CasC";
             } if (section.startsWith("plugins")) {
-                description = "Plugins to install in the controller";
+                description = "Plugins to install in the instance";
             } else if (section.startsWith("catalog") || section.startsWith("plugin-catalog")) {
-                description = "The plugin catalog to install in the controller";
+                description = "The plugin catalog to install in the instance";
             } else if (section.startsWith("items")) {
-                description = "The items to create in the controller";
+                description = "The items to create in the instance";
             } else if (section.startsWith("rbac")) {
-                description = "The global groups and roles in the controller";
+                description = "The global groups and roles in the instance";
             }
             File current = bundleFolder.resolve(section).toFile();
             if (current.isDirectory()) {

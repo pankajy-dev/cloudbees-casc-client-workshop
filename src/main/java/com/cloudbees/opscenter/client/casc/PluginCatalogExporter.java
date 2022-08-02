@@ -151,7 +151,7 @@ public final class PluginCatalogExporter extends BundleExporter {
             JSONObject conf;
             if (configurations.size() >= 1) {
                 // new plugins will be added to the first configuration, this can be manually edited by the user later
-                // as a future improvement this could add the plugins to all configurations compatible with the current controller
+                // as a future improvement this could add the plugins to all configurations compatible with the current instance
                 conf = (JSONObject) configurations.get(0);
             } else {
                 conf = new JSONObject();
@@ -181,7 +181,7 @@ public final class PluginCatalogExporter extends BundleExporter {
     @NonNull
     @Override
     public String getDescription() {
-        return "The plugin catalog to install in the controller";
+        return "The plugin catalog to install in the instance";
     }
 
     @Override

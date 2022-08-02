@@ -9,7 +9,6 @@ import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnve
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
 import com.cloudbees.jenkins.plugins.casc.items.Items;
 import com.cloudbees.jenkins.plugins.casc.rbac.GlobalRbac;
-import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -191,7 +190,7 @@ public abstract class BundleExporter implements ExtensionPoint {
         @NonNull
         @Override
         public String getDescription() {
-            return "Plugins to install in the controller";
+            return "Plugins to install in the instance";
         }
 
         @Override
@@ -246,7 +245,7 @@ public abstract class BundleExporter implements ExtensionPoint {
         @NonNull
         @Override
         public String getDescription() {
-            return "The global groups and roles in the controller";
+            return "The global groups and roles in the instance";
         }
 
         @Override
@@ -290,7 +289,7 @@ public abstract class BundleExporter implements ExtensionPoint {
         @NonNull
         @Override
         public String getDescription() {
-            return "The items to create in the controller";
+            return "The items to create in the instance";
         }
 
         @Override
