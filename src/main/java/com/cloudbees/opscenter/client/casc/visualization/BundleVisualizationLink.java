@@ -25,8 +25,8 @@ import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -313,42 +313,47 @@ public class BundleVisualizationLink extends ManagementLink {
     // used in jelly
     @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. bundleFolder and subdirectories are checked, so listFiles cannot be null")
     public List<CasCFile> getEffectiveBundle() {
-        // Shouldn't be needed, but this check here does not hurt
-        if (!isBundleUsed()) {
-            return Collections.emptyList();
-        }
+        final List<CasCFile> files = new ArrayList<>();
 
-        List<CasCFile> files = new ArrayList<>();
-        final Path bundleFolder = ConfigurationBundleManager.getBundleFolder();
-        for (String section : bundleFolder.toFile().list()) {
-            String description = "";
-            if (section.startsWith("..")) {
-                continue; // https://stackoverflow.com/questions/50685385/kubernetes-config-map-symlinks-data-is-there-a-way-to-avoid-them
-            } else if (section.startsWith("bundle")) {
-                description = "The bundle descriptor";
-            } else if (section.startsWith("jenkins") || section.startsWith("jcasc")) {
-                description = "Jenkins configuration as defined by OSS CasC";
-            } if (section.startsWith("plugins")) {
-                description = "Plugins to install in the instance";
-            } else if (section.startsWith("catalog") || section.startsWith("plugin-catalog")) {
-                description = "The plugin catalog to install in the instance";
-            } else if (section.startsWith("items")) {
-                description = "The items to create in the instance";
-            } else if (section.startsWith("rbac")) {
-                description = "The global groups and roles in the instance";
+        try {
+            // Shouldn't be needed, but this check here does not hurt
+            if (isBundleUsed()) {
+                final Path bundleFolder = ConfigurationBundleManager.getBundleFolder();
+                Files.walk(bundleFolder).filter(Files::isRegularFile).forEach(path -> {
+                    final String firstElement = path.subpath(0, 1).toFile().getPath();
+                    // https://stackoverflow.com/questions/50685385/kubernetes-config-map-symlinks-data-is-there-a-way-to-avoid-them
+                    if (!firstElement.startsWith("..")) {
+                        final String fileName = bundleFolder.relativize(path).toFile().getPath();
+                        final String description = toDescription(fileName);
+                        files.add(new CasCFile(fileName, description));
+                    }
+                });
             }
-            File current = bundleFolder.resolve(section).toFile();
-            if (current.isDirectory()) {
-                for (String file : current.list()) {
-                    files.add(new CasCFile(section, file, description));
-                }
-            } else {
-                files.add(new CasCFile(null, section, description));
-            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error walking the tree directory", e);
         }
 
         Collections.sort(files);
+
         return files;
+    }
+
+    private String toDescription(final String section) {
+        if (section.startsWith("bundle")) {
+            return "The bundle descriptor";
+        } else if (section.startsWith("jenkins") || section.startsWith("jcasc")) {
+            return "Jenkins configuration as defined by OSS CasC";
+        } else if (section.startsWith("plugins")) {
+            return "Plugins to install in the instance";
+        } else if (section.startsWith("catalog") || section.startsWith("plugin-catalog")) {
+            return "The plugin catalog to install in the instance";
+        } else if (section.startsWith("items")) {
+            return "The items to create in the instance";
+        } else if (section.startsWith("rbac")) {
+            return "The global groups and roles in the instance";
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -358,22 +363,21 @@ public class BundleVisualizationLink extends ManagementLink {
      * Filename: File name in disk
      */
     public static final class CasCFile implements Comparable<CasCFile> {
-        private final String section;
         private final String filename;
         private final String description;
 
-        private CasCFile(String section, @NonNull String filename, @NonNull String description) {
-            this.section = section;
+        private CasCFile(@NonNull String filename, @NonNull String description) {
             this.filename = filename;
             this.description = description;
         }
 
         public String getFullname() {
-            return section == null ? filename : section + "/" + filename;
+            return filename;
         }
 
+        @Deprecated
         public String getSection() {
-            return section;
+            return null;
         }
 
         public String getFilename() {
@@ -386,16 +390,6 @@ public class BundleVisualizationLink extends ManagementLink {
 
         @Override
         public int compareTo(CasCFile casCFile) {
-            if (this.section == null && casCFile.section != null) {
-                return -1;
-            }
-            if (this.section != null && casCFile.section == null) {
-                return 1;
-            }
-            if (this.section != null && !this.section.equals(casCFile.section)) {
-                return this.section.compareTo(casCFile.section);
-            }
-
             return this.filename.compareTo(casCFile.filename);
         }
 
@@ -406,7 +400,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
         @Override
         public int hashCode() {
-            return Objects.hash(section, filename);
+            return Objects.hash(filename);
         }
 
         @Override
@@ -419,7 +413,7 @@ public class BundleVisualizationLink extends ManagementLink {
             }
 
             CasCFile that = (CasCFile) obj;
-            return Objects.equals(this.section, that.section) && Objects.equals(this.filename, that.filename);
+            return Objects.equals(this.filename, that.filename);
         }
     }
 

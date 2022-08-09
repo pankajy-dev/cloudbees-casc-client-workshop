@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -191,24 +192,23 @@ public class EffectiveBundleExport implements RootAction {
         // Visible for testing
         @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. bundleDirectory already checked")
         void addZipEntries(@NonNull ZipOutputStream zipFile) throws IOException {
-            addZipEntries(bundleDirectory, zipFile, true);
-        }
-
-        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. bundleDirectory already checked, so neither bundleDirectory nor list cannot be null")
-        private void addZipEntries(File originFolder, ZipOutputStream zipFile, boolean isBundleDirectory) throws IOException {
-            if (originFolder.isDirectory() && originFolder.list() != null) {
-                for (String file : originFolder.list()) {
-                    File current = new File(originFolder, file);
-                    String zipEntryName = current.isDirectory() ? file + "/" : (isBundleDirectory ? file : originFolder.getName() + "/" + file);
-                    ZipEntry entry = new ZipEntry(zipEntryName);
-                    zipFile.putNextEntry(entry);
-                    if (current.isDirectory()) {
-                        zipFile.closeEntry();
-                        addZipEntries(current, zipFile, false);
-                    } else {
-                        zipFile.write(FileUtils.readFileToByteArray(current));
-                    }
+            try {
+                if (bundleDirectory.isDirectory()) {
+                    final Path bundlePath = bundleDirectory.toPath();
+                    Files.walk(bundlePath).filter(Files::isRegularFile).forEach(path -> {
+                        try {
+                            final String zipEntryName = bundlePath.relativize(path).toFile().getPath();
+                            final ZipEntry entry = new ZipEntry(zipEntryName);
+                            zipFile.putNextEntry(entry);
+                            zipFile.write(FileUtils.readFileToByteArray(path.toFile()));
+                            zipFile.closeEntry();
+                        } catch (IOException e) {
+                            LOG.log(Level.WARNING, "Error walking the tree directory", e);
+                        }
+                    });
                 }
+            } catch (IOException e) {
+                LOG.log(Level.WARNING, "Error walking the tree directory", e);
             }
         }
     }
