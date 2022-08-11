@@ -9,6 +9,8 @@ import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
+import jenkins.util.Timer;
+
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpResponse;
@@ -129,7 +131,18 @@ public class BundleReloadAction implements RootAction {
             ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
             ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            service.reloadIfIsHotReloadable(bundle);
+            // Launching reload asynchronously
+            Timer.get().execute(() -> {
+                BundleReloadMonitor monitor = ExtensionList.lookupSingleton(BundleReloadMonitor.class);
+                monitor.setDisplay(false);
+                try {
+                    service.reloadIfIsHotReloadable(bundle);
+                    LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
+                } catch (IOException | CasCException ex){
+                    LOGGER.log(Level.WARNING,String.format("Error while executing hot reload %s", ex.getMessage()), ex);
+                    monitor.setDisplay(true);
+                }
+            });
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             return true;
@@ -146,7 +159,18 @@ public class BundleReloadAction implements RootAction {
             ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
             ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            service.reload(bundle);
+            // Launching reload asynchronously
+            Timer.get().execute(() -> {
+                BundleReloadMonitor monitor = ExtensionList.lookupSingleton(BundleReloadMonitor.class);
+                monitor.setDisplay(false);
+                try {
+                    service.reload(bundle);
+                    LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
+                } catch (IOException | CasCException ex){
+                    LOGGER.log(Level.WARNING,String.format("Error while executing force hot reload %s", ex.getMessage()), ex);
+                    monitor.setDisplay(true);
+                }
+            });
         }
         return false;
     }
