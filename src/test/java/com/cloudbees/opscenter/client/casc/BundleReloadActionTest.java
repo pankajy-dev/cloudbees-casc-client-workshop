@@ -21,16 +21,19 @@ import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
+import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.Issue;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
@@ -122,7 +125,50 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("The bundle was reloaded", response.getBoolean("reloaded"));
     }
 
+    @Test
+    @Issue("BEE-22192")
+    @WithEnvelope(TwoPluginsV2dot289.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle")
+    public void asynchronousReloadRaisesMonitorOnFailureTest() throws IOException {
+        initializeRealm(rule);
+        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
+        User plainUser = setSecurityRealmUser(rule, "user", Jenkins.READ);
+        CJPRule.WebClient wc = rule.createWebClient();
 
+        // Monitor should be disabled
+        assertThat("Monitor is disabled", Jenkins.get().getAdministrativeMonitor("com.cloudbees.opscenter.client.casc.BundleReloadMonitor").isActivated(), is(false));
+
+        // Setup a new failing version of the bundle
+        System.setProperty("core.casc.config.bundle",
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle-invalid").toFile().getAbsolutePath());
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
+        JSONObject response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("There's a new version available", response.getBoolean("update-available"));
+
+        // We should get a response indicating reload is requested
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("The bundle was reloaded", response.getBoolean("reloaded"));
+        // Wait for the bundle to reload and we should have a failure
+        Awaitility.await()
+                  .atMost(5, TimeUnit.SECONDS)
+                  .until(() -> Jenkins.get().getAdministrativeMonitor("com.cloudbees.opscenter.client.casc.BundleReloadMonitor").isActivated());
+
+        // Setup old working version of the bundle
+        System.setProperty("core.casc.config.bundle",
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
+
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("The bundle was reloaded", response.getBoolean("reloaded"));
+        // Wait for the bundle to reload and we should have removed the failure monitor
+        Awaitility.await()
+                  .atMost(5, TimeUnit.SECONDS)
+                  .until(() -> !Jenkins.get().getAdministrativeMonitor("com.cloudbees.opscenter.client.casc.BundleReloadMonitor").isActivated());
+    }
 
     private static void initializeRealm(CJPRule j){
         j.jenkins.setSecurityRealm(new HudsonPrivateSecurityRealm(false, false, null));
