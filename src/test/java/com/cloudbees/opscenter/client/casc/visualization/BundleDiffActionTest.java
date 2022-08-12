@@ -17,13 +17,17 @@ import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.beer12;
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.e;
+
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -82,6 +86,8 @@ public class BundleDiffActionTest extends AbstractCJPTest {
 
             // Apply new version - Diff should be removed
             ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
+            // Wait for async reload to complete
+            await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
             assertFalse("No new version, so without diff object", bundleUpdate.withDiff());
             assertNull("No new version, so without diff object", ConfigurationStatus.INSTANCE.getChangesInNewVersion());
             assertNull("No new version, so without diff object", diffAction.getBundleDiff());

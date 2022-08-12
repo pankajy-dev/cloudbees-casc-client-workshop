@@ -20,6 +20,7 @@ import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
+
 import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -110,7 +111,8 @@ public class HotReloadTest extends AbstractIMTest {
             assertThat(status.getExtension(), notNullValue());
 
             service.reloadIfIsHotReloadable(bundle);
-
+            // Wait for async reload to complete
+            await().atMost(Duration.ofSeconds(30)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
             await().atMost(Duration.ofSeconds(120)).until(() ->
                     BeekeeperRemote.get().getStatus().getExtension(), nullValue());
 
@@ -132,6 +134,8 @@ public class HotReloadTest extends AbstractIMTest {
         ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
         boolean reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
+        // Wait for async reload to complete
+        await().atMost(Duration.ofSeconds(30)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName())));
@@ -142,6 +146,8 @@ public class HotReloadTest extends AbstractIMTest {
         ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
+        // Wait for async reload to complete
+        await().atMost(Duration.ofSeconds(30)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Only JCasC has changed, thus partial reload. Expected JCasCReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
         assertThat("Only JCasC has changed, thus partial reload. Not expected ItemsReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName()))));
         assertThat("Only JCasC has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));
@@ -152,6 +158,8 @@ public class HotReloadTest extends AbstractIMTest {
         ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
+        // Wait for async reload to complete
+        await().atMost(Duration.ofSeconds(30)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Only items has changed, thus partial reload. Not expected JCasCReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName()))));
         assertThat("Only items has changed, thus partial reload. Expected ItemsAndRbacReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
         assertThat("Only items has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));

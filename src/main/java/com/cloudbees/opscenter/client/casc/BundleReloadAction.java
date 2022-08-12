@@ -8,6 +8,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
+import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
@@ -124,25 +125,17 @@ public class BundleReloadAction implements RootAction {
         }
     }
 
-    public boolean tryReload() throws IOException, CasCException{
+    public boolean tryReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            // Launching reload asynchronously
-            Timer.get().execute(() -> {
-                BundleReloadMonitor monitor = ExtensionList.lookupSingleton(BundleReloadMonitor.class);
-                monitor.setDisplay(false);
-                try {
-                    service.reloadIfIsHotReloadable(bundle);
-                    LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
-                } catch (IOException | CasCException ex){
-                    LOGGER.log(Level.WARNING,String.format("Error while executing hot reload %s", ex.getMessage()), ex);
-                    monitor.setDisplay(true);
-                }
-            });
+            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
+                LOGGER.log(Level.INFO, "Reload could not be done because another reload is already running");
+                return false;
+            }
+            launchAsynchronousReload(false);
+            LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             return true;
@@ -150,29 +143,45 @@ public class BundleReloadAction implements RootAction {
         return false;
     }
 
-    public boolean forceReload() throws IOException, CasCException{
+    public boolean forceReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             return tryReload();
         } else if (ConfigurationBundleManager.isSet() && !isHotReloadable()) {
             String username = Jenkins.getAuthentication2().getName();
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            // Launching reload asynchronously
-            Timer.get().execute(() -> {
-                BundleReloadMonitor monitor = ExtensionList.lookupSingleton(BundleReloadMonitor.class);
-                monitor.setDisplay(false);
-                try {
-                    service.reload(bundle);
-                    LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
-                } catch (IOException | CasCException ex){
-                    LOGGER.log(Level.WARNING,String.format("Error while executing force hot reload %s", ex.getMessage()), ex);
-                    monitor.setDisplay(true);
-                }
-            });
+            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
+                LOGGER.log(Level.INFO, "Force reload could not be done because another reload is already running");
+                return false;
+            }
+            launchAsynchronousReload(true);
+            LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
         }
         return false;
+    }
+
+    private void launchAsynchronousReload(boolean force) {
+        Timer.get().submit(new SafeTimerTask() {
+            @Override
+            protected void doRun() throws Exception {
+                ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+                ConfigurationStatus.INSTANCE.setErrorInNewVersion(false);
+                try {
+                    ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+                    if (force) {
+                        service.reload(bundle);
+                    } else {
+                        service.reloadIfIsHotReloadable(bundle);
+                    }
+                } catch (IOException | CasCException ex) {
+                    LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
+                    ConfigurationStatus.INSTANCE.setErrorInNewVersion(true);
+                } finally {
+                    ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
+                }
+            }
+        });
     }
 
     /**

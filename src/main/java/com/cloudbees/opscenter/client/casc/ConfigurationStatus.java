@@ -50,6 +50,11 @@ public enum ConfigurationStatus {
     private BundleComparator.Result changesInNewVersion;
 
     /**
+     * Flag that indicates if  there's a reload currently running
+     */
+    private boolean currentlyReloading;
+
+    /**
      * Returns true if there is a new version available.
      * @return True/False if there is/isn't a new version available.
      */
@@ -167,5 +172,22 @@ public enum ConfigurationStatus {
     @CheckForNull
     public BundleComparator.Result getChangesInNewVersion() {
         return this.changesInNewVersion;
+    }
+
+    /**
+     * Checks if a hot reload is currently running
+     * @return true if reload is running, false otherwise
+     */
+    public boolean isCurrentlyReloading() {
+        return currentlyReloading;
+    }
+
+    /**
+     * Sets the currently running parameter for a hot reload
+     * @param currentlyReloading
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public void setCurrentlyReloading(boolean currentlyReloading) {
+        this.currentlyReloading = currentlyReloading;
     }
 }

@@ -9,8 +9,6 @@ import hudson.model.AdministrativeMonitor;
 @Symbol("bundleReloadMonitor")
 public class BundleReloadMonitor extends AdministrativeMonitor {
 
-    boolean display = false;
-
     @Override
     public String getDisplayName() {
         return "Bundle hot reload errors monitor";
@@ -18,10 +16,6 @@ public class BundleReloadMonitor extends AdministrativeMonitor {
 
     @Override
     public boolean isActivated() {
-        return display;
-    }
-
-    public void setDisplay(boolean display) {
-        this.display = display;
+        return ConfigurationStatus.INSTANCE.isErrorInNewVersion();
     }
 }

@@ -3,14 +3,19 @@ package com.cloudbees.opscenter.client.casc.cli;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+
 import hudson.cli.CLICommandInvoker;
 import net.sf.json.JSONObject;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
+
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -40,6 +45,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertVersions(jsonResult, "version-2.zip", "1", empty(), "2", empty(), true);
         assertUpdateType(jsonResult, "version-2.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
+        // Wait for async reload to complete
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // Updated to version 3 - Without version - Ignored
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-3.zip").toFile().getAbsolutePath());
@@ -68,6 +75,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
         assertUpdateType(jsonResult, "version-5.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
+        // Wait for async reload to complete
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // Updated to version 6 - Invalid
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-6.zip").toFile().getAbsolutePath());
@@ -87,6 +96,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertVersions(jsonResult, "version-7.zip", "5", empty(), "7", empty(), true);
         assertUpdateType(jsonResult, "version-7.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
+        // Wait for async reload to complete
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // Updated to version 8 - Valid structure / Invalid jenkins.yaml only warnings
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-8.zip").toFile().getAbsolutePath());
@@ -97,6 +108,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), true);
         assertUpdateType(jsonResult, "version-8.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
+        // Wait for async reload to complete
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // Updated to version 9 - Valid
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-9.zip").toFile().getAbsolutePath());
@@ -107,6 +120,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertVersions(jsonResult, "version-9.zip", "8", empty(), "9", empty(), true);
         assertUpdateType(jsonResult, "version-9.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
+        // Wait for async reload to complete
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // Updated to version 10 - Valid structure / Invalid jenkins.yaml
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-10.zip").toFile().getAbsolutePath());
