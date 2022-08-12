@@ -140,7 +140,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
 
         // We should get a response indicating reload is requested
         // Wait for a "reloaded" answer, as previous async reload could still be running, we also test the new false answer when system is already reloading bundle
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                .until(() -> {
                    WebResponse call = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
                    boolean reloaded = call.getStatusCode() == HttpServletResponse.SC_OK && JSONObject.fromObject(call.getContentAsString()).getBoolean("reloaded");
@@ -150,7 +150,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
                    return reloaded;
                });
         // Wait for the bundle to reload and we should have a failure
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                .until(() -> ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
 
         // Setup old working version of the bundle
@@ -158,13 +158,13 @@ public class BundleReloadActionTest extends AbstractIMTest {
                            Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
 
         // Wait for a "reloaded" answer, as previous async reload could still be running
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                .until(() -> {
                    WebResponse call = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
                    return call.getStatusCode() == HttpServletResponse.SC_OK && JSONObject.fromObject(call.getContentAsString()).getBoolean("reloaded");
                });
         // Wait for the bundle to reload and we should have removed the failure monitor
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                .until(() -> !ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
     }
 
