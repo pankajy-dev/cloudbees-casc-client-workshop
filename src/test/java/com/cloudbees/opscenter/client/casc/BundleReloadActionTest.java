@@ -27,6 +27,7 @@ import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.Issue;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -127,30 +128,35 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("The bundle was reloaded", response.getBoolean("reloaded"));
 
+        await().atMost(60, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+    }
+
+    @Test
+    @WithEnvelope(TwoPluginsV2dot289.class)
+    @Issue("BEE-22192")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle")
+    public void asynchronousReloadRaisesMonitorTest() throws Exception {
+        initializeRealm(rule);
+        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
+        CJPRule.WebClient wc = rule.createWebClient();
+        wc.getOptions().setPrintContentOnFailingStatusCode(false);
+
         // Monitor should be disabled
         assertThat("Monitor is disabled", Jenkins.get().getAdministrativeMonitor("com.cloudbees.opscenter.client.casc.BundleReloadMonitor").isActivated(), is(false));
 
         // Setup a new failing version of the bundle
         System.setProperty("core.casc.config.bundle",
                            Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle-invalid").toFile().getAbsolutePath());
-        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
-        response = JSONObject.fromObject(resp.getContentAsString());
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
+        JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("There's a new version available", response.getBoolean("update-available"));
 
         // We should get a response indicating reload is requested
-        // Wait for a "reloaded" answer, as previous async reload could still be running, we also test the new false answer when system is already reloading bundle
-        await().atMost(60, TimeUnit.SECONDS)
-               .until(() -> {
-                   WebResponse call = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
-                   boolean reloaded = call.getStatusCode() == HttpServletResponse.SC_OK && JSONObject.fromObject(call.getContentAsString()).getBoolean("reloaded");
-                   if (!reloaded) {
-                       Thread.sleep(2000); // To avoid making lots of requests
-                   }
-                   return reloaded;
-               });
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
         // Wait for the bundle to reload and we should have a failure
-        await().atMost(60, TimeUnit.SECONDS)
+        await().atMost(30, TimeUnit.SECONDS)
                .until(() -> ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
 
         // Setup old working version of the bundle
@@ -158,14 +164,24 @@ public class BundleReloadActionTest extends AbstractIMTest {
                            Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
 
         // Wait for a "reloaded" answer, as previous async reload could still be running
-        await().atMost(60, TimeUnit.SECONDS)
-               .until(() -> {
-                   WebResponse call = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
-                   return call.getStatusCode() == HttpServletResponse.SC_OK && JSONObject.fromObject(call.getContentAsString()).getBoolean("reloaded");
-               });
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("Update was applied", response.getBoolean("reloaded"));
         // Wait for the bundle to reload and we should have removed the failure monitor
-        await().atMost(60, TimeUnit.SECONDS)
+        await().atMost(30, TimeUnit.SECONDS)
                .until(() -> !ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
+
+        // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running
+        // Setting failing bundle to make sure request takes some (small) time to complete
+        System.setProperty("core.casc.config.bundle",
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle-invalid").toFile().getAbsolutePath());
+        requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("Update was not applied", !response.getBoolean("reloaded"));
+        await().atMost(60, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
     }
 
     private static void initializeRealm(CJPRule j){
