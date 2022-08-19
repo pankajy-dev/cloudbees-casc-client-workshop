@@ -40,6 +40,11 @@ public enum ConfigurationStatus {
     private boolean errorInNewVersion;
 
     /**
+     * True indicates there was a problem during the bundle reload. Note this is the reload operation itself, not bundle downloading
+     */
+    private boolean errorInReload;
+
+    /**
      * Message after an error happened when the new version of the bundle was checked or downloaded.
      */
     private String errorMessage;
@@ -187,7 +192,19 @@ public enum ConfigurationStatus {
      * @param currentlyReloading
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setCurrentlyReloading(boolean currentlyReloading) {
+    public synchronized void setCurrentlyReloading(boolean currentlyReloading) {
         this.currentlyReloading = currentlyReloading;
+    }
+
+    public boolean isErrorInReload() {
+        return errorInReload;
+    }
+
+    /**
+     * Sets the error during reload flag in case a hot reload fails
+     * @param errorInReload
+     */
+    public void setErrorInReload(boolean errorInReload) {
+        this.errorInReload = errorInReload;
     }
 }

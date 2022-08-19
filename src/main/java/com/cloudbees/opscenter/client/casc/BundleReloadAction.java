@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -131,7 +132,7 @@ public class BundleReloadAction implements RootAction {
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
             if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
-                LOGGER.log(Level.INFO, "Reload could not be done because another reload is already running");
+                LOGGER.log(Level.INFO, "Reload could not be executed because another reload is already running");
                 return false;
             }
             launchAsynchronousReload(false);
@@ -161,14 +162,14 @@ public class BundleReloadAction implements RootAction {
     }
 
     private void launchAsynchronousReload(boolean force) {
-        Timer.get().submit(new SafeTimerTask() {
+        Timer.get().submit(new TimerTask (){
             @Override
-            protected void doRun() throws Exception {
+            public void run() {
                 ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
                 ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-                ConfigurationStatus.INSTANCE.setErrorInNewVersion(false);
+                ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+                ConfigurationStatus.INSTANCE.setErrorInReload(false);
                 try {
-                    ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
                     if (force) {
                         service.reload(bundle);
                     } else {
@@ -176,7 +177,7 @@ public class BundleReloadAction implements RootAction {
                     }
                 } catch (IOException | CasCException ex) {
                     LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
-                    ConfigurationStatus.INSTANCE.setErrorInNewVersion(true);
+                    ConfigurationStatus.INSTANCE.setErrorInReload(true);
                 } finally {
                     ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
                 }
