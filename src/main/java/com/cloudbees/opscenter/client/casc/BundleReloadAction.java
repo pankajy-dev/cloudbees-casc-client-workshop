@@ -216,6 +216,21 @@ public class BundleReloadAction implements RootAction {
     }
 
     /**
+     * Check if there's a reload operation running
+     * <p>
+     * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-reload-running }
+     * Permission required: READ
+     * </p>
+     * @return 200 and a boolean in-progress field indicating if a reload operation is running or not.
+     */
+    @GET
+    @WebMethod(name = "check-bundle-reload-running")
+    public HttpResponse doCheckReloadInProgress() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        return new JsonHttpResponse(new JSONObject().accumulate("in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
+    }
+
+    /**
      * Return information about the update log
      * <p>
      * {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-update-log }
