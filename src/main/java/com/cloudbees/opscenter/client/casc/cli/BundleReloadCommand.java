@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import org.kohsuke.args4j.Option;
 import org.kohsuke.stapler.json.JsonHttpResponse;
 
 import net.sf.json.JSONObject;
@@ -16,6 +17,9 @@ import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 public class BundleReloadCommand extends CLICommand {
 
     public final static String COMMAND_NAME = "casc-bundle-reload-bundle";
+
+    @Option(name="-a", aliases = {"--asynchronous-run"}, usage="Executes reload asynchronously, returning immediately")
+    private boolean async = false;
 
     @Override
     public String getShortDescription() { return "Reloads the CasC bundle.";}
@@ -38,7 +42,7 @@ public class BundleReloadCommand extends CLICommand {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         BundleReloadAction action = ExtensionList.lookupSingleton(BundleReloadAction.class);
-        JSONObject json = action.executeReload();
+        JSONObject json = action.executeReload(async);
 
         int retValue = 0;
         if (json.opt("cause") == null){

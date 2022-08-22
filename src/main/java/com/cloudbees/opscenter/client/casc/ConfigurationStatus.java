@@ -204,6 +204,7 @@ public enum ConfigurationStatus {
      * Sets the error during reload flag in case a hot reload fails
      * @param errorInReload
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorInReload(boolean errorInReload) {
         this.errorInReload = errorInReload;
     }
