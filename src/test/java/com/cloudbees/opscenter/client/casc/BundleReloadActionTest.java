@@ -23,6 +23,7 @@ import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
+import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -156,21 +158,26 @@ public class BundleReloadActionTest extends AbstractIMTest {
         resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
         response = JSONObject.fromObject(resp.getContentAsString());
         // Wait for the bundle to reload and we should have a failure
-        await().atMost(30, TimeUnit.SECONDS)
-               .until(() -> ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
+        Awaitility.setDefaultPollInterval(Duration.ofSeconds(1)); // To avoid flooding with requests
+        await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
+        assertThat("Monitor is activated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(true));
 
         // Setup old working version of the bundle
         System.setProperty("core.casc.config.bundle",
                            Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
 
-        // Wait for a "reloaded" answer, as previous async reload could still be running
+        // Wait for reload to complete
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
+        response = JSONObject.fromObject(resp.getContentAsString());
+        assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
+        assertThat("There's a new version available", response.getBoolean("update-available"));
         resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc);
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was applied", response.getBoolean("reloaded"));
         // Wait for the bundle to reload and we should have removed the failure monitor
-        await().atMost(30, TimeUnit.SECONDS)
-               .until(() -> !ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated());
+        await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
+        assertThat("Monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));
 
         // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running
         // Setting failing bundle to make sure request takes some (small) time to complete
@@ -181,7 +188,13 @@ public class BundleReloadActionTest extends AbstractIMTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was not applied", !response.getBoolean("reloaded"));
-        await().atMost(60, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
+    }
+
+    private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-reload-running"), user, wc);
+        JSONObject response = JSONObject.fromObject(resp.getContentAsString());
+        return !response.getBoolean("in-progress");
     }
 
     private static void initializeRealm(CJPRule j){
