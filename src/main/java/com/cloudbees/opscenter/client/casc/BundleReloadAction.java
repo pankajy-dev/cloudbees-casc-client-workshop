@@ -68,6 +68,7 @@ public class BundleReloadAction implements RootAction {
      * @return 200 and a JSON object with the result:
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
+     *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
      *         403 - Not authorized. Administer permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
@@ -92,6 +93,7 @@ public class BundleReloadAction implements RootAction {
      * @return 200 and a JSON object with the result:
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
+     *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
      *         403 - Not authorized. Administer permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
@@ -110,7 +112,11 @@ public class BundleReloadAction implements RootAction {
     public JSONObject executeReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
         if (tryReload(async)) {
-            return new JSONObject().accumulate("reloaded", true);
+            JSONObject response = new JSONObject().accumulate("reloaded", true);
+            if (async) {
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+            }
+            return response;
         } else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
@@ -131,7 +137,11 @@ public class BundleReloadAction implements RootAction {
     public JSONObject executeForceReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
         if (forceReload(async)) {
-            return new JSONObject().accumulate("reloaded", true);
+            JSONObject response = new JSONObject().accumulate("reloaded", true);
+            if (async) {
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+            }
+            return response;
         } else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
