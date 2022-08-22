@@ -52,11 +52,11 @@ public class ForceReloadAction implements RootAction {
         try {
             BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
             if (isHotReloadable()) {
-                if (!realAction.tryReload()){
+                if (!realAction.tryReload(true)){
                     LOGGER.log(Level.INFO, "Configuration Bundle force reload has been requested but the current bundle can not be reloaded");
                 }
             } else {
-                realAction.forceReload();
+                realAction.forceReload(true);
             }
 
             return HttpResponses.redirectViaContextPath("/manage");
