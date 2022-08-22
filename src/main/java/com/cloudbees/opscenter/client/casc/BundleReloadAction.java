@@ -165,7 +165,7 @@ public class BundleReloadAction implements RootAction {
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
             if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
-                LOGGER.log(Level.INFO, "Reload could not be executed because another reload is already running");
+                LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
                 return false;
             }
             if (async){
