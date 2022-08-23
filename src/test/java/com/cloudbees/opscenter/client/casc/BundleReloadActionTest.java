@@ -162,7 +162,8 @@ public class BundleReloadActionTest extends AbstractIMTest {
         // Wait for the bundle to reload and we should have a failure
         Awaitility.setDefaultPollInterval(Duration.ofSeconds(1)); // To avoid flooding with requests
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
-        assertThat("Monitor is activated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(true));
+        assertThat("Error monitor is activated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(true));
+        assertThat("Info monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(false));
 
         // Setup old working version of the bundle
         System.setProperty("core.casc.config.bundle",
@@ -180,7 +181,8 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("Update is ongoing", response.getBoolean("completed"), is(false));
         // Wait for the bundle to reload and we should have removed the failure monitor
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
-        assertThat("Monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));
+        assertThat("Error monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));
+        assertThat("Info monitor is activated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(true));
 
         // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running
         // Setting failing bundle to make sure request takes some (small) time to complete
@@ -196,6 +198,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 200", resp2.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was not applied in 2nd request", response2.getBoolean("reloaded"), is(false));
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
+        assertThat("Info monitor is activated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(true));
     }
 
     private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
