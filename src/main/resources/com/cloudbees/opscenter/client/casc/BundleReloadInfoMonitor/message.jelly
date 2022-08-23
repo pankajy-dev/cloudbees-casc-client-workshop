@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <div class="alert alert-info">
+        The configuration bundle was successfully reloaded.
+        <form method="post" action="${rootURL}/${it.url}/ack" name="${it.id}">
+            <f:submit name="ack" value="OK"/>
+        </form>
+    </div>
+</j:jelly>

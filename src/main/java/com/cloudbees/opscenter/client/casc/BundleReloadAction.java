@@ -229,12 +229,14 @@ public class BundleReloadAction implements RootAction {
         ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
         ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
         ConfigurationStatus.INSTANCE.setErrorInReload(false);
+        ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
         try {
             if (force) {
                 service.reload(bundle);
             } else {
                 service.reloadIfIsHotReloadable(bundle);
             }
+            ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(true);
         } catch (IOException | CasCException ex) {
             LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
             ConfigurationStatus.INSTANCE.setErrorInReload(true);

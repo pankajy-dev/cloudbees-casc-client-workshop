@@ -60,6 +60,11 @@ public enum ConfigurationStatus {
     private boolean currentlyReloading;
 
     /**
+     * Flag to indicate if the last build was successful, just used to show / hide info monitor
+     */
+    private boolean showSuccessfulInstallMonitor;
+
+    /**
      * Returns true if there is a new version available.
      * @return True/False if there is/isn't a new version available.
      */
@@ -205,7 +210,20 @@ public enum ConfigurationStatus {
      * @param errorInReload
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setErrorInReload(boolean errorInReload) {
+    public synchronized void setErrorInReload(boolean errorInReload) {
         this.errorInReload = errorInReload;
+    }
+
+    public boolean isShowSuccessfulInstallMonitor() {
+        return showSuccessfulInstallMonitor;
+    }
+
+    /**
+     * Sets the flag to show the successful reload monitor
+     * @param showSuccessfulInstallMonitor
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public synchronized void setShowSuccessfulInstallMonitor(boolean showSuccessfulInstallMonitor) {
+        this.showSuccessfulInstallMonitor = showSuccessfulInstallMonitor;
     }
 }
