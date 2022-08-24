@@ -74,7 +74,7 @@ public class BundleReloadAction implements RootAction {
      */
     @POST
     @WebMethod(name = "reload-bundle")
-    public HttpResponse doReloadBundle(@QueryParameter(required = false) boolean asynchronous) {
+    public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             return new JsonHttpResponse(executeReload(asynchronous));
@@ -99,10 +99,10 @@ public class BundleReloadAction implements RootAction {
      */
     @POST
     @WebMethod(name = "force-reload-bundle")
-    public HttpResponse doForceReloadBundle() {
+    public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
-            return new JsonHttpResponse(executeForceReload());
+            return new JsonHttpResponse(executeForceReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
