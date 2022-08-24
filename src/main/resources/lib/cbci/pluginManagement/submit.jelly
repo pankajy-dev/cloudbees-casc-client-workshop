@@ -16,10 +16,25 @@
         <s:attribute name="class">
             Classes to add to the tag
         </s:attribute>
+        <s:attribute name="disable">
+            Allows disabling the button, if true adds disabled attribute
+        </s:attribute>
     </s:documentation>
 
-    <input type="submit"
-           name="${attrs.name ?: 'Submit'}"
-           value="${attrs.value ?: '%Submit'}"
-           class="${attrs.class ?: 'submit-button primary'}" />
+    <j:choose>
+        <j:when test="${attrs.disable != null}">
+            <input type="submit"
+                   name="${attrs.name ?: 'Submit'}"
+                   value="${attrs.value ?: '%Submit'}"
+                   class="${attrs.class ?: 'submit-button primary'}"
+                   disabled="disabled"
+                   />
+        </j:when>
+        <j:otherwise>
+            <input type="submit"
+                   name="${attrs.name ?: 'Submit'}"
+                   value="${attrs.value ?: '%Submit'}"
+                   class="${attrs.class ?: 'submit-button primary'}"/>
+        </j:otherwise>
+    </j:choose>
 </j:jelly>

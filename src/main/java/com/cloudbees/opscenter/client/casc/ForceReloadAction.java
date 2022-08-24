@@ -46,6 +46,8 @@ public class ForceReloadAction implements RootAction {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
+    public boolean isDisabled() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
+
     @RequirePOST
     public HttpResponse doForceReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);

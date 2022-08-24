@@ -56,7 +56,16 @@
                                                 <div class="alert__form">
                                                     <f:form method="post" action="act" name="act-update-bundle">
                                                         <f:submit name="restart" value="Safe Restart" />
-                                                        <j:if test="${it.isHotReloadable()}"><f:submit name="reload" value="Reload Configuration"/></j:if>
+                                                        <j:if test="${it.isHotReloadable()}">
+                                                            <j:choose>
+                                                                <j:when test="${it.isReloadInProgress()}">
+                                                                    Hot reload is not available as there's a reload already running.
+                                                                </j:when>
+                                                                <j:otherwise>
+                                                                    <f:submit name="reload" value="Reload Configuration"/>
+                                                                </j:otherwise>
+                                                            </j:choose>
+                                                        </j:if>
                                                     </f:form>
                                                 </div>
                                             </div>
@@ -89,7 +98,16 @@
 
                                             <!-- The form reloads this page-->
                                             <f:form method="post" action="act" name="act-update-bundle" >
-                                                <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn" /> <span class="secondary-text">Force the reload of the installed bundle</span>
+                                                <j:choose>
+                                                    <j:when test="${it.isReloadInProgress()}">
+                                                        <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn" disable="disabled"/>
+                                                        <span class="secondary-text">Force hot reload is not available as there's a reload already running.</span>
+                                                    </j:when>
+                                                    <j:otherwise>
+                                                        <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn"/>
+                                                        <span class="secondary-text">Force the reload of the installed bundle</span>
+                                                    </j:otherwise>
+                                                </j:choose>
                                             </f:form>
                                         </cbcipm:tabcontent>
                                     </j:otherwise>

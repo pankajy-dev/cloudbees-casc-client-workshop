@@ -6,7 +6,14 @@
                 <j:when test="${it.isHotReloadable()}">
                     <form method="post" action="reload">
                         ${%Are you sure you want to apply the Configuration Bundle? Update will happen in the background.}
-                        <f:submit value="${%Yes}" />
+                        <j:choose>
+                            <j:when test="${it.isDisabled()}">
+                                Reload is not available as there's a reload already executing.
+                            </j:when>
+                            <j:otherwise>
+                                <f:submit value="${%Yes}"/>
+                            </j:otherwise>
+                        </j:choose>
                     </form>
                 </j:when>
                 <j:otherwise>

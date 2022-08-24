@@ -46,6 +46,8 @@ public class HotReloadAction implements RootAction {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
+    public boolean isDisabled() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
+
     @RequirePOST
     public HttpResponse doReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
