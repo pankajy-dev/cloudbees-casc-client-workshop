@@ -178,7 +178,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was applied", response.getBoolean("reloaded"));
-        assertThat("Completed field is informed", response.getBoolean("completed"), notNullValue());
+        assertThat("Completed field is informed", response.get("completed"), notNullValue());
         // Wait for the bundle to reload and we should have removed the failure monitor
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
         assertThat("Error monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));

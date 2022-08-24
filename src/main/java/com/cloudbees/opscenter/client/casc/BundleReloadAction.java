@@ -111,6 +111,10 @@ public class BundleReloadAction implements RootAction {
 
     public JSONObject executeReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+            LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
+        }
         if (tryReload(async)) {
             JSONObject response = new JSONObject().accumulate("reloaded", true);
             if (async) {
@@ -136,6 +140,10 @@ public class BundleReloadAction implements RootAction {
 
     public JSONObject executeForceReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+            LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
+        }
         if (forceReload(async)) {
             JSONObject response = new JSONObject().accumulate("reloaded", true);
             if (async) {
@@ -164,10 +172,6 @@ public class BundleReloadAction implements RootAction {
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
-                LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
-                return false;
-            }
             if (async){
                 launchAsynchronousReload(false);
             } else {
@@ -197,10 +201,6 @@ public class BundleReloadAction implements RootAction {
         } else if (ConfigurationBundleManager.isSet() && !isHotReloadable()) {
             String username = Jenkins.getAuthentication2().getName();
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()){
-                LOGGER.log(Level.INFO, "Force reload could not be done because another reload is already running");
-                return false;
-            }
             if (async) {
                 launchAsynchronousReload(true);
             } else {
