@@ -9,12 +9,12 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>134</version>
+    <version>138</version>
     <relativePath />
   </parent>
 
   <artifactId>cloudbees-casc-client</artifactId>
-  <version>1.67-SNAPSHOT</version>
+  <version>1.68-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>CloudBees CasC Client Plugin</name>
@@ -45,33 +45,10 @@
         <type>pom</type>
       </dependency>
 
-      <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
-        <groupId>com.cloudbees.jenkins.plugins</groupId>
-        <artifactId>cloudbees-casc-items-commons</artifactId>
-        <version>1.16</version>
-      </dependency>
-      <dependency> <!-- BEE-20643 TODO Remove when in URR BOM -->
-        <groupId>com.cloudbees.jenkins.plugins</groupId>
-        <artifactId>cloudbees-casc-items-api</artifactId>
-        <version>1.26</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest</artifactId>
-        <version>2.2</version>
-      </dependency>
-
       <dependency>
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>4.2.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.jenkins.lib</groupId>
-        <artifactId>support-log-formatter</artifactId>
-        <version>1.1</version>
       </dependency>
 
       <dependency>
@@ -92,12 +69,6 @@
       <groupId>io.github.java-diff-utils</groupId>
       <artifactId>java-diff-utils</artifactId>
       <version>4.11</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kohsuke</groupId>
-      <artifactId>access-modifier-suppressions</artifactId>
-      <version>1.27</version>
     </dependency>
 
     <dependency>
@@ -141,25 +112,9 @@
       <optional>true</optional>
     </dependency>
 
-    <!-- To pick this up: https://github.com/cloudbees/cloudbees-assurance-plugin/commit/78bfd4d91f9d29b8b166b4af3a2d2c7884776cda -->
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-assurance</artifactId>
-      <!--
-        Why is this optional?
-        Well, it is not really optional, it is required. However modules depending on this one do not necessarily require it as transitive.
-        Actually they should not have it unless they really depend on it, the only way to achieve that is by making it
-        optional. This has other implications in the Jenkins Plugins world, however cloudbees-assurance is in scope
-        bootstrap in all CB products, so it granted to be installed in all supported versions, so this "optional" configuration
-        will not affect any runtime behaviour, it is merely needed for the build and test process.
-      -->
-      <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>annotations</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Test -->
@@ -217,6 +172,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>github-branch-source</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -240,40 +196,8 @@
           <loggers>
             <com.cloudbees.jenkins.plugins.casc>FINEST</com.cloudbees.jenkins.plugins.casc>
           </loggers>
-          <minimumJavaVersion>8</minimumJavaVersion>
         </configuration>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.1.2</version>
-          <dependencies>
-            <dependency>
-              <groupId>com.cloudbees.devoptics</groupId>
-              <artifactId>devoptics-checkstyle</artifactId>
-              <version>1.22</version>
-            </dependency>
-            <dependency>
-              <groupId>com.cloudbees</groupId>
-              <artifactId>astro-checkstyle</artifactId>
-              <version>1.0.0</version>
-            </dependency>
-          </dependencies>
-          <configuration>
-            <configLocation>devoptics/checkstyle.xml</configLocation>
-            <headerLocation>devoptics/LICENSE.txt</headerLocation>
-            <violationSeverity>warning</violationSeverity>
-            <failOnViolation>false</failOnViolation>
-            <failsOnError>true</failsOnError>
-
-            <!-- default suppressions are defined in astro-checkstyle. You can apply local suppressions for your module
-            by putting the following file in the root directory of your module -->
-            <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 </project>
