@@ -48,6 +48,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 public class BundleReloadActionTest extends AbstractIMTest {
@@ -169,7 +170,6 @@ public class BundleReloadActionTest extends AbstractIMTest {
         System.setProperty("core.casc.config.bundle",
                            Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
 
-        // Wait for reload to complete
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc, false);
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
@@ -178,7 +178,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was applied", response.getBoolean("reloaded"));
-        assertThat("Update is ongoing", response.getBoolean("completed"), is(false));
+        assertThat("Completed field is informed", response.getBoolean("completed"), notNullValue());
         // Wait for the bundle to reload and we should have removed the failure monitor
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
         assertThat("Error monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));
