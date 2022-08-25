@@ -184,18 +184,13 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("Info monitor is activated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(true));
 
         // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running
-        // Setting failing bundle to make sure request takes some (small) time to complete
-        System.setProperty("core.casc.config.bundle",
-                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle-invalid").toFile().getAbsolutePath());
+        // Simulate a request is already running
+        ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
         resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc, true);
-        WebResponse resp2 = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc, false);
         response = JSONObject.fromObject(resp.getContentAsString());
-        JSONObject response2 = JSONObject.fromObject(resp2.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
-        assertThat("Update was applied in 1st request", response.getBoolean("reloaded"));
-        assertThat("Update is not completed in 1st request", response.getBoolean("completed"), is(false));
-        assertThat("We should get a 200", resp2.getStatusCode(), is(HttpServletResponse.SC_OK));
-        assertThat("Update was not applied in 2nd request", response2.getBoolean("reloaded"), is(false));
+        assertThat("Update was not applied in 2nd request", response.getBoolean("reloaded"), is(false));
+        assertThat("Update was not applied in 2nd request", response.getString("reason"), containsString("A reload is already in progress"));
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
     }
 
