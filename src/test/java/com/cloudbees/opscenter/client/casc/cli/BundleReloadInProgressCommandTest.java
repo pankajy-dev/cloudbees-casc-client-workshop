@@ -20,11 +20,11 @@ public class BundleReloadInProgressCommandTest extends AbstractBundleVersionChec
         // Simulate bundle reload
         ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleReloadInProgressCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
-        assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("in-progress"), is(true));
+        assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("reload-in-progress"), is(true));
         // Simulate reload completed
         ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
         result = new CLICommandInvoker(rule, BundleReloadInProgressCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
-        assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("in-progress"), is(false));
+        assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("reload-in-progress"), is(false));
     }
 
 

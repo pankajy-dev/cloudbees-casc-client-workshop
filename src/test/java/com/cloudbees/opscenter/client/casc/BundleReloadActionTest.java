@@ -146,7 +146,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
 
         // Monitor should be disabled
-        assertThat("Monitor is disabled", Jenkins.get().getAdministrativeMonitor("com.cloudbees.opscenter.client.casc.BundleReloadMonitor").isActivated(), is(false));
+        assertThat("Monitor is disabled", ExtensionList.lookupSingleton(BundleReloadErrorMonitor.class).isActivated(), is(false));
 
         // Setup a new failing version of the bundle
         System.setProperty("core.casc.config.bundle",
@@ -203,7 +203,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
     private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
         WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-reload-running"), user, wc, false);
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
-        return !response.getBoolean("in-progress");
+        return !response.getBoolean("reload-in-progress");
     }
 
     private static void initializeRealm(CJPRule j){

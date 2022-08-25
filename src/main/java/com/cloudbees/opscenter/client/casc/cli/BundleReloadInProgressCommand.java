@@ -32,7 +32,7 @@ public class BundleReloadInProgressCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
-        stdout.println(new JSONObject().accumulate("in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
+        stdout.println(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
         return 0;
     }
 }
