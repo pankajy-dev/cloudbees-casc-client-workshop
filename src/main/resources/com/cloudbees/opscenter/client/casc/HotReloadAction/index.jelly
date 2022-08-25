@@ -10,7 +10,7 @@
                     <form method="post" action="reload">
                         ${%Are you sure you want to apply the Configuration Bundle?}
                         <j:choose>
-                            <j:when test="${it.isDisabled()}">
+                            <j:when test="${it.isReloadInProgress()}">
                                 Reload is not available as there's a reload already executing.
                             </j:when>
                             <j:otherwise>
