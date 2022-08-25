@@ -23,16 +23,6 @@
                     A bundle update is available. A force reload can not be executed if a new version is available.
                 </j:otherwise>
             </j:choose>
-            <j:set var="errorMessage" value="hot_reload_error"/>
-            <j:if test="${requestScope[errorMessage] != null}">
-                <div class="error">
-                    An error occurred:
-                    <br/>
-                    ${requestScope[errorMessage]}
-                    <br/>
-                    Check the log for more details.
-                </div>
-            </j:if>
         </l:main-panel>
     </l:layout>
 </j:jelly>
