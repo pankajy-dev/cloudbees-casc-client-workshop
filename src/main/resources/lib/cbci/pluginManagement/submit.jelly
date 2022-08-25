@@ -17,7 +17,7 @@
             Classes to add to the tag
         </s:attribute>
         <s:attribute name="disable">
-            Allows disabling the button, if true adds disabled attribute
+            Allows disabling the button, if informed (not null) will add disabled to the button
         </s:attribute>
     </s:documentation>
 
