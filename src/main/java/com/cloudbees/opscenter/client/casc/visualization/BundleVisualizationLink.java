@@ -196,6 +196,7 @@ public class BundleVisualizationLink extends ManagementLink {
      *
      * @return true if a bundle reload is runnign in the background, false otherwise
      */
+    // Used by jelly
     public boolean isReloadInProgress() {
         return ConfigurationStatus.INSTANCE.isCurrentlyReloading();
     }

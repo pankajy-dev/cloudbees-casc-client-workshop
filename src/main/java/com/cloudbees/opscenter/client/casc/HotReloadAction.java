@@ -42,6 +42,7 @@ public class HotReloadAction implements RootAction {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
+    // Used by jelly
     public boolean isDisabled() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
 
     @RequirePOST

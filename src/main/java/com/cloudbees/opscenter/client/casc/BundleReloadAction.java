@@ -211,6 +211,7 @@ public class BundleReloadAction implements RootAction {
         return false;
     }
 
+    @Deprecated
     public boolean forceReload() {
         return forceReload(false);
     }

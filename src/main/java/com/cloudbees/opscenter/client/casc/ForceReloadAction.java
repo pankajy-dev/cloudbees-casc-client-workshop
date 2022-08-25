@@ -42,7 +42,8 @@ public class ForceReloadAction implements RootAction {
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
-    public boolean isDisabled() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
+    // Used by jelly
+    public boolean isReloadInProgress() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
 
     @RequirePOST
     public HttpResponse doForceReload() {
