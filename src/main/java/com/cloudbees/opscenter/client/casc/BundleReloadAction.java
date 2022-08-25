@@ -8,10 +8,14 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
+import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
+import jenkins.util.Timer;
+
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.json.JsonHttpResponse;
@@ -25,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,15 +68,16 @@ public class BundleReloadAction implements RootAction {
      * @return 200 and a JSON object with the result:
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
+     *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
      *         403 - Not authorized. Administer permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
     @POST
     @WebMethod(name = "reload-bundle")
-    public HttpResponse doReloadBundle() {
+    public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
-            return new JsonHttpResponse(executeReload());
+            return new JsonHttpResponse(executeReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -87,49 +93,91 @@ public class BundleReloadAction implements RootAction {
      * @return 200 and a JSON object with the result:
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
+     *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
      *         403 - Not authorized. Administer permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
     @POST
     @WebMethod(name = "force-reload-bundle")
-    public HttpResponse doForceReloadBundle() {
+    public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
-            return new JsonHttpResponse(executeForceReload());
+            return new JsonHttpResponse(executeForceReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
+    public JSONObject executeReload(boolean async) throws CasCException, IOException {
+        String username = Jenkins.getAuthentication2().getName();
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+            LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
+        }
+        if (tryReload(async)) {
+            JSONObject response = new JSONObject().accumulate("reloaded", true);
+            if (async) {
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+            }
+            return response;
+        } else {
+            LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
+        }
+    }
+
+    /**
+     * @deprecated use {@link #executeReload(boolean)} instead
+     * @return
+     * @throws CasCException
+     * @throws IOException
+     */
+    @Deprecated
     public JSONObject executeReload() throws CasCException, IOException {
+        return executeReload(false);
+    }
+
+    public JSONObject executeForceReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
-        if (tryReload()) {
-            return new JSONObject().accumulate("reloaded", true);
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+            LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
+            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
+        }
+        if (forceReload(async)) {
+            JSONObject response = new JSONObject().accumulate("reloaded", true);
+            if (async) {
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+            }
+            return response;
         } else {
             LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
         }
     }
 
+    /**
+     * @deprecated use {@link #executeForceReload(boolean)} instead
+     * @return
+     * @throws CasCException
+     * @throws IOException
+     */
+    @Deprecated
     public JSONObject executeForceReload() throws CasCException, IOException {
-        String username = Jenkins.getAuthentication2().getName();
-        if (forceReload()) {
-            return new JSONObject().accumulate("reloaded", true);
-        } else {
-            LOGGER.log(Level.WARNING, "Reload request by {0} could not be completed. The updated configuration bundle cannot be hot reloaded.", username);
-            return new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle is not hot reloadable");
-        }
+        return executeReload(false);
     }
 
-    public boolean tryReload() throws IOException, CasCException{
+    public boolean tryReload(boolean async) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            service.reloadIfIsHotReloadable(bundle);
+            if (async){
+                launchAsynchronousReload(false);
+            } else {
+                launchSynchronousReload(false);
+            }
+            LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             return true;
@@ -137,18 +185,65 @@ public class BundleReloadAction implements RootAction {
         return false;
     }
 
-    public boolean forceReload() throws IOException, CasCException{
+    /**
+     * @deprecated use {@link #tryReload(boolean)} instead
+     * @return
+     */
+    @Deprecated
+    public boolean tryReload() throws IOException, CasCException{
+        return tryReload(false);
+    }
+
+    public boolean forceReload(boolean async) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
-            return tryReload();
+            return tryReload(async);
         } else if (ConfigurationBundleManager.isSet() && !isHotReloadable()) {
             String username = Jenkins.getAuthentication2().getName();
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            service.reload(bundle);
+            if (async) {
+                launchAsynchronousReload(true);
+            } else {
+                launchSynchronousReload(true);
+            }
+            LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
         }
         return false;
+    }
+
+    @Deprecated
+    public boolean forceReload() {
+        return forceReload(false);
+    }
+
+    private void launchAsynchronousReload(boolean force) {
+        Timer.get().submit(new TimerTask (){
+            @Override
+            public void run() {
+                launchSynchronousReload(force);
+            }
+        });
+    }
+
+    private void launchSynchronousReload(boolean force) {
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+        ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+        ConfigurationStatus.INSTANCE.setErrorInReload(false);
+        ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
+        try {
+            if (force) {
+                service.reload(bundle);
+            } else {
+                service.reloadIfIsHotReloadable(bundle);
+            }
+            ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(true);
+        } catch (IOException | CasCException ex) {
+            LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
+            ConfigurationStatus.INSTANCE.setErrorInReload(true);
+        } finally {
+            ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
+        }
     }
 
     /**
@@ -179,6 +274,21 @@ public class BundleReloadAction implements RootAction {
         }
 
         return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
+    }
+
+    /**
+     * Check if there's a reload operation running
+     * <p>
+     * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-reload-running }
+     * Permission required: READ
+     * </p>
+     * @return 200 and a boolean in-progress field indicating if a reload operation is running or not.
+     */
+    @GET
+    @WebMethod(name = "check-bundle-reload-running")
+    public HttpResponse doCheckReloadInProgress() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
     }
 
     /**

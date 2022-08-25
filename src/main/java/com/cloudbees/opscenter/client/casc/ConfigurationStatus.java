@@ -40,6 +40,11 @@ public enum ConfigurationStatus {
     private boolean errorInNewVersion;
 
     /**
+     * True indicates there was a problem during the bundle reload. Note this is the reload operation itself, not bundle downloading
+     */
+    private boolean errorInReload;
+
+    /**
      * Message after an error happened when the new version of the bundle was checked or downloaded.
      */
     private String errorMessage;
@@ -48,6 +53,16 @@ public enum ConfigurationStatus {
      * Result of comparing the new version available and the current version. Set only if the version is valid
      */
     private BundleComparator.Result changesInNewVersion;
+
+    /**
+     * Flag that indicates if  there's a reload currently running
+     */
+    private boolean currentlyReloading;
+
+    /**
+     * Flag to indicate if the last build was successful, just used to show / hide info monitor
+     */
+    private boolean showSuccessfulInstallMonitor;
 
     /**
      * Returns true if there is a new version available.
@@ -167,5 +182,48 @@ public enum ConfigurationStatus {
     @CheckForNull
     public BundleComparator.Result getChangesInNewVersion() {
         return this.changesInNewVersion;
+    }
+
+    /**
+     * Checks if a hot reload is currently running
+     * @return true if reload is running, false otherwise
+     */
+    public boolean isCurrentlyReloading() {
+        return currentlyReloading;
+    }
+
+    /**
+     * Sets the currently running parameter for a hot reload
+     * @param currentlyReloading
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public synchronized void setCurrentlyReloading(boolean currentlyReloading) {
+        this.currentlyReloading = currentlyReloading;
+    }
+
+    public boolean isErrorInReload() {
+        return errorInReload;
+    }
+
+    /**
+     * Sets the error during reload flag in case a hot reload fails
+     * @param errorInReload
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public synchronized void setErrorInReload(boolean errorInReload) {
+        this.errorInReload = errorInReload;
+    }
+
+    public boolean isShowSuccessfulInstallMonitor() {
+        return showSuccessfulInstallMonitor;
+    }
+
+    /**
+     * Sets the flag to show the successful reload monitor
+     * @param showSuccessfulInstallMonitor
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public synchronized void setShowSuccessfulInstallMonitor(boolean showSuccessfulInstallMonitor) {
+        this.showSuccessfulInstallMonitor = showSuccessfulInstallMonitor;
     }
 }

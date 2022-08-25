@@ -2,11 +2,21 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
     <l:layout title="Reload the Configuration Bundle" permission="${app.MANAGE}">
         <l:main-panel>
+            <div class="alert alert-info">
+                Reload will happen asynchronously, an administrative monitor will be shown once the reload is complete to inform of the operation result.
+            </div>
             <j:choose>
                 <j:when test="${it.isHotReloadable()}">
                     <form method="post" action="reload">
                         ${%Are you sure you want to apply the Configuration Bundle?}
-                        <f:submit value="${%Yes}" />
+                        <j:choose>
+                            <j:when test="${it.isReloadInProgress()}">
+                                Reload is not available as there's a reload already executing.
+                            </j:when>
+                            <j:otherwise>
+                                <f:submit value="${%Yes}"/>
+                            </j:otherwise>
+                        </j:choose>
                     </form>
                 </j:when>
                 <j:otherwise>
@@ -14,16 +24,6 @@
                     instance if you want to apply changes.
                 </j:otherwise>
             </j:choose>
-            <j:set var="errorMessage" value="hot_reload_error"/>
-            <j:if test="${requestScope[errorMessage] != null}">
-                <div class="error">
-                    An error occurred:
-                    <br/>
-                    ${requestScope[errorMessage]}
-                    <br/>
-                    Check the log for more details.
-                </div>
-            </j:if>
         </l:main-panel>
     </l:layout>
 </j:jelly>
