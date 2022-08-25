@@ -38,7 +38,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
@@ -163,7 +162,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         // Wait for the bundle to reload and we should have a failure
         Awaitility.setDefaultPollInterval(Duration.ofSeconds(1)); // To avoid flooding with requests
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
-        assertThat("Error monitor is activated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(true));
+        assertThat("Error monitor is activated", ExtensionList.lookupSingleton(BundleReloadErrorMonitor.class).isActivated(), is(true));
         assertThat("Info monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(false));
 
         // Setup old working version of the bundle
@@ -181,7 +180,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("Completed field is informed", response.get("completed"), notNullValue());
         // Wait for the bundle to reload and we should have removed the failure monitor
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
-        assertThat("Error monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadMonitor.class).isActivated(), is(false));
+        assertThat("Error monitor is deactivated", ExtensionList.lookupSingleton(BundleReloadErrorMonitor.class).isActivated(), is(false));
         assertThat("Info monitor is activated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(true));
 
         // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running

@@ -6,8 +6,8 @@ import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
 
 @Extension
-@Symbol("bundleReloadMonitor")
-public class BundleReloadMonitor extends AdministrativeMonitor {
+@Symbol("bundleReloadErrorMonitor")
+public class BundleReloadErrorMonitor extends AdministrativeMonitor {
 
     @Override
     public String getDisplayName() {
