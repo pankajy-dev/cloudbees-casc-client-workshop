@@ -197,7 +197,6 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 200", resp2.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was not applied in 2nd request", response2.getBoolean("reloaded"), is(false));
         await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
-        assertThat("Info monitor is activated", ExtensionList.lookupSingleton(BundleReloadInfoMonitor.class).isActivated(), is(true));
     }
 
     private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
