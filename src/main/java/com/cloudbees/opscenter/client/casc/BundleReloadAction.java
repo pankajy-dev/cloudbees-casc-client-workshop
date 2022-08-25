@@ -288,7 +288,7 @@ public class BundleReloadAction implements RootAction {
     @WebMethod(name = "check-bundle-reload-running")
     public HttpResponse doCheckReloadInProgress() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
-        return new JsonHttpResponse(new JSONObject().accumulate("in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
+        return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
     }
 
     /**
