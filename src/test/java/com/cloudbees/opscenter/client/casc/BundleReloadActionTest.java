@@ -191,7 +191,6 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("Update was not applied in 2nd request", response.getBoolean("reloaded"), is(false));
         assertThat("Update was not applied in 2nd request", response.getString("reason"), containsString("A reload is already in progress"));
-        await().atMost(Duration.ofSeconds(30)).until(() -> reloadComplete(admin, wc));
     }
 
     private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
