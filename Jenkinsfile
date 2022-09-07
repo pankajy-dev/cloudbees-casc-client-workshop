@@ -1,6 +1,16 @@
 // https://cloudbees.atlassian.net/browse/OSS-1842 workaround
 echo "Checking Jenkinsfile existence"
-
+def jenkinsfile
+try {
+    jenkinsfile = readTrusted 'Jenkinsfile'
+    echo "Existing Jenkinsfile found, using it instead of the default one!"
+} catch (e) {
+    echo "No Jenkinsfile found, using default behaviour"
+}
+if (jenkinsfile != null) {
+    evaluate jenkinsfile
+    return
+}
 // END OSS-1842
 jdkConfig = readYaml text: readPipelineRelative('config/jdks.yaml')
 defaultConfig = readYaml text: readPipelineRelative('config/defaults.yaml')
@@ -464,7 +474,9 @@ def runIntegration(String jdk) {
             // To run CasC IT we need both artifacts + setting up variables
             unstash 'je-war'
             unstash 'jenkins-oc-war'
-            INTEGRATION_TESTS_ARGUMENTS += "-DOPERATIONS_CENTER_IT_CC_LOCATION=$(pwd)/je.war,OPERATIONS_CENTER_IT_OC_LOCATION=$(pwd)/jenkins-oc.war "
+            def ccWar = pwd() + "/je.war"
+            def ocWar = pwd() + "/jenkins-oc.war"
+            INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar},OPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
             // Grant ssh and https credentials for ease of use
             sshagent(['github-ssh']) { withCredentials([gitUsernamePassword(credentialsId: 'cloudbees-gaia-ro-g3')]) {
                     withEnv([
