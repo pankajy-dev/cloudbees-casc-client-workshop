@@ -1,1 +1,6 @@
 CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
+WINDOWS_BUILD=false
+DEFAULT_JDK=jdk11
+INTEGRATION_TESTS_SCRIPT=operations-center-it.sh
+INTEGRATION_TESTS_ARGUMENTS=-DDgroups=com.cloudbees.casc.categories.CascE2ECategory
+JAVA8=false
