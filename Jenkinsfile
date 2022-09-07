@@ -367,7 +367,7 @@ def buildLinux(String jdk, boolean mainBuildStage) {
                 sh 'mvn ${MAVEN_ARGS} -DforkCount=${SUREFIRE_FORK_COUNT} -Dmaven.test.failure.ignore=true -Dspotbugs.failOnError=false -DskipTests install'
             }
         }
-        junit testResults: '**/*-reports/*.xml'
+//        junit testResults: '**/*-reports/*.xml'
 
         //Quality gate: we want zero spotbugs issue, so unstable at the first one.
         if (mainBuildStage) {
@@ -384,7 +384,7 @@ def buildWindows(String jdk) {
              'SUREFIRE_FORK_COUNT=' + SUREFIRE_FORK_COUNT_WINDOWS]) {
         withMaven(globalMavenSettingsConfig: 'maven-settings-nexus-internal-ci-build-jobs-g3',
                 options: [artifactsPublisher(disabled: true), junitPublisher(disabled: true), findbugsPublisher(disabled: true), openTasksPublisher(disabled: true)]) {
-            bat 'mvn %MAVEN_ARGS% -DforkCount=%SUREFIRE_FORK_COUNT% -Dmaven.test.failure.ignore=true -Dspotbugs.failOnError=false install'
+            bat 'mvn %MAVEN_ARGS% -DforkCount=%SUREFIRE_FORK_COUNT% -Dmaven.test.failure.ignore=true -Dspotbugs.failOnError=false -DskipTests install'
         }
         junit testResults: '**/*-reports/*.xml', testDataPublishers: [[$class: 'AttachmentPublisher']]
     }
@@ -685,26 +685,26 @@ pipeline {
                         }
                     }
                 }
-                stage ('windows-jdk11') {
-                    agent {
-                        kubernetes {
-                            cloud 'gauntlet3-windows'
-                            slaveConnectTimeout 10000
-                            yaml readPipelineRelative('k8s-pod-definitions/' + K8S_WINDOWS_PLUGIN_BUILD_POD + '.yaml').replace('${AGENT_IMAGE}', jdkConfig['jdk11'].agentImage.windows).replace('${MAVEN_IMAGE}', jdkConfig['jdk11'].agentImage.windows)
-                            defaultContainer 'maven'
-                        }
-                    }
-                    when {
-                        beforeAgent true
-                        expression { WINDOWS_BUILD == "true" }
-                        expression { JAVA11 == "true" }
-                    }
-                    steps {
-                        script {
-                            buildWindows('jdk11')
-                        }
-                    }
-                }
+//                 stage ('windows-jdk11') {
+//                     agent {
+//                         kubernetes {
+//                             cloud 'gauntlet3-windows'
+//                             slaveConnectTimeout 10000
+//                             yaml readPipelineRelative('k8s-pod-definitions/' + K8S_WINDOWS_PLUGIN_BUILD_POD + '.yaml').replace('${AGENT_IMAGE}', jdkConfig['jdk11'].agentImage.windows).replace('${MAVEN_IMAGE}', jdkConfig['jdk11'].agentImage.windows)
+//                             defaultContainer 'maven'
+//                         }
+//                     }
+//                     when {
+//                         beforeAgent true
+//                         expression { WINDOWS_BUILD == "true" }
+//                         expression { JAVA11 == "true" }
+//                     }
+//                     steps {
+//                         script {
+//                             buildWindows('jdk11')
+//                         }
+//                     }
+//                 }
                 /*stage ('coverage-jdk11') {
                     agent none
                     when {
