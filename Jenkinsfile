@@ -1,16 +1,6 @@
 // https://cloudbees.atlassian.net/browse/OSS-1842 workaround
 echo "Checking Jenkinsfile existence"
-/*def jenkinsfile
-try {
-    jenkinsfile = readTrusted 'Jenkinsfile'
-    echo "Existing Jenkinsfile found, using it instead of the default one!"
-} catch (e) {
-    echo "No Jenkinsfile found, using default behaviour"
-}
-if (jenkinsfile != null) {
-    evaluate jenkinsfile
-    //return
-}*/
+
 // END OSS-1842
 jdkConfig = readYaml text: readPipelineRelative('config/jdks.yaml')
 defaultConfig = readYaml text: readPipelineRelative('config/defaults.yaml')
