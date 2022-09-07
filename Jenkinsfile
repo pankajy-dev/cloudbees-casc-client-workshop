@@ -9,7 +9,7 @@ try {
 }
 if (jenkinsfile != null) {
     evaluate jenkinsfile
-    return
+    //return
 }
 // END OSS-1842
 jdkConfig = readYaml text: readPipelineRelative('config/jdks.yaml')
