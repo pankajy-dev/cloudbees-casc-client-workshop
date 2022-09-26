@@ -2,4 +2,4 @@ CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
 JAVA8=false
 DEFAULT_JDK=jdk11
 INTEGRATION_TESTS_SCRIPT=operations-center-casc-it.sh
-INTEGRATION_TESTS_ARGUMENTS=groups={com.cloudbees.casc.categories.CascE2ECategory}
+INTEGRATION_TESTS_ARGUMENTS=-Dgroups={com.cloudbees.casc.categories.CascE2ECategory}

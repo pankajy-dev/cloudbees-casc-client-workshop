@@ -474,9 +474,9 @@ def runIntegration(String jdk) {
             // To run CasC IT we need both artifacts + setting up variables
             unstash 'je-war'
             unstash 'jenkins-oc-war'
-            def ccWar = pwd() + "/je.war"
-            def ocWar = pwd() + "/jenkins-oc.war"
-            INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar},OPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
+//             def ccWar = pwd() + "/je.war"
+//             def ocWar = pwd() + "/jenkins-oc.war"
+//             INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar} -DOPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
             // Grant ssh and https credentials for ease of use
             sshagent(['github-ssh']) { withCredentials([gitUsernamePassword(credentialsId: 'cloudbees-gaia-ro-g3')]) {
                     withEnv([
@@ -484,9 +484,9 @@ def runIntegration(String jdk) {
                             'INTEGRATION_TESTS_ARGUMENTS=' + INTEGRATION_TESTS_ARGUMENTS,
                             'MAVEN_ARGS=' + GLOBAL_MAVEN_OPTS + ' ' + MAVEN_EXTRA_OPTS + ' ' + LINUX_MAVEN_EXTRA_OPTS
                     ]) {
-                        sh 'ls -la'
-                        sh 'pwd'
-                        sh 'echo $INTEGRATION_TESTS_ARGUMENTS'
+//                         sh 'ls -la'
+//                         sh 'pwd'
+//                         sh 'echo $INTEGRATION_TESTS_ARGUMENTS'
                         sh './$INTEGRATION_TESTS_SCRIPT $INTEGRATION_TESTS_ARGUMENTS $MAVEN_ARGS -Dmaven.test.failure.ignore=true'
                     }
             }}
