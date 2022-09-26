@@ -478,7 +478,7 @@ def runIntegration(String jdk) {
             def ocWar = pwd() + "/jenkins-oc.war"
             INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar} -DOPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
             // Grant ssh and https credentials for ease of use
-            sshagent(['github-ssh']) { withCredentials([gitUsernamePassword(credentialsId: 'cloudbees-gaia-ro-g3')]) {
+            sshagent(['github-ssh']) { withCredentials([gitUsernamePassword(credentialsId: 'github-https')]) {
                     withEnv([
                             'INTEGRATION_TESTS_SCRIPT=' + INTEGRATION_TESTS_SCRIPT,
                             'INTEGRATION_TESTS_ARGUMENTS=' + INTEGRATION_TESTS_ARGUMENTS,
@@ -487,7 +487,41 @@ def runIntegration(String jdk) {
 //                         sh 'ls -la'
 //                         sh 'pwd'
 //                         sh 'echo $INTEGRATION_TESTS_ARGUMENTS'
-                        sh './$INTEGRATION_TESTS_SCRIPT $INTEGRATION_TESTS_ARGUMENTS $MAVEN_ARGS -Dmaven.test.failure.ignore=true'
+                        sh '''#!/bin/bash -ex
+                        set -euo pipefail
+
+                        args="${INTEGRATION_TESTS_ARGUMENTS:-}"
+
+                        clone_oc_it() {
+                          if [ -n "$CHANGE_ID" ]; then
+                            if ! git clone -b ${CHANGE_BRANCH} https://github.com/${CHANGE_FORK}/operations-center-it.git operations-center-it; then
+                              echo "https://github.com/${CHANGE_FORK}/operations-center-it.git does not exist. Cloning from cloudbees organization"
+                              git clone https://github.com/cloudbees/operations-center-it.git operations-center-it
+                            fi
+                          else
+                            git clone https://github.com/cloudbees/operations-center-it.git operations-center-it
+                          fi
+                          (
+                            cd operations-center-it
+                            git rev-parse --verify HEAD
+                          )
+                        }
+
+                        if [ -z "$args" ]; then
+                          echo "INTEGRATION_TESTS_ARGUMENTS is unset. skipping integration tests"
+                          exit 0
+                        fi
+
+                        clone_oc_it
+                        # Both wars should be in ./ (unstashed in the pipeline), moving to the project folder
+                        mv je.war operations-center-it/casc-it/
+                        mv jenkins-oc.war operations-center-it/casc-it/
+                        cd operations-center-it
+                        ls -la ./casc-it/
+                        mvn -pl casc-it $INTEGRATION_TESTS_ARGUMENTS -DOPERATIONS_CENTER_IT_CC_LOCATION=./casc-it/jenkins-oc.war -DOPERATIONS_CENTER_IT_OC_LOCATION=./casc-it/je
+                        .war verify "$@"
+                        '''
+//                         sh './$INTEGRATION_TESTS_SCRIPT $INTEGRATION_TESTS_ARGUMENTS $MAVEN_ARGS -Dmaven.test.failure.ignore=true'
                     }
             }}
         }
