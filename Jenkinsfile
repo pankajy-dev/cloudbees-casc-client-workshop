@@ -474,9 +474,9 @@ def runIntegration(String jdk) {
             // To run CasC IT we need both artifacts + setting up variables
             unstash 'je-war'
             unstash 'jenkins-oc-war'
-//             def ccWar = pwd() + "/je.war"
-//             def ocWar = pwd() + "/jenkins-oc.war"
-//             INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar} -DOPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
+            def ccWar = pwd() + "/je.war"
+            def ocWar = pwd() + "/jenkins-oc.war"
+            INTEGRATION_TESTS_ARGUMENTS += " -DOPERATIONS_CENTER_IT_CC_LOCATION=${ccWar} -DOPERATIONS_CENTER_IT_OC_LOCATION=${ocWar}"
             // Grant ssh and https credentials for ease of use
             sshagent(['github-ssh']) { withCredentials([gitUsernamePassword(credentialsId: 'cloudbees-gaia-ro-g3')]) {
                     withEnv([
