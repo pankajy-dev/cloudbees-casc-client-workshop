@@ -518,8 +518,7 @@ def runIntegration(String jdk) {
                         mv jenkins-oc.war operations-center-it/casc-it/
                         cd operations-center-it
                         ls -la ./casc-it/
-                        mvn -pl casc-it $INTEGRATION_TESTS_ARGUMENTS -DOPERATIONS_CENTER_IT_CC_LOCATION=./casc-it/jenkins-oc.war -DOPERATIONS_CENTER_IT_OC_LOCATION=./casc-it/je
-                        .war verify "$@"
+                        mvn -pl casc-it $INTEGRATION_TESTS_ARGUMENTS -DOPERATIONS_CENTER_IT_CC_LOCATION=./casc-it/jenkins-oc.war -DOPERATIONS_CENTER_IT_OC_LOCATION=./casc-it/je.war $MAVEN_ARGS -Dmaven.test.failure.ignore=true verify "$@"
                         '''
 //                         sh './$INTEGRATION_TESTS_SCRIPT $INTEGRATION_TESTS_ARGUMENTS $MAVEN_ARGS -Dmaven.test.failure.ignore=true'
                     }
