@@ -17,7 +17,6 @@ import hudson.model.ManagementLink;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
 /**
  * Configuration as Code Bundle Visualization.
  */
-@IgnoreJRERequirement // this is local to the instance, no need to get it signature checked.
 @Restricted(NoExternalUse.class)
 @Extension
 public class BundleVisualizationLink extends ManagementLink {
