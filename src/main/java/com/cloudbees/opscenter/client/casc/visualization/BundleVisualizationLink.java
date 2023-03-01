@@ -529,11 +529,11 @@ public class BundleVisualizationLink extends ManagementLink {
                 if (StringUtils.isNotBlank(candidate.getId())) {
                     info.append(candidate.getId());
                 }
-                if (StringUtils.isNotBlank(candidate.getVersion())) {
+                if (StringUtils.isNotBlank(version)) {
                     if (StringUtils.isNotBlank(candidate.getId())) {
                         info.append(":");
                     }
-                    info.append(candidate.getVersion());
+                    info.append(version);
                 }
                 if (StringUtils.isNotBlank(candidate.getChecksum())) {
                     info.append(" (checksum " + candidate.getChecksum() + ")");
