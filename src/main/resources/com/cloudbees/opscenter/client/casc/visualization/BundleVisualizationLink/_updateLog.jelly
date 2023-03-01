@@ -8,6 +8,7 @@
     <d:taglib uri="local">
         <d:tag name="row">
             <tr>
+                <td class="table__column table__column--version">${id}</td>
                 <td class="table__column table__column--version"><pre>${version}</pre></td>
                 <td class="table__column table__column--date"><i:formatDate value="${date}" type="date" dateStyle="long"/></td>
                 <td class="table__column table__column--errors">${errors}</td>
@@ -81,14 +82,15 @@
         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
             <table id="casc-bundle-files-table" class="pane bigtable" xmlns:local="local">
                 <tr>
+                    <td class="table__header table__header--id">${%id}</td>
                     <td class="table__header table__header--version">${%version}</td>
                     <td class="table__header table__header--date">${%date}</td>
                     <td class="table__header table__header--errors">${%errors}</td>
                     <td class="table__header table__header--warnings">${%warnings}</td>
-                    <th class="table__header table__header--actions"/>
+                    <td class="table__header table__header--actions"/>
                 </tr>
                 <j:forEach items="${it.truncatedUpdateLog}" var="u">
-                    <local:row version="${u.version}" date="${u.date}" errors="${u.errors}" warnings="${u.warnings}" folder="${u.folder}"/>
+                    <local:row id="${u.id}" version="${u.fullVersion}" date="${u.date}" errors="${u.errors}" warnings="${u.warnings}" folder="${u.folder}"/>
                 </j:forEach>
             </table>
         </cbcipm:tabcontent>

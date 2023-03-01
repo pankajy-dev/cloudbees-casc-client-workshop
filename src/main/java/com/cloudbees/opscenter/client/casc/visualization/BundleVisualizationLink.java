@@ -566,15 +566,19 @@ public class BundleVisualizationLink extends ManagementLink {
 
     public static class UpdateLogRow {
 
+        private final String id;
         private final String version;
+        private final String checksum;
         private final Date date;
         private final long errors;
         private final long warnings;
         private final String folder;
 
         private UpdateLogRow(BundleUpdateLog.CandidateBundle candidate) {
+            this.id =  candidate == null ? null : candidate.getId();
             this.folder = candidate == null ? null : candidate.getFolder();
             this.version = candidate == null ? null : candidate.getVersion();
+            this.checksum = candidate == null ? null : candidate.getChecksum();
             this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
             this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
@@ -595,6 +599,21 @@ public class BundleVisualizationLink extends ManagementLink {
 
         public String getVersion() {
             return version;
+        }
+
+        public String getFullVersion() {
+            if (StringUtils.defaultString(version).equals(StringUtils.defaultString(checksum))) {
+                return version;
+            }
+            return version + " (checksum " + checksum + ")";
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getChecksum() {
+            return checksum;
         }
 
         @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "False positive")
