@@ -44,9 +44,9 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         try (JenkinsRule.WebClient wc = rule.createWebClient()) {
             HtmlPage bundleUpdateTab = wc.goTo("casc-bundle-export-ui/bundleUpdate");
             String content = bundleUpdateTab.getWebResponse().getContentAsString();
-            assertThat("Expected bundle version is 4", content, containsString("You are using version 4"));
-            assertThat("Current version with validations", content, containsString("Validation output for version 4"));
-            assertThat("Expected version 5 was rejected", content, containsString("A new version of the Configuration Bundle (5) is available, but it cannot be applied because it has validation errors"));
+            assertThat("Expected bundle version is 4", content, containsString("You are using bundle my-bundle:4 (checksum 4)"));
+            assertThat("Current version with validations", content, containsString("Validation output for version my-bundle:4 (checksum 4)"));
+            assertThat("Expected version 5 was rejected", content, containsString("A new version of the <b>Configuration Bundle (my-bundle:5 (checksum 5))</b> is available, but it cannot be applied"));
 
             String newest = new BundleUpdateLog().getHistoricalRecords().get(0).toFile().getName(); // folder for newest depends on the test execution date, so reading the newest folder
             HtmlPage updateLogTab = wc.goTo("casc-bundle-export-ui/updateLog");

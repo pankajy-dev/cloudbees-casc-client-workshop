@@ -66,6 +66,8 @@ public final class ConfigurationUpdaterHelper {
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+                String idBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getId();
+                String checksumBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getChecksum();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
                     ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
@@ -118,6 +120,7 @@ public final class ConfigurationUpdaterHelper {
                     if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
                         // If there is no previous known version, store it
                         ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
+                        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
                     }
                     ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
 

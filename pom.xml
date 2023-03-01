@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>149</version>
+    <version>155</version>
     <relativePath />
   </parent>
 
@@ -56,6 +56,13 @@
         <artifactId>commons-lang3</artifactId>
         <version>3.12.0</version>
       </dependency>
+
+      <!-- TODO Remove once in URR BOM -->
+      <dependency>
+        <groupId>com.cloudbees.jenkins.modules</groupId>
+        <artifactId>cloudbees-installation-manager</artifactId>
+        <version>2.332.0.21-20230301.084924-10</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -94,6 +101,12 @@
     <dependency>
       <groupId>com.cloudbees.nectar.plugins</groupId>
       <artifactId>nectar-license</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

@@ -35,6 +35,12 @@ public enum ConfigurationStatus {
     private String outdatedVersion;
 
     /**
+     * When there is a new version available, keeps the bundle id, version and checksum of current bundle until it is updated
+     */
+    @CheckForNull
+    private String outdatedBundleInformation;
+
+    /**
      * True means an error happened when the new version of the bundle was checked or downloaded.
      */
     private boolean errorInNewVersion;
@@ -129,6 +135,48 @@ public enum ConfigurationStatus {
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedVersion(@CheckForNull String outdatedVersion) {
         this.outdatedVersion = outdatedVersion;
+    }
+
+    /**
+     * @return the bundle id, version and checksum of current bundle until it is updated
+     */
+    @CheckForNull
+    public String getOutdatedBundleInformation() {
+        return outdatedBundleInformation;
+    }
+
+    /**
+     * Set the bundle id, version and checksum of current bundle until it is updated
+     * @param outdatedBundleInformation null if there is no new version
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public void setOutdatedBundleInformation(@CheckForNull String outdatedBundleInformation) {
+        this.outdatedBundleInformation = outdatedBundleInformation;
+    }
+
+    /**
+     * Set the bundle id, version and checksum of current bundle until it is updated
+     * @param bundleId bundle identification
+     * @param version bundle version
+     * @param checksum bundle checksum
+     */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
+    public void setOutdatedBundleInformation(@CheckForNull String bundleId, @CheckForNull String version, @CheckForNull String checksum) {
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.isNotBlank(bundleId)) {
+            sb.append(bundleId);
+        }
+        if (StringUtils.isNotBlank(version)) {
+            if (StringUtils.isNotBlank(bundleId)) {
+                sb.append(":");
+            }
+            sb.append(version);
+        }
+        if (StringUtils.isNotBlank(checksum)) {
+            sb.append(" (checksum " + checksum + ")");
+        }
+
+        this.outdatedBundleInformation = StringUtils.isNotBlank(sb.toString()) ? sb.toString() : null;
     }
 
     /**

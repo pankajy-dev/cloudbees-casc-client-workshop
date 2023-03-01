@@ -180,6 +180,7 @@ public class BundleReloadAction implements RootAction {
             LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
+            ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
             return true;
         }
         return false;

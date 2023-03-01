@@ -198,6 +198,7 @@ public class BundleVisualizationLink extends ManagementLink {
     public boolean isReloadInProgress() {
         return ConfigurationStatus.INSTANCE.isCurrentlyReloading();
     }
+
     /**
      * @return the version of the incoming bundle.
      */
@@ -205,6 +206,17 @@ public class BundleVisualizationLink extends ManagementLink {
     public String getUpdateVersion(){
         if(isUpdateAvailable()) {
             return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+        }
+        return null;
+    }
+
+    /**
+     * @return the info of the incoming bundle.
+     */
+    @CheckForNull
+    public String getUpdateInfo(){
+        if(isUpdateAvailable()) {
+            return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
         }
         return null;
     }
@@ -222,6 +234,18 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     /**
+     * @return the version of the currently installed bundle, or null if there is no bundle
+     */
+    //used in jelly
+    @CheckForNull
+    public String getBundleInformation(){
+        if(ConfigurationStatus.INSTANCE.getOutdatedVersion() != null) {
+            return ConfigurationStatus.INSTANCE.getOutdatedBundleInformation();
+        }
+        return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
+    }
+
+    /**
      * While {@link BundleVisualizationLink#getBundleVersion()} returns the installed version, this method returns the downloaded
      * version, i.e., the installed version or the new downloaded version if the new version still has to be applied.
      * @return the version of the currently downloaded bundle, or null if there is no downloaded bundle
@@ -230,6 +254,17 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     public String getDownloadedBundleVersion(){
         return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
+    }
+
+    /**
+     * While {@link BundleVisualizationLink#getBundleInformation()} ()} returns the installed bundle information, this method returns the downloaded
+     * bundle information, i.e., the installed version or the new downloaded version if the new version still has to be applied.
+     * @return the version of the currently downloaded bundle, or null if there is no downloaded bundle
+     */
+    //used in jelly
+    @CheckForNull
+    public String getDownloadedBundleInfo(){
+        return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
     }
 
     /**
@@ -475,6 +510,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
         private final ValidationSection validations;
         private final String version;
+        private final String info;
 
         private CandidateSection() {
             this(null);
@@ -484,13 +520,28 @@ public class BundleVisualizationLink extends ManagementLink {
             List<String> warnings = new ArrayList<>();
             List<String> errors = new ArrayList<>();
             String version = null;
+            StringBuilder info = null;
             if (candidate != null) {
                 warnings = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList());
                 errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
                 version = candidate.getVersion();
+                info = new StringBuilder();
+                if (StringUtils.isNotBlank(candidate.getId())) {
+                    info.append(candidate.getId());
+                }
+                if (StringUtils.isNotBlank(candidate.getVersion())) {
+                    if (StringUtils.isNotBlank(candidate.getId())) {
+                        info.append(":");
+                    }
+                    info.append(candidate.getVersion());
+                }
+                if (StringUtils.isNotBlank(candidate.getChecksum())) {
+                    info.append(" (checksum " + candidate.getChecksum() + ")");
+                }
             }
             this.validations = new ValidationSection(warnings, errors);
             this.version = version;
+            this.info = info == null ? null : info.toString();
         }
 
         @NonNull
@@ -501,6 +552,11 @@ public class BundleVisualizationLink extends ManagementLink {
         @CheckForNull
         public String getVersion() {
             return version;
+        }
+
+        @CheckForNull
+        public String getInfo() {
+            return info;
         }
 
         public boolean isCandidate() {
