@@ -15,8 +15,8 @@
                 <j:choose>
                     <j:when test="${it.isBundleUsed()}">
                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
-                            You are using version ${it.bundleVersion}.
-                            <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleVersion}"/>
+                            <strong>You are using bundle ${it.bundleInformation}.</strong>
+                            <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleInfo}"/>
                         </cbcipm:tabcontent>
                         <j:choose>
                             <j:when test="${it.isErrorInNewVersion()}">
@@ -36,7 +36,7 @@
                                             <div class="alert alert-info">
                                                 <div class="alert__body">
                                                     <j:if test="${it.getUpdateVersion() != null}">
-                                                        <j:set var="version" value="(${it.getUpdateVersion()}) "/>
+                                                        <j:set var="version" value="(${it.getUpdateInfo()}) "/>
                                                     </j:if>
                                                     <header>A new version of the <b>Configuration Bundle ${version}</b>is available</header>
                                                     <p class="mb-0">You can perform a restart now to apply the new Configuration
@@ -75,8 +75,10 @@
                                         <j:if test="${it.isCandidateAvailable()}" >
                                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                             <j:set var="candidate" value="${it.candidate}"/>
-                                            A new version of the Configuration Bundle (${candidate.version}) is available, but it cannot be applied because it has validation errors.
-                                            <cbcipm:valcontent validationObject="${candidate.validations}" bundleVersion="${candidate.version}"/>
+                                            A new version of the <b>Configuration Bundle (${candidate.info})</b> is available, but it cannot be applied because it has
+                                            validation
+                                            errors.
+                                            <cbcipm:valcontent validationObject="${candidate.validations}" bundleVersion="${candidate.info}"/>
                                         </cbcipm:tabcontent>
                                         </j:if>
                                         <cbcipm:tabcontent
