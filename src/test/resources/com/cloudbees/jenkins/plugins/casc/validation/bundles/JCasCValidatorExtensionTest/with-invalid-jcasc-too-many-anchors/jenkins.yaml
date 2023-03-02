@@ -1,0 +1,215 @@
+x-test-1: &test-1_anchor
+  value: test-1
+x-test-2: &test-2_anchor
+  value: test-2
+x-test-3: &test-3_anchor
+  value: test-3
+x-test-4: &test-4_anchor
+  value: test-4
+x-test-5: &test-5_anchor
+  value: test-5
+x-test-6: &test-6_anchor
+  value: test-6
+x-test-7: &test-7_anchor
+  value: test-7
+x-test-8: &test-8_anchor
+  value: test-8
+x-test-9: &test-9_anchor
+  value: test-9
+x-test-10: &test-10_anchor
+  value: test-10
+x-test-11: &test-11_anchor
+  value: test-11
+x-test-12: &test-12_anchor
+  value: test-12
+x-test-13: &test-13_anchor
+  value: test-13
+x-test-14: &test-14_anchor
+  value: test-14
+x-test-15: &test-15_anchor
+  value: test-15
+x-test-16: &test-16_anchor
+  value: test-16
+x-test-17: &test-17_anchor
+  value: test-17
+x-test-18: &test-18_anchor
+  value: test-18
+x-test-19: &test-19_anchor
+  value: test-19
+x-test-20: &test-20_anchor
+  value: test-20
+x-test-21: &test-21_anchor
+  value: test-21
+x-test-22: &test-22_anchor
+  value: test-22
+x-test-23: &test-23_anchor
+  value: test-23
+x-test-24: &test-24_anchor
+  value: test-24
+x-test-25: &test-25_anchor
+  value: test-25
+x-test-26: &test-26_anchor
+  value: test-26
+x-test-27: &test-27_anchor
+  value: test-27
+x-test-28: &test-28_anchor
+  value: test-28
+x-test-29: &test-29_anchor
+  value: test-29
+x-test-30: &test-30_anchor
+  value: test-30
+x-test-31: &test-31_anchor
+  value: test-31
+x-test-32: &test-32_anchor
+  value: test-32
+x-test-33: &test-33_anchor
+  value: test-33
+x-test-34: &test-34_anchor
+  value: test-34
+x-test-35: &test-35_anchor
+  value: test-35
+x-test-36: &test-36_anchor
+  value: test-36
+x-test-37: &test-37_anchor
+  value: test-37
+x-test-38: &test-38_anchor
+  value: test-38
+x-test-39: &test-39_anchor
+  value: test-39
+x-test-40: &test-40_anchor
+  value: test-40
+x-test-41: &test-41_anchor
+  value: test-41
+x-test-42: &test-42_anchor
+  value: test-42
+x-test-43: &test-43_anchor
+  value: test-43
+x-test-44: &test-44_anchor
+  value: test-44
+x-test-45: &test-45_anchor
+  value: test-45
+x-test-46: &test-46_anchor
+  value: test-46
+x-test-47: &test-47_anchor
+  value: test-47
+x-test-48: &test-48_anchor
+  value: test-48
+x-test-49: &test-49_anchor
+  value: test-49
+x-test-50: &test-50_anchor
+  value: test-50
+x-test-51: &test-51_anchor
+  value: test-51
+jenkins:
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "test-1"
+            <<: *test-1_anchor
+          - key: "test-2"
+            <<: *test-2_anchor
+          - key: "test-3"
+            <<: *test-3_anchor
+          - key: "test-4"
+            <<: *test-4_anchor
+          - key: "test-5"
+            <<: *test-5_anchor
+          - key: "test-6"
+            <<: *test-6_anchor
+          - key: "test-7"
+            <<: *test-7_anchor
+          - key: "test-8"
+            <<: *test-8_anchor
+          - key: "test-9"
+            <<: *test-9_anchor
+          - key: "test-10"
+            <<: *test-10_anchor
+          - key: "test-11"
+            <<: *test-11_anchor
+          - key: "test-12"
+            <<: *test-12_anchor
+          - key: "test-13"
+            <<: *test-13_anchor
+          - key: "test-14"
+            <<: *test-14_anchor
+          - key: "test-15"
+            <<: *test-15_anchor
+          - key: "test-16"
+            <<: *test-16_anchor
+          - key: "test-17"
+            <<: *test-17_anchor
+          - key: "test-18"
+            <<: *test-18_anchor
+          - key: "test-19"
+            <<: *test-19_anchor
+          - key: "test-20"
+            <<: *test-20_anchor
+          - key: "test-21"
+            <<: *test-21_anchor
+          - key: "test-22"
+            <<: *test-22_anchor
+          - key: "test-23"
+            <<: *test-23_anchor
+          - key: "test-24"
+            <<: *test-24_anchor
+          - key: "test-25"
+            <<: *test-25_anchor
+          - key: "test-26"
+            <<: *test-26_anchor
+          - key: "test-27"
+            <<: *test-27_anchor
+          - key: "test-28"
+            <<: *test-28_anchor
+          - key: "test-29"
+            <<: *test-29_anchor
+          - key: "test-30"
+            <<: *test-30_anchor
+          - key: "test-31"
+            <<: *test-31_anchor
+          - key: "test-32"
+            <<: *test-32_anchor
+          - key: "test-33"
+            <<: *test-33_anchor
+          - key: "test-34"
+            <<: *test-34_anchor
+          - key: "test-35"
+            <<: *test-35_anchor
+          - key: "test-36"
+            <<: *test-36_anchor
+          - key: "test-37"
+            <<: *test-37_anchor
+          - key: "test-38"
+            <<: *test-38_anchor
+          - key: "test-39"
+            <<: *test-39_anchor
+          - key: "test-40"
+            <<: *test-40_anchor
+          - key: "test-41"
+            <<: *test-41_anchor
+          - key: "test-42"
+            <<: *test-42_anchor
+          - key: "test-43"
+            <<: *test-43_anchor
+          - key: "test-44"
+            <<: *test-44_anchor
+          - key: "test-45"
+            <<: *test-45_anchor
+          - key: "test-46"
+            <<: *test-46_anchor
+          - key: "test-47"
+            <<: *test-47_anchor
+          - key: "test-48"
+            <<: *test-48_anchor
+          - key: "test-49"
+            <<: *test-49_anchor
+          - key: "test-50"
+            <<: *test-50_anchor
+          - key: "test-51"
+            <<: *test-51_anchor
+  quietPeriod: 5
+unclassified:
+  location:
+    url: http://localhost:8081
+  usageStatisticsCloudBees:
+    disabledJenkinsUsageStatistics: true
+    usageStatisticsCollected: false

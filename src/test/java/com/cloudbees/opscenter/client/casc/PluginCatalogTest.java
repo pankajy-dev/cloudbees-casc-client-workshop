@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
@@ -20,16 +21,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class PluginCatalogTest extends AbstractIMTest {
@@ -69,7 +67,7 @@ public class PluginCatalogTest extends AbstractIMTest {
         Path file = new File(path).toPath();
 
         try (InputStream inputStream = Files.newInputStream(file)) {
-            Yaml yaml = new Yaml(new SafeConstructor());
+            Yaml yaml = YamlClientUtils.createDefault();
             Map<String, Object> extensionYaml = (Map<String, Object>) yaml.load(inputStream);
             String name = (String) extensionYaml.get("name");
             String displayName = (String) extensionYaml.get("displayName");

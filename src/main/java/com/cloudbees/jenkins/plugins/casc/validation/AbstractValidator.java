@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
@@ -14,8 +15,6 @@ import hudson.ExtensionPoint;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -80,7 +79,7 @@ public abstract class AbstractValidator implements ExtensionPoint {
     @CheckForNull
     Map<String, Object> parseYaml(String content) throws IOException {
         try {
-            Yaml yaml = new Yaml(new SafeConstructor());
+            Yaml yaml = YamlClientUtils.createDefault();
             return yaml.load(content);
         } catch (Exception e) {
             throw new IOException("Error parsing yaml content", e);
@@ -113,8 +112,9 @@ public abstract class AbstractValidator implements ExtensionPoint {
         if (StringUtils.isBlank(content)) {
             return null;
         }
+        RootLimitedConstructor rootLimitedConstructor = new RootLimitedConstructor(BundleLoader.BundleDescriptor.class);
 
-        Yaml yaml = new Yaml(new RootLimitedConstructor(BundleLoader.BundleDescriptor.class));
+        Yaml yaml = YamlClientUtils.Builder.create().setBaseConstructor(rootLimitedConstructor).build();
         try {
             return yaml.load(content);
         } catch (Exception e) {

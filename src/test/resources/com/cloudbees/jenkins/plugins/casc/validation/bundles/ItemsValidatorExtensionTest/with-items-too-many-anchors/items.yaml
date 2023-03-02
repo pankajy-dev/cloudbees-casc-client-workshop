@@ -1,0 +1,208 @@
+x-test-1: &test-1_anchor
+  name: test-1
+x-test-2: &test-2_anchor
+  name: test-2
+x-test-3: &test-3_anchor
+  name: test-3
+x-test-4: &test-4_anchor
+  name: test-4
+x-test-5: &test-5_anchor
+  name: test-5
+x-test-6: &test-6_anchor
+  name: test-6
+x-test-7: &test-7_anchor
+  name: test-7
+x-test-8: &test-8_anchor
+  name: test-8
+x-test-9: &test-9_anchor
+  name: test-9
+x-test-10: &test-10_anchor
+  name: test-10
+x-test-11: &test-11_anchor
+  name: test-11
+x-test-12: &test-12_anchor
+  name: test-12
+x-test-13: &test-13_anchor
+  name: test-13
+x-test-14: &test-14_anchor
+  name: test-14
+x-test-15: &test-15_anchor
+  name: test-15
+x-test-16: &test-16_anchor
+  name: test-16
+x-test-17: &test-17_anchor
+  name: test-17
+x-test-18: &test-18_anchor
+  name: test-18
+x-test-19: &test-19_anchor
+  name: test-19
+x-test-20: &test-20_anchor
+  name: test-20
+x-test-21: &test-21_anchor
+  name: test-21
+x-test-22: &test-22_anchor
+  name: test-22
+x-test-23: &test-23_anchor
+  name: test-23
+x-test-24: &test-24_anchor
+  name: test-24
+x-test-25: &test-25_anchor
+  name: test-25
+x-test-26: &test-26_anchor
+  name: test-26
+x-test-27: &test-27_anchor
+  name: test-27
+x-test-28: &test-28_anchor
+  name: test-28
+x-test-29: &test-29_anchor
+  name: test-29
+x-test-30: &test-30_anchor
+  name: test-30
+x-test-31: &test-31_anchor
+  name: test-31
+x-test-32: &test-32_anchor
+  name: test-32
+x-test-33: &test-33_anchor
+  name: test-33
+x-test-34: &test-34_anchor
+  name: test-34
+x-test-35: &test-35_anchor
+  name: test-35
+x-test-36: &test-36_anchor
+  name: test-36
+x-test-37: &test-37_anchor
+  name: test-37
+x-test-38: &test-38_anchor
+  name: test-38
+x-test-39: &test-39_anchor
+  name: test-39
+x-test-40: &test-40_anchor
+  name: test-40
+x-test-41: &test-41_anchor
+  name: test-41
+x-test-42: &test-42_anchor
+  name: test-42
+x-test-43: &test-43_anchor
+  name: test-43
+x-test-44: &test-44_anchor
+  name: test-44
+x-test-45: &test-45_anchor
+  name: test-45
+x-test-46: &test-46_anchor
+  name: test-46
+x-test-47: &test-47_anchor
+  name: test-47
+x-test-48: &test-48_anchor
+  name: test-48
+x-test-49: &test-49_anchor
+  name: test-49
+x-test-50: &test-50_anchor
+  name: test-50
+x-test-51: &test-51_anchor
+  name: test-51
+removeStrategy:
+  items: NONE
+  rbac: SYNC
+items:
+  - kind: "folder"
+    <<: *test-1_anchor
+  - kind: "folder"
+    <<: *test-2_anchor
+  - kind: "folder"
+    <<: *test-3_anchor
+  - kind: "folder"
+    <<: *test-4_anchor
+  - kind: "folder"
+    <<: *test-5_anchor
+  - kind: "folder"
+    <<: *test-6_anchor
+  - kind: "folder"
+    <<: *test-7_anchor
+  - kind: "folder"
+    <<: *test-8_anchor
+  - kind: "folder"
+    <<: *test-9_anchor
+  - kind: "folder"
+    <<: *test-10_anchor
+  - kind: "folder"
+    <<: *test-11_anchor
+  - kind: "folder"
+    <<: *test-12_anchor
+  - kind: "folder"
+    <<: *test-13_anchor
+  - kind: "folder"
+    <<: *test-14_anchor
+  - kind: "folder"
+    <<: *test-15_anchor
+  - kind: "folder"
+    <<: *test-16_anchor
+  - kind: "folder"
+    <<: *test-17_anchor
+  - kind: "folder"
+    <<: *test-18_anchor
+  - kind: "folder"
+    <<: *test-20_anchor
+  - kind: "folder"
+    <<: *test-19_anchor
+  - kind: "folder"
+    <<: *test-21_anchor
+  - kind: "folder"
+    <<: *test-22_anchor
+  - kind: "folder"
+    <<: *test-23_anchor
+  - kind: "folder"
+    <<: *test-24_anchor
+  - kind: "folder"
+    <<: *test-25_anchor
+  - kind: "folder"
+    <<: *test-26_anchor
+  - kind: "folder"
+    <<: *test-27_anchor
+  - kind: "folder"
+    <<: *test-28_anchor
+  - kind: "folder"
+    <<: *test-29_anchor
+  - kind: "folder"
+    <<: *test-30_anchor
+  - kind: "folder"
+    <<: *test-31_anchor
+  - kind: "folder"
+    <<: *test-32_anchor
+  - kind: "folder"
+    <<: *test-33_anchor
+  - kind: "folder"
+    <<: *test-34_anchor
+  - kind: "folder"
+    <<: *test-35_anchor
+  - kind: "folder"
+    <<: *test-36_anchor
+  - kind: "folder"
+    <<: *test-37_anchor
+  - kind: "folder"
+    <<: *test-38_anchor
+  - kind: "folder"
+    <<: *test-39_anchor
+  - kind: "folder"
+    <<: *test-40_anchor
+  - kind: "folder"
+    <<: *test-41_anchor
+  - kind: "folder"
+    <<: *test-42_anchor
+  - kind: "folder"
+    <<: *test-43_anchor
+  - kind: "folder"
+    <<: *test-44_anchor
+  - kind: "folder"
+    <<: *test-45_anchor
+  - kind: "folder"
+    <<: *test-46_anchor
+  - kind: "folder"
+    <<: *test-47_anchor
+  - kind: "folder"
+    <<: *test-48_anchor
+  - kind: "folder"
+    <<: *test-49_anchor
+  - kind: "folder"
+    <<: *test-50_anchor
+  - kind: "folder"
+    <<: *test-51_anchor
