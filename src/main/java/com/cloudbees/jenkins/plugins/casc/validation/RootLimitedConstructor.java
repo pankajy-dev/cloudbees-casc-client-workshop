@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.plugins.casc.validation;
 
 import org.yaml.snakeyaml.constructor.Constructor;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

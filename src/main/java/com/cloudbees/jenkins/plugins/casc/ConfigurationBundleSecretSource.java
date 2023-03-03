@@ -6,7 +6,6 @@ import io.jenkins.plugins.casc.SecretSource;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -81,7 +80,7 @@ public class ConfigurationBundleSecretSource extends SecretSource {
 
     private Map<String, Object> parseYaml(String content) {
         try {
-            Yaml yaml = new Yaml(new SafeConstructor());
+            Yaml yaml = YamlClientUtils.createDefault();
             return yaml.load(content);
         } catch (Exception e) {
             return Collections.emptyMap();

@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import hudson.ExtensionList;
 import org.hamcrest.MatcherAssert;
@@ -11,8 +12,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +108,7 @@ public class BundleExportInControllerTest {
     }
 
     private Map<String, Object> toYaml(String str) {
-        Map<String, Object> yaml = new Yaml(new SafeConstructor()).load(str);
+        Map<String, Object> yaml = YamlClientUtils.createDefault().load(str);
         return yaml;
     }
 }

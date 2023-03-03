@@ -3,9 +3,11 @@ package com.cloudbees.jenkins.plugins.casc.validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import hudson.ExtensionList;
+import io.jenkins.plugins.casc.ConfigurationContext;
+import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.nio.file.Paths;
@@ -19,8 +21,6 @@ public class JCasCValidatorExtensionTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
-    @Rule
-    public TestName testName = new TestName();
 
     @Test
     public void smokes() {
@@ -47,5 +47,28 @@ public class JCasCValidatorExtensionTest {
         assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
         assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getMessage(), is("[JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
 
+    }
+
+    @Issue("BEE-29721")
+    @Test
+    public void invalidAnchors(){
+        JCasCValidatorExtension validator = ExtensionList.lookupSingleton(JCasCValidatorExtension.class);
+
+        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-invalid-jcasc-too-many-anchors"));
+        Validation v = validations.get(0);
+        String error = "[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that is empty or has an invalid yaml format. Impossible to validate Jenkins Configuration as Code.";
+        assertThat("with-invalid-jcasc-too-many-anchors-bundle: should be a error in JCASC", v.getLevel(), is(Validation.Level.ERROR));
+        assertThat("with-invalid-jcasc-too-many-anchors-bundle: should be a error in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
+        assertThat("with-invalid-jcasc-too-many-anchors-bundle: should be a error in JCASC", v.getMessage(), is(error));
+    }
+
+    @Test
+    public void invalidAnchorsFixed(){
+        System.setProperty(ConfigurationContext.CASC_YAML_MAX_ALIASES_PROPERTY, "51");
+
+        JCasCValidatorExtension validator = ExtensionList.lookupSingleton(JCasCValidatorExtension.class);
+
+        List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-invalid-jcasc-too-many-anchors"));
+        assertThat("there is no validation outcome", validations, IsCollectionWithSize.hasSize(0));
     }
 }
