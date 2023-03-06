@@ -9,6 +9,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
+import com.cloudbees.jenkins.plugins.casc.YamlUtils;
 import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
@@ -237,7 +238,7 @@ public final class PluginCatalogExporter extends BundleExporter {
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setIndent(2);
         options.setPrettyFlow(true);
-        Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), options);
+        Yaml yaml = YamlUtils.Builder.create().setDumperOptions(options).build();
         StringWriter writer = new StringWriter();
         yaml.dump(json, writer);
         return writer.toString();
