@@ -9,7 +9,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
-import com.cloudbees.jenkins.plugins.casc.YamlUtils;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.license.nectar.utils.ProductDescriptionUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
@@ -26,8 +26,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
-import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -238,7 +236,7 @@ public final class PluginCatalogExporter extends BundleExporter {
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setIndent(2);
         options.setPrettyFlow(true);
-        Yaml yaml = YamlUtils.Builder.create().setDumperOptions(options).build();
+        Yaml yaml = YamlClientUtils.Builder.create().setDumperOptions(options).build();
         StringWriter writer = new StringWriter();
         yaml.dump(json, writer);
         return writer.toString();

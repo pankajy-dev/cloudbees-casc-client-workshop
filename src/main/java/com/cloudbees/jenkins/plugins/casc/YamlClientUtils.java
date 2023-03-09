@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.casc;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
+import io.jenkins.plugins.casc.ConfigurationContext;
 import org.apache.commons.lang.math.NumberUtils;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -17,10 +18,7 @@ public class YamlClientUtils {
         return Util.fixEmptyAndTrim(System.getProperty(proKey, System.getenv(envKey)));
     }
     static public Yaml createDefault() {
-        LoaderOptions loaderOptions = new LoaderOptions();
-        String prop = getPropertyOrEnv("CASC_YAML_MAX_ALIASES", "casc.yaml.max.aliases");
-        loaderOptions.setMaxAliasesForCollections(NumberUtils.toInt(prop, 50));
-        return new Builder().setLoaderOptions(loaderOptions).build();
+        return new Builder().build();
     }
 
     @SuppressFBWarnings
@@ -51,16 +49,12 @@ public class YamlClientUtils {
         }
 
         public Builder() {
+            String prop = getPropertyOrEnv("CASC_YAML_MAX_ALIASES", ConfigurationContext.CASC_YAML_MAX_ALIASES_PROPERTY);
+            loaderOptions.setMaxAliasesForCollections(NumberUtils.toInt(prop, 50));
         }
 
         public static Builder create(){
             return new Builder();
-        }
-        public Builder(LoaderOptions loaderOptions, DumperOptions dumperOptions, Constructor constructor, Representer representer) {
-            this.loaderOptions = loaderOptions;
-            this.dumperOptions = dumperOptions;
-            this.constructor = constructor;
-            this.representer = representer;
         }
 
         public Yaml build(){

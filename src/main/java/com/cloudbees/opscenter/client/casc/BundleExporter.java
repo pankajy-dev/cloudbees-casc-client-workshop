@@ -7,7 +7,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.Configuration;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
-import com.cloudbees.jenkins.plugins.casc.YamlUtils;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.items.Items;
 import com.cloudbees.jenkins.plugins.casc.rbac.GlobalRbac;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -24,8 +24,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
-import org.yaml.snakeyaml.representer.Representer;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -208,7 +206,7 @@ public abstract class BundleExporter implements ExtensionPoint {
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             options.setIndent(2);
             options.setPrettyFlow(true);
-            Yaml yaml = YamlUtils.Builder.create().setDumperOptions(options).build();
+            Yaml yaml = YamlClientUtils.Builder.create().setDumperOptions(options).build();
             return yaml.dump(obj);
         }
     }
@@ -233,7 +231,7 @@ public abstract class BundleExporter implements ExtensionPoint {
             if (!yaml.isEmpty()) {
                 DumperOptions options = new DumperOptions();
                 options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-                Yaml output = YamlUtils.Builder.create().setDumperOptions(options).build();
+                Yaml output = YamlClientUtils.Builder.create().setDumperOptions(options).build();
                 StringWriter writer = new StringWriter();
                 output.dump(yaml, writer);
                 return writer.toString();
@@ -276,7 +274,7 @@ public abstract class BundleExporter implements ExtensionPoint {
             if (!yaml.isEmpty()) {
                 DumperOptions options = new DumperOptions();
                 options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-                Yaml output = YamlUtils.Builder.create().setDumperOptions(options).build();
+                Yaml output = YamlClientUtils.Builder.create().setDumperOptions(options).build();
                 StringWriter writer = new StringWriter();
                 output.dump(yaml, writer);
                 return writer.toString();
