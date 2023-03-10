@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -116,6 +117,7 @@ public class ConfigurationBundleService {
             }
         }
 
+        Set<String> catalogDiffs = new TreeSet<>();
         // No other plugin but plugins in the catalog can offer an update
         for (String plugin : alreadyInstalledPlugins) {
             if (pluginsInCatalog.containsKey(plugin)) {
@@ -125,10 +127,17 @@ public class ConfigurationBundleService {
                     String picVersion = pic.getPluginEntry().getVersion();
                     String pucVersion = puc.getWrapper().getVersion();
                     if (!Objects.equals(picVersion, pucVersion)) {
-                        return false;
+                        catalogDiffs.add(String.format("{plugin: %s, catalog: %s, installed: %s}",
+                            plugin, picVersion, pucVersion));
                     }
                 }
             }
+        }
+
+        if(!catalogDiffs.isEmpty()) {
+            LOGGER.log(Level.INFO, "Configuration Bundle cannot be reloaded because of Plugin Catalog versions update: [{0}]",
+                String.join(",", catalogDiffs));
+            return false;
         }
 
         return true;
