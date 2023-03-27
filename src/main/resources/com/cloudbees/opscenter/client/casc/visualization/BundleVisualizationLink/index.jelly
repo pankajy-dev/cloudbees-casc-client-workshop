@@ -14,11 +14,11 @@
         </l:header>
         <l:main-panel>
             <common:layout>
-                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                <cbcipm:tabcontent class="plugin-management-content--narrow-900 plugin-management-content--margin">
                     You can export the current configuration to create a template Configuration as Code (CasC) bundle. However, the exported configuration is not an exact replica of this instance and must be manually updated.
                     Refer to the documentation for more information.
                 </cbcipm:tabcontent>
-                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                <cbcipm:tabcontent class="plugin-management-content--narrow-900 plugin-management-content--margin">
                     You must verify there are no Beekeeper plugin warnings in the exported configuration. Otherwise, the files may be unusable and require modifications due to warning comments in the files caused by plugin conflicts.
                 </cbcipm:tabcontent>
                 <cbcipm:tabcontent class="plugin-management-content--margin">

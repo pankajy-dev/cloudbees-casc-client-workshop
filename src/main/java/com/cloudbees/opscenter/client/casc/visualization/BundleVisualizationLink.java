@@ -569,6 +569,7 @@ public class BundleVisualizationLink extends ManagementLink {
         private final String id;
         private final String version;
         private final String checksum;
+        private final String description;
         private final Date date;
         private final long errors;
         private final long warnings;
@@ -579,6 +580,7 @@ public class BundleVisualizationLink extends ManagementLink {
             this.folder = candidate == null ? null : candidate.getFolder();
             this.version = candidate == null ? null : candidate.getVersion();
             this.checksum = candidate == null ? null : candidate.getChecksum();
+            this.description = candidate == null ? null : candidate.getDescription();
             this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
             this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
@@ -631,6 +633,10 @@ public class BundleVisualizationLink extends ManagementLink {
 
         public String getFolder() {
             return folder;
+        }
+
+        public String getDescription() {
+            return description;
         }
     }
 }

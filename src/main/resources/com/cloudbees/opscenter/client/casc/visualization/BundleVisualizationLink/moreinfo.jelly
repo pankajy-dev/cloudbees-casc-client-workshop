@@ -10,12 +10,12 @@
         </l:header>
         <l:main-panel>
             <common:layout>
-                <cbcipm:tabcontent class="plugin-management-content--narrow-700  plugin-management-content--margin">
+                <cbcipm:tabcontent class="plugin-management-content--narrow-900  plugin-management-content--margin">
                     Configuration as Code (CasC) simplifies the management of a CloudBees CI cluster
                     by capturing the configuration of this instance in human-readable, declarative configuration
                     files that can be applied in a reproducible way.
                 </cbcipm:tabcontent>
-                <cbcipm:tabcontent class="plugin-management-content--narrow-700  plugin-management-content--margin">
+                <cbcipm:tabcontent class="plugin-management-content--narrow-900  plugin-management-content--margin">
                     The configuration is described in a collection of YAML files referred to as a
                     Configuration as Code (CasC) bundle. Refer to the documentation for more information.
                 </cbcipm:tabcontent>
