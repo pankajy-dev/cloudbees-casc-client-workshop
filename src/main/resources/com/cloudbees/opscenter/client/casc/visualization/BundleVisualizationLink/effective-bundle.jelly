@@ -14,7 +14,7 @@
         </l:header>
         <l:main-panel>
             <common:layout>
-                <cbcipm:tabcontent class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                <cbcipm:tabcontent class="plugin-management-content--narrow-900 plugin-management-content--margin">
                     The original bundle is the folder or file that was applied when this instance was started.
                 </cbcipm:tabcontent>
                 <cbcipm:tabcontent class="plugin-management-content--margin">

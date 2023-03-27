@@ -42,8 +42,8 @@
     /* BODY */
     margin: 0 20px;
     min-width: 400px;
-    max-width: 900px;
-    flex-basis: 900px; // To solve an issue in IE11: https://github.com/philipwalton/flexbugs/tree/6e720da852c3d566a84f3d82eb500e6f53f0a326#flexbug-17
+    max-width: 1100px;
+    flex-basis: 1100px; // To solve an issue in IE11: https://github.com/philipwalton/flexbugs/tree/6e720da852c3d566a84f3d82eb500e6f53f0a326#flexbug-17
     flex: 1 1 auto; /* Can grow or shrink */
 
     @media only screen and (max-width: 768px) {
@@ -118,5 +118,9 @@
 
     &--narrow-700 {
         max-width: 700px;
+    }
+
+    &--narrow-900 {
+        max-width: 900px;
     }
 }

@@ -82,7 +82,7 @@
                                         </cbcipm:tabcontent>
                                         </j:if>
                                         <cbcipm:tabcontent
-                                                class="plugin-management-content--narrow-700 plugin-management-content--margin">
+                                                class="plugin-management-content--narrow-900 plugin-management-content--margin">
 
                                             <!-- The form reloads this page-->
                                             <a class="yui-button primary check-updates-btn" href="${request.getRequestURI()}">Check for Updates</a>
@@ -96,7 +96,7 @@
                                             </j:if>
                                         </cbcipm:tabcontent>
                                         <cbcipm:tabcontent
-                                                class="plugin-management-content--narrow-700 plugin-management-content--margin ">
+                                                class="plugin-management-content--narrow-900 plugin-management-content--margin ">
 
                                             <!-- The form reloads this page-->
                                             <f:form method="post" action="act" name="act-update-bundle" >
