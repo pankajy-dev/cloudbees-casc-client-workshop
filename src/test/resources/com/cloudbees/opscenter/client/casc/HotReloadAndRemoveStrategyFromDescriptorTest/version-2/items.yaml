@@ -1,0 +1,22 @@
+removeStrategy:
+  rbac: "SYNC"
+  items: "NONE"
+items:
+  - kind: "folder"
+    name: "folder-root"
+    description: "First level folder"
+    displayName: "folder-root"
+    items:
+      - kind: "folder"
+        name: "folder-in-folder"
+        description: "Second level folder"
+        displayName: "folder-in-folder"
+        items:
+          - kind: "freeStyle"
+            name: "free-in-folder-in-folder"
+            displayName: "free-in-folder-in-folder"
+            description: "Job in the second level folder"
+      - kind: "freeStyle"
+        name: "free-in-folder"
+        description: "Job in the first level folder"
+        displayName: "free-in-folder"
