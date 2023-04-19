@@ -20,3 +20,7 @@ items:
         name: "free-in-folder"
         description: "Job in the first level folder"
         displayName: "free-in-folder"
+  - kind: "freeStyle"
+    name: "free-root"
+    description: "Job in root"
+    displayName: "free-root"

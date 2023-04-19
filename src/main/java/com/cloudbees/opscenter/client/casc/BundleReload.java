@@ -1,12 +1,16 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
+import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
+import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
+
 import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -157,7 +161,7 @@ public abstract class BundleReload implements ExtensionPoint {
                 try {
                     Bootstrap.initializeRbac();
                 } catch (IOException | CasCException e) {
-                    // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
+                    // TODO: let the exception to bubble up to fail fast (when we make the overall change about that)
                     LOGGER.log(Level.SEVERE, "Configuration as Code RBAC processing failed: {0}", e);
                     throw new CasCException("Configuration as Code RBAC processing failed", e);
                 }
@@ -185,7 +189,7 @@ public abstract class BundleReload implements ExtensionPoint {
                 try {
                     Bootstrap.initializeItems();
                 } catch (IOException | CasCException e) {
-                    // TODO: let the exception to buble up to fail fast (when we make the overall change about that)
+                    // TODO: let the exception to bubble up to fail fast (when we make the overall change about that)
                     LOGGER.log(Level.SEVERE, "Configuration as Code items processing failed: {0}", e);
                     throw new CasCException("Configuration as Code items processing failed", e);
                 }
@@ -194,8 +198,24 @@ public abstract class BundleReload implements ExtensionPoint {
 
         @Override
         public boolean isReloadable() {
-            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
-            return comparisonResult != null && comparisonResult.getItems().withChanges();
+            try {
+                ConfigurationBundle newBundleVersion = ConfigurationBundleManager.get().getConfigurationBundle();
+                String removeStrategy;
+                if (newBundleVersion.getItemRemoveStrategy() != null) {
+                    removeStrategy = newBundleVersion.getItemRemoveStrategy().getItems();
+                } else {
+                    removeStrategy = ItemsProcessor.from(newBundleVersion.getItems()).getRemoveStrategy() instanceof RemoveStrategyProcessor.None ? "none" : "delete"; // We don't care of the exact value. It's only to check if the remove strategy is none or it implies a removal
+                }
+                boolean isRemoveStrategyWithRemoval = !"none".equalsIgnoreCase(removeStrategy);
+
+                BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+                boolean withChangesInItems = comparisonResult != null && comparisonResult.getItems().withChanges();
+
+                return isRemoveStrategyWithRemoval || withChangesInItems;
+            } catch (CasCException e) {
+                LOGGER.log(Level.SEVERE, "Error checking if the items must be recreated. By default, bundle is applied again", e);
+                return true;
+            }
         }
     }
 

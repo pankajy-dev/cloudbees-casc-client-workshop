@@ -20,6 +20,7 @@ import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -51,7 +52,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         assertThat("folder-root/free-in-folder must have a build", fsp2.getBuilds(), not(empty()));
         assertThat("folder-root/folder-in-folder/free-in-folder-in-folder must have a build", fsp3.getBuilds(), not(empty()));
 
-        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-2").toFile().getAbsolutePath());
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/version-2").toFile().getAbsolutePath());
         ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -60,12 +61,13 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
         fsp3 = Jenkins.get().getItemByFullName("folder-root/folder-in-folder/free-in-folder-in-folder", FreeStyleProject.class);
 
-        assertNull("free-root should have been removed", fsp1);
+        assertNotNull("free-root should have been re-created", fsp1);
         assertNotNull("free-in-folder should have been re-created", fsp2);
         assertNotNull("free-in-folder-in-folder  should have been re-created", fsp3);
 
-        assertThat("folder-root/free-in-folder mustn't have a build as it ahs been recreated", fsp2.getBuilds(), not(empty()));
-        assertThat("folder-root/folder-in-folder/free-in-folder-in-folder mustn't have a build as it ahs been recreated", fsp3.getBuilds(), not(empty()));
+        assertThat("free-root mustn't have a build as it has been recreated", fsp1.getBuilds().size(), is(0));
+        assertThat("folder-root/free-in-folder mustn't have a build as it has been recreated", fsp2.getBuilds().size(), is(0));
+        assertThat("folder-root/folder-in-folder/free-in-folder-in-folder mustn't have a build as it has been recreated", fsp3.getBuilds().size(), is(0));
     }
 
     public static final class TwoPluginsV2dot289 implements TestEnvelopeProvider {
