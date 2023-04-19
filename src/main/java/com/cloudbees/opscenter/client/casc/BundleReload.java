@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ItemRemoveStrategy;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
@@ -201,10 +202,12 @@ public abstract class BundleReload implements ExtensionPoint {
             try {
                 ConfigurationBundle newBundleVersion = ConfigurationBundleManager.get().getConfigurationBundle();
                 String removeStrategy;
-                if (newBundleVersion.getItemRemoveStrategy() != null) {
-                    removeStrategy = newBundleVersion.getItemRemoveStrategy().getItems();
+                ItemRemoveStrategy fromDescriptor = newBundleVersion.getItemRemoveStrategy();
+                if (fromDescriptor != null) {
+                    removeStrategy = fromDescriptor.getItems();
                 } else {
-                    removeStrategy = ItemsProcessor.from(newBundleVersion.getItems()).getRemoveStrategy() instanceof RemoveStrategyProcessor.None ? "none" : "delete"; // We don't care of the exact value. It's only to check if the remove strategy is none or it implies a removal
+                    removeStrategy = !newBundleVersion.hasItems() || ItemsProcessor.from(newBundleVersion.getItems()).getRemoveStrategy() instanceof RemoveStrategyProcessor.None ?
+                                     "none" : "sync"; // We don't care of the exact value. It's only to check if the remove strategy exists and implies a removal
                 }
                 boolean isRemoveStrategyWithRemoval = !"none".equalsIgnoreCase(removeStrategy);
 
