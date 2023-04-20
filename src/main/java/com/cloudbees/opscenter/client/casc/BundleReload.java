@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
 import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
@@ -19,12 +20,16 @@ import hudson.ExtensionPoint;
 import hudson.model.UpdateCenter;
 import hudson.model.UpdateSite;
 import jenkins.model.Jenkins;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -33,6 +38,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Marker interface for each CasC bundle section to be reloaded.
@@ -170,9 +177,25 @@ public abstract class BundleReload implements ExtensionPoint {
         }
 
         @Override
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive in newBundleVersion.getRbac(). Already checked with hasRBAC()")
         public boolean isReloadable() {
+            ConfigurationBundle newBundleVersion = ConfigurationBundleManager.get().getConfigurationBundle();
+            String removeStrategy = newBundleVersion.getRbacRemoveStrategy();
+            if (StringUtils.isEmpty(removeStrategy)) {
+                if (newBundleVersion.hasRBAC()) {
+                    Map<String, Object> parsed = YamlClientUtils.createDefault().load(newBundleVersion.getRbac().get(0));
+                    if (parsed != null) {
+                        Map<String, Object> fromFile = (Map<String, Object>) parsed.getOrDefault("removeStrategy", new HashMap<>());
+                        removeStrategy = (String) fromFile.getOrDefault("rbac", "update"); // If no present, then let's consider update so it's not reloaded
+                    }
+                }
+            }
+            boolean isRemoveStrategyWithRemoval = "sync".equalsIgnoreCase(removeStrategy);
+
             BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
-            return comparisonResult != null && comparisonResult.getRbac().withChanges();
+            boolean withChangesInItems = comparisonResult != null && comparisonResult.getRbac().withChanges();
+
+            return isRemoveStrategyWithRemoval || withChangesInItems;
         }
     }
 
