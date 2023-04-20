@@ -176,6 +176,13 @@ public abstract class BundleReload implements ExtensionPoint {
             }
         }
 
+        /**
+         * Check if RBAC configuration should be reloaded
+         * - If remove strategy is sync, then the groups and roles must be recreated, as if the bundle is applied in a restart
+         *   During the restart, with that strategy the groups and roles will be synchronized, so here it's the same
+         * - Remove strategy from bundle prevails over remove strategy from yaml files
+         * @return true if RBAC configuration must be reloaded
+         */
         @Override
         @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive in newBundleVersion.getRbac(). Already checked with hasRBAC()")
         public boolean isReloadable() {
@@ -220,6 +227,13 @@ public abstract class BundleReload implements ExtensionPoint {
             }
         }
 
+        /**
+         * Check if Items configuration should be reloaded
+         * - If remove strategy is different to none, then the items must be recreated, as if the bundle is applied in a restart
+         *   During the restart with that strategy some items will be removed, so now they must be removed
+         * - Remove strategy from bundle descriptor prevails over remove strategy from yaml files
+         * @return true if Items configuration must be reloaded
+         */
         @Override
         public boolean isReloadable() {
             try {
