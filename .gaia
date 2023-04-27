@@ -1,7 +1,5 @@
-# TODO Restore after BEE-29584
-# CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
+CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
 JAVA8=false
 DEFAULT_JDK=jdk11
-# TODO Restore after BEE-29584
-# INTEGRATION_TESTS_SCRIPT=operations-center-casc-it.sh
-# INTEGRATION_TESTS_ARGUMENTS=-Dtest.categories={com.cloudbees.casc.categories.CascE2ECategory}
+INTEGRATION_TESTS_SCRIPT=operations-center-casc-it.sh
+INTEGRATION_TESTS_ARGUMENTS=-Dtest.categories={com.cloudbees.casc.categories.CascE2ECategory}
