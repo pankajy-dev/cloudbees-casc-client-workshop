@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
+import hudson.model.AbstractModelObject;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.ArrayUtils;
@@ -38,6 +39,12 @@ public class CloudBeesCasCBundlesSupport extends Component {
     @Override
     public String getDisplayName() {
         return "CloudBees Configuration as Code bundle";
+    }
+
+    // Disabled as per BEE-32489, to avoid credentials included in CasC bundle to be exported with the support bundle
+    @Override
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return false;
     }
 
     @Override
