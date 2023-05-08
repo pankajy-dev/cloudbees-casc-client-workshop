@@ -340,7 +340,7 @@ public class BundleReloadAction implements RootAction {
      */
     @POST
     @WebMethod(name = "casc-bundle-validate")
-    public HttpResponse doBundleValidate(StaplerRequest req) {
+    public HttpResponse doBundleValidate(StaplerRequest req, @QueryParameter String commit) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         Path tempFolder = null;
@@ -385,7 +385,7 @@ public class BundleReloadAction implements RootAction {
                 return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
 
-            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir);
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
             return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error reading the zip file", e);
