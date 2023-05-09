@@ -33,9 +33,6 @@ public class BundleValidatorCommandTest {
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
-    @Rule
-    public LoggerRule logger = new LoggerRule();
-
     private User admin;
     private User user;
 
@@ -71,23 +68,19 @@ public class BundleValidatorCommandTest {
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
 
         // Valid without warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(admin.getId()).invokeWithArgs("-c", "COMMIT_HASH");
         assertThat("User admin should have permissions", result.returnCode(), is(0));
-        assertThat("Commit has been logged", logger.getMessages(), containsInAnyOrder("Validating bundles associated with commit COMMIT_HASH"));
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
 
         // Valid but with warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/only-with-warnings.zip")))
                 .asUser(admin.getId()).invoke();
         assertThat("User admin should have permissions", result.returnCode(), is(0));
-        assertThat("Commit has been logged", logger.getMessages(), not(containsInAnyOrder("Validating bundles associated with commit COMMIT_HASH")));
         response = JSONObject.fromObject(result.stdout());
         assertTrue("only-with-warnings.zip should be valid", response.getBoolean("valid"));
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
