@@ -69,7 +69,7 @@ public class BundleValidateHttpEndpointTest {
         conn.disconnect();
 
         // Valid without warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(1);
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         conn = post("valid-bundle.zip", admin);
         assertThat("User admin should have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_OK));
         JSONObject response = JSONObject.fromObject(readResponse(conn.getInputStream()));

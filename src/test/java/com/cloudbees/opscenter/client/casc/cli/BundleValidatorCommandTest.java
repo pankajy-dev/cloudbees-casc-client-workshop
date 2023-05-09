@@ -71,7 +71,7 @@ public class BundleValidatorCommandTest {
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
 
         // Valid without warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(1);
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(admin.getId()).invokeWithArgs("-c", "COMMIT_HASH");
@@ -82,7 +82,7 @@ public class BundleValidatorCommandTest {
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
 
         // Valid but with warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(1);
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/only-with-warnings.zip")))
                 .asUser(admin.getId()).invoke();
