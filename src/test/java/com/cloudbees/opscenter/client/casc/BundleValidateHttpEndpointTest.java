@@ -75,7 +75,7 @@ public class BundleValidateHttpEndpointTest {
         JSONObject response = JSONObject.fromObject(readResponse(conn.getInputStream()));
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
-        assertThat("Commit has been logged", logger.getMessages(), contains("Validating bundles associated with commit COMMIT_HASH"));
+        assertThat("Commit has been logged", logger.getMessages(), containsInAnyOrder("Validating bundles associated with commit COMMIT_HASH"));
         conn.disconnect();
 
         // Valid but with warnings
