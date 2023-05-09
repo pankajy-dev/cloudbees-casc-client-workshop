@@ -328,6 +328,7 @@ public class BundleReloadAction implements RootAction {
      * }
      * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
      * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
+     * Parameters: {@code commit=[STRING] } optional parameter to indicate the commit hash associated with the bundles to validate
      * Permission required: MANAGE
      * @return
      *      <table>
