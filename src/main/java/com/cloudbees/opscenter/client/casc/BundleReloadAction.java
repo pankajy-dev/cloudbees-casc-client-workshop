@@ -327,7 +327,7 @@ public class BundleReloadAction implements RootAction {
      *         "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
      *     ]
      * }
-     * Commit field will only appear if it was indicated in the request, this filled is not supposed to be used manually.
+     * Commit field will only appear if it was indicated in the request, this field is not supposed to be used manually.
      * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
      * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
      * Parameters: {@code commit=[STRING] } optional parameter to indicate the commit hash associated with the bundles to validate
