@@ -506,12 +506,33 @@ public final class ConfigurationUpdaterHelper {
         return validations;
     }
 
+    /**
+     * Make a full validation of the bundle: structural and runtime validations.
+     * Also logs associated commit
+     * @param bundleDir Path to the bundle to validate
+     * @param commit The commit's hash for logging purposes
+     * @return List of validation messages
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir, String commit) {
+        if (StringUtils.isNotBlank(commit)) {
+            LOGGER.log(Level.INFO, String.format("Validating bundles associated with commit %s", commit));
+        }
+        return fullValidation(bundleDir);
+    }
+
     public static JSONObject getValidationJSON(@NonNull List<Validation> validations) {
+        return getValidationJSON(validations, null);
+    }
+
+    public static JSONObject getValidationJSON(@NonNull List<Validation> validations, String commit) {
         JSONObject json = new JSONObject();
 
         boolean valid = validations.stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
         json.accumulate("valid", valid);
-
+        if (StringUtils.isNotBlank(commit)) {
+            json.accumulate("commit", commit);
+        }
         if (!validations.isEmpty()) {
             JSONArray array = new JSONArray();
             array.addAll(validations.stream().map(v -> v.toString()).collect(Collectors.toList()));

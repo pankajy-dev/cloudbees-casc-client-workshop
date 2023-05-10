@@ -11,15 +11,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +32,9 @@ public class BundleValidatorCommandTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logger = new LoggerRule();
 
     private User admin;
     private User user;
@@ -63,13 +71,17 @@ public class BundleValidatorCommandTest {
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
 
         // Valid without warnings
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
-                .asUser(admin.getId()).invoke();
+                .asUser(admin.getId()).invokeWithArgs("-c", "COMMIT_HASH");
         assertThat("User admin should have permissions", result.returnCode(), is(0));
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
+        assertThat("Logs should contain the commit", logger.getMessages().contains("Validating bundles associated with commit COMMIT_HASH"));
+        assertTrue("Validation results include commit", response.containsKey("commit"));
+        assertThat("Validation results include indicated commit", response.getString("commit"), is("COMMIT_HASH"));
 
         // Valid but with warnings
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
@@ -80,6 +92,7 @@ public class BundleValidatorCommandTest {
         assertTrue("only-with-warnings.zip should be valid", response.getBoolean("valid"));
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages"), contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+        assertFalse("Validation results don't include commit", response.containsKey("commit"));
 
         // No valid
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)

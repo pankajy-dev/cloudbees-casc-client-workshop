@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.logging.Level;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,6 +36,9 @@ public class BundleValidateHttpEndpointTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logger = new LoggerRule();
 
     private User admin;
     private User user;
@@ -64,11 +69,15 @@ public class BundleValidateHttpEndpointTest {
         conn.disconnect();
 
         // Valid without warnings
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         conn = post("valid-bundle.zip", admin);
         assertThat("User admin should have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_OK));
         JSONObject response = JSONObject.fromObject(readResponse(conn.getInputStream()));
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
+        assertThat("Logs should contain the commit", logger.getMessages().contains("Validating bundles associated with commit COMMIT_HASH"));
+        assertTrue("Validation response contains commit", response.containsKey("commit"));
+        assertThat("Commit should contain indicated hash", response.getString("commit"), is("COMMIT_HASH"));
         conn.disconnect();
 
         // Valid but with warnings
@@ -120,7 +129,7 @@ public class BundleValidateHttpEndpointTest {
     }
 
     private HttpURLConnection post(String bundle, User user) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-validate").openConnection();
+        HttpURLConnection conn = (HttpURLConnection) new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-validate?commit=COMMIT_HASH").openConnection();
         conn.setRequestMethod("POST");
         String apiToken = rule.createApiToken(user);
         org.apache.commons.codec.binary.Base64.encodeBase64String((user.getId() + ":" +  apiToken).getBytes(StandardCharsets.UTF_8));
@@ -128,7 +137,6 @@ public class BundleValidateHttpEndpointTest {
         conn.setRequestProperty(HttpHeaders.AUTHORIZATION, "Basic " + authCode);
         conn.setRequestProperty("Content-Type", "application/zip; charset=utf-8");
         conn.setRequestProperty("Accept", "application/json");
-
         conn.setDoOutput(true);
         try (OutputStream out = conn.getOutputStream()) {
             Files.copy(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleValidateHttpEndpointTest/", bundle), out);

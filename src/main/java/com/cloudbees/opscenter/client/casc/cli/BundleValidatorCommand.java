@@ -7,6 +7,7 @@ import hudson.FilePath;
 import hudson.cli.CLICommand;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.kohsuke.args4j.Option;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.io.BufferedInputStream;
@@ -19,6 +20,9 @@ import java.util.List;
 public class BundleValidatorCommand extends CLICommand {
 
     public final static String COMMAND_NAME = "casc-bundle-validate";
+
+    @Option(name="-c", aliases = { "--commit"}, usage="Logs the indicated commit in the instance logs for further tracking", required = false)
+    private String commit = null;
 
     @Override
     public String getShortDescription() { return "Validates a bundle on this instance. The bundle must be a zip file containing the bundle structure. Example of use: java -jar jenkins-cli.jar " + COMMAND_NAME + " < /path/to/bundle.zip";}
@@ -82,8 +86,8 @@ public class BundleValidatorCommand extends CLICommand {
                 throw new IllegalArgumentException("Invalid bundle - Missing descriptor");
             }
 
-            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir);
-            stdout.println(ConfigurationUpdaterHelper.getValidationJSON(validations));
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
+            stdout.println(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } finally {
             if (tempFolder != null && Files.exists(tempFolder)) {
                 FileUtils.deleteDirectory(tempFolder.toFile());
