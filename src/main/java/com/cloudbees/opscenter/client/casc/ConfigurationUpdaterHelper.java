@@ -520,12 +520,19 @@ public final class ConfigurationUpdaterHelper {
         }
         return fullValidation(bundleDir);
     }
+
     public static JSONObject getValidationJSON(@NonNull List<Validation> validations) {
+        return getValidationJSON(validations, null);
+    }
+
+    public static JSONObject getValidationJSON(@NonNull List<Validation> validations, String commit) {
         JSONObject json = new JSONObject();
 
         boolean valid = validations.stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
         json.accumulate("valid", valid);
-
+        if (StringUtils.isNotBlank(commit)) {
+            json.accumulate("commit", commit);
+        }
         if (!validations.isEmpty()) {
             JSONArray array = new JSONArray();
             array.addAll(validations.stream().map(v -> v.toString()).collect(Collectors.toList()));
