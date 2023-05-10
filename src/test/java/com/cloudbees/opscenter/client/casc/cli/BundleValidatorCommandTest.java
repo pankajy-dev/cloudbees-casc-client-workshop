@@ -33,6 +33,9 @@ public class BundleValidatorCommandTest {
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
+    @Rule
+    public LoggerRule logger = new LoggerRule();
+
     private User admin;
     private User user;
 
@@ -68,6 +71,7 @@ public class BundleValidatorCommandTest {
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
 
         // Valid without warnings
+        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(admin.getId()).invokeWithArgs("-c", "COMMIT_HASH");
@@ -75,6 +79,7 @@ public class BundleValidatorCommandTest {
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
+        assertThat("Logs should contain the commit", logger.getMessages().contains("Validating bundles associated with commit COMMIT_HASH"));
 
         // Valid but with warnings
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
