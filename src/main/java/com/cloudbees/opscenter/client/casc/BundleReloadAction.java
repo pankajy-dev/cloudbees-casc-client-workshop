@@ -321,11 +321,13 @@ public class BundleReloadAction implements RootAction {
      * Validates a bundle. If validation goes as expected, the method will return a JSON output as following:
      * {
      *     "valid": false,
+     *     "commit": 44e7cfa,
      *     "validation-messages": [
      *         "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
      *         "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
      *     ]
      * }
+     * Commit field will only appear if it was indicated in the request, this filled is not supposed to be used manually.
      * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
      * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
      * Parameters: {@code commit=[STRING] } optional parameter to indicate the commit hash associated with the bundles to validate
@@ -387,7 +389,7 @@ public class BundleReloadAction implements RootAction {
             }
 
             List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
-            return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations));
+            return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error reading the zip file", e);
             return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

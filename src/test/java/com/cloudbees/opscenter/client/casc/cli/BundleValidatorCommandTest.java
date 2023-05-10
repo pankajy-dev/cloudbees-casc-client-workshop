@@ -80,6 +80,8 @@ public class BundleValidatorCommandTest {
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
         assertThat("Logs should contain the commit", logger.getMessages().contains("Validating bundles associated with commit COMMIT_HASH"));
+        assertTrue("Validation results include commit", response.containsKey("commit"));
+        assertThat("Validation results include indicated commit", response.getString("commit"), is("COMMIT_HASH"));
 
         // Valid but with warnings
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
@@ -90,6 +92,7 @@ public class BundleValidatorCommandTest {
         assertTrue("only-with-warnings.zip should be valid", response.getBoolean("valid"));
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages"), contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+        assertFalse("Validation results don't include commit", response.containsKey("commit"));
 
         // No valid
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)

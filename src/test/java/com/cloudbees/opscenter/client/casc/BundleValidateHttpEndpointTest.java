@@ -76,6 +76,8 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("valid-bundle.zip should be valid", response.getBoolean("valid"));
         assertFalse("valid-bundle.zip should not have validation messages", response.containsKey("validation-messages"));
         assertThat("Logs should contain the commit", logger.getMessages().contains("Validating bundles associated with commit COMMIT_HASH"));
+        assertTrue("Validation response contains commit", response.containsKey("commit"));
+        assertThat("Commit should contain indicated hash", response.getString("commit"), is("COMMIT_HASH"));
         conn.disconnect();
 
         // Valid but with warnings

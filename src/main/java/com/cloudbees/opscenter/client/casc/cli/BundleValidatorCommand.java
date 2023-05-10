@@ -87,7 +87,7 @@ public class BundleValidatorCommand extends CLICommand {
             }
 
             List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
-            stdout.println(ConfigurationUpdaterHelper.getValidationJSON(validations));
+            stdout.println(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } finally {
             if (tempFolder != null && Files.exists(tempFolder)) {
                 FileUtils.deleteDirectory(tempFolder.toFile());
