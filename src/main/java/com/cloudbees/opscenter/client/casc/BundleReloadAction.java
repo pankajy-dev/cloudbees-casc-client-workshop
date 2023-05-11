@@ -12,6 +12,7 @@ import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpResponse;
@@ -28,6 +29,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -105,6 +107,33 @@ public class BundleReloadAction implements RootAction {
             return new JsonHttpResponse(executeForceReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+            return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET request to check what items would be deleted if the bundle is applied
+     * <p>
+     *     {@code JENKINS_URL/casc-bundle-mgnt/check-reload-deletions}
+     *     Permission required: READ
+     * </p>
+     * @return  200 and a JSON object with the result:
+     *              "deletions" -> ["item-1", "item-2", ...]
+     *          403 - Not authorized. READ permission required.
+     *          500 - Server error while checking items or bundle remove strategy
+     */
+    @GET
+    @WebMethod(name = "check-reload-deletions")
+    public HttpResponse doCheckReloadDeletions() {
+        Jenkins.get().checkPermission(Jenkins.READ); // Not performing any real deletion, so should be safe
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        try {
+            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+            JSONArray response = new JSONArray();
+            response.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
+            return new JsonHttpResponse(new JSONObject().accumulate("deletions", response));
+        } catch (CasCException ex) {
+            LOGGER.log(Level.WARNING, "Could not process remoteStrategy for items (maybe invalid strategy?)", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

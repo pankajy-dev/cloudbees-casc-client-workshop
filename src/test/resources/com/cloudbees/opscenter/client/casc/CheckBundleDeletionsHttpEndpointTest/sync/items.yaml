@@ -1,0 +1,11 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "first-folder"
+    displayName: "This is folder 1"
+  - kind: "folder"
+    name: "second-folder"
+    displayName: "This is folder 2"
