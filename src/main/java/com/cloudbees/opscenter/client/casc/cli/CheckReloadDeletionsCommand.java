@@ -9,6 +9,8 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.cli.CLICommand;
 
+import jenkins.model.Jenkins;
+
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
@@ -33,6 +35,7 @@ public class CheckReloadDeletionsCommand extends CLICommand {
      */
     @Override
     protected int run() throws Exception {
+        Jenkins.get().checkPermission(Jenkins.READ);
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         try {
             ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
