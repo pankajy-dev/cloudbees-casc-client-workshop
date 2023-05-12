@@ -6,6 +6,8 @@ import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 
 import hudson.cli.CLICommandInvoker;
+import hudson.model.FreeStyleProject;
+
 import net.sf.json.JSONObject;
 import org.junit.Test;
 
@@ -20,6 +22,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 public class BundleVersionCheckerCommandTest extends AbstractBundleVersionCheckerTest {
@@ -133,6 +137,9 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-10.zip", null);
 
         // Updated to version 11 - Valid
+        // Also, creating some items not present in v11 to check they are informed as to be deleted
+        rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted");
+        rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted-too");
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-11.zip").toFile().getAbsolutePath());
         result = new CLICommandInvoker(rule, BundleVersionCheckerCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
@@ -140,5 +147,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateAvailable(jsonResult, "version-11.zip", true);
         assertVersions(jsonResult, "version-11.zip", "9", empty(), "11", empty(), true);
         assertUpdateType(jsonResult, "version-11.zip", "RELOAD");
+        assertThat("We should get a list with 2 items", jsonResult.getJSONObject("items").getJSONArray("deletions"), hasSize(2));
+        assertThat("Created items should be in deletions list", jsonResult.getJSONObject("items").getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too"));
     }
 }
