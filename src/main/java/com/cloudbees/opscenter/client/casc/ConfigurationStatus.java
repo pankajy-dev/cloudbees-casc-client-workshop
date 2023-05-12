@@ -216,7 +216,7 @@ public enum ConfigurationStatus {
 
     /**
      * Set the result of comparing the new available version to the current version
-     * @param changesInNewVersion
+     * @param changesInNewVersion The results to set.
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setChangesInNewVersion(BundleComparator.Result changesInNewVersion) {
@@ -242,7 +242,7 @@ public enum ConfigurationStatus {
 
     /**
      * Sets the currently running parameter for a hot reload
-     * @param currentlyReloading
+     * @param currentlyReloading Indicates if the system is currently reloading
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setCurrentlyReloading(boolean currentlyReloading) {
@@ -255,7 +255,7 @@ public enum ConfigurationStatus {
 
     /**
      * Sets the error during reload flag in case a hot reload fails
-     * @param errorInReload
+     * @param errorInReload Indicates if there was an error during reload
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setErrorInReload(boolean errorInReload) {
@@ -268,7 +268,7 @@ public enum ConfigurationStatus {
 
     /**
      * Sets the flag to show the successful reload monitor
-     * @param showSuccessfulInstallMonitor
+     * @param showSuccessfulInstallMonitor indicates if the monitor should be showed or not
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setShowSuccessfulInstallMonitor(boolean showSuccessfulInstallMonitor) {

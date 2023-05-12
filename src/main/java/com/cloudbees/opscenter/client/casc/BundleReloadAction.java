@@ -118,7 +118,7 @@ public class BundleReloadAction implements RootAction {
      *     Permission required: READ
      * </p>
      * @return  200 and a JSON object with the result:
-     *              "deletions" -> ["item-1", "item-2", ...]
+     *              "deletions": ["item-1", "item-2", ...]
      *          403 - Not authorized. READ permission required.
      *          500 - Server error while checking items or bundle remove strategy
      */
@@ -158,9 +158,9 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #executeReload(boolean)} instead
-     * @return
-     * @throws CasCException
-     * @throws IOException
+     * @return a json indicating the status of the reload action
+     * @throws CasCException In case of some CasC specific failure
+     * @throws IOException If there were RW operations exceptions
      */
     @Deprecated
     public JSONObject executeReload() throws CasCException, IOException {
@@ -187,9 +187,9 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #executeForceReload(boolean)} instead
-     * @return
-     * @throws CasCException
-     * @throws IOException
+     * @return a json indicating the status of the reload action
+     * @throws CasCException In case of some CasC specific failure
+     * @throws IOException If there were RW operations exceptions
      */
     @Deprecated
     public JSONObject executeForceReload() throws CasCException, IOException {
@@ -217,7 +217,7 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #tryReload(boolean)} instead
-     * @return
+     * @return a boolean indicating if reload could be performed
      */
     @Deprecated
     public boolean tryReload() throws IOException, CasCException{

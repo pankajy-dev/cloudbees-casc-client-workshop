@@ -20,7 +20,7 @@ public class BundleUpdateLogCommand extends CLICommand {
     /**
      * Return information about the update log
      * @return 0 and a JSON object with the update log
-     * @throws Exception
+     * @throws Exception As described in CLICommand
      */
     @Override
     protected int run() throws Exception {
