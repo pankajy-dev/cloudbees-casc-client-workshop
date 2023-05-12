@@ -114,8 +114,8 @@ public class BundleReloadAction implements RootAction {
     /**
      * GET request to check what items would be deleted if the bundle is applied
      * <p>
-     *     {@code JENKINS_URL/casc-bundle-mgnt/check-reload-deletions}
-     *     Permission required: READ
+     *     {@code JENKINS_URL/casc-bundle-mgnt/check-reload-items}
+     *     Permission required: MANAGE
      * </p>
      * @return  200 and a JSON object with the result:
      *              "deletions": ["item-1", "item-2", ...]
@@ -123,15 +123,16 @@ public class BundleReloadAction implements RootAction {
      *          500 - Server error while checking items or bundle remove strategy
      */
     @GET
-    @WebMethod(name = "check-reload-deletions")
+    @WebMethod(name = "check-reload-items")
     public HttpResponse doCheckReloadDeletions() {
-        Jenkins.get().checkPermission(Jenkins.READ); // Not performing any real deletion, so should be safe
+        Jenkins.get().checkPermission(Jenkins.MANAGE); // Not performing any real deletion, so should be safe
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         try {
             ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            JSONArray response = new JSONArray();
-            response.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
-            return new JsonHttpResponse(new JSONObject().accumulate("deletions", response));
+            JSONArray deletions = new JSONArray();
+            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
+            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
+            return new JsonHttpResponse(new JSONObject().accumulate("items", responseContent));
         } catch (CasCException ex) {
             LOGGER.log(Level.WARNING, "Could not process remoteStrategy for items (maybe invalid strategy?)", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

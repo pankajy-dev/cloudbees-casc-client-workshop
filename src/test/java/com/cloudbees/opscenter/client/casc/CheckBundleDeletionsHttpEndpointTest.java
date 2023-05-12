@@ -37,24 +37,24 @@ public class CheckBundleDeletionsHttpEndpointTest extends AbstractBundleVersionC
         CJPRule.WebClient wc = rule.createWebClient();
 
         // No changes in the instance, we expect no deletions
-        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-deletions"), admin, wc);
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-items"), admin, wc);
         JSONObject jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertThat("Response code should be a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
-        assertThat("deletions should be an empty list", jsonResult.getJSONArray("deletions"), empty());
+        assertThat("deletions should be an empty list", jsonResult.getJSONObject("items").getJSONArray("deletions"), empty());
 
         // Creating 2 items, as strategy is SYNC they should be deleted when the bundle is applied
         rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted");
         rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted-too");
-        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-deletions"), admin, wc);
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-items"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertThat("Response code should be a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
-        assertThat("deletions should contain 1 element", jsonResult.getJSONArray("deletions"), hasSize(2));
-        assertThat("to-be-deleted should be in the response", jsonResult.getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too"));
+        assertThat("deletions should contain 1 element", jsonResult.getJSONObject("items").getJSONArray("deletions"), hasSize(2));
+        assertThat("to-be-deleted should be in the response", jsonResult.getJSONObject("items").getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too"));
         assertThat("The instance still has 4 items", rule.jenkins.getAllItems(), hasSize(4));
 
         // Using an invalid remove strategy should return an error
         ConfigurationBundleManager.get().getConfigurationBundle().getItemRemoveStrategy().setItems("invalid");
-        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-deletions"), admin, wc);
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-reload-items"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertThat("Response code should be a 500", resp.getStatusCode(), is(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         assertThat("Error is indicated", jsonResult.getString("error"), containsString("Unknown items removeStrategy"));
