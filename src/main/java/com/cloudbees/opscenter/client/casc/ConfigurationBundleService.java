@@ -1,6 +1,7 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
@@ -8,6 +9,8 @@ import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
+import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 import com.cloudbees.jenkins.plugins.updates.envelope.Validation;
@@ -187,5 +190,18 @@ public class ConfigurationBundleService {
                 ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
             }
         }
+    }
+
+    /**
+     * Obtains the list of items that would be removed on bundle application
+     * @param bundle The bundle to apply
+     * @return A list containing the full names of the items that would be deleted, might be empty
+     * @throws CasCException If the remove strategy indicated is not supported
+     */
+    public List<String> getDeletionsOnReload(ConfigurationBundle bundle) throws CasCException {
+        List<String> itemsYaml = ConfigurationBundleManager.get().getConfigurationBundle().getItems();
+        ItemsProcessor itemsProcessor = ItemsProcessor.from(itemsYaml, bundle.getItemRemoveStrategy());
+        RemoveStrategyProcessor removeStrategyProcessor = itemsProcessor.getRemoveStrategy();
+        return removeStrategyProcessor.getItemsToRemove();
     }
 }

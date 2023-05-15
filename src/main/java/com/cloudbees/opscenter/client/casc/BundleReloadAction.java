@@ -12,6 +12,7 @@ import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.HttpResponse;
@@ -28,6 +29,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -109,6 +111,34 @@ public class BundleReloadAction implements RootAction {
         }
     }
 
+    /**
+     * GET request to check what items would be deleted if the bundle is applied
+     * <p>
+     *     {@code JENKINS_URL/casc-bundle-mgnt/check-reload-items}
+     *     Permission required: MANAGE
+     * </p>
+     * @return  200 and a JSON object with the result:
+     *              "deletions": ["item-1", "item-2", ...]
+     *          403 - Not authorized. READ permission required.
+     *          500 - Server error while checking items or bundle remove strategy
+     */
+    @GET
+    @WebMethod(name = "check-reload-items")
+    public HttpResponse doCheckReloadDeletions() {
+        Jenkins.get().checkPermission(Jenkins.MANAGE); // Not performing any real deletion, so should be safe
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        try {
+            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+            JSONArray deletions = new JSONArray();
+            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
+            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
+            return new JsonHttpResponse(new JSONObject().accumulate("items", responseContent));
+        } catch (CasCException ex) {
+            LOGGER.log(Level.WARNING, "Could not process remoteStrategy for items (maybe invalid strategy?)", ex);
+            return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public JSONObject executeReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
@@ -129,9 +159,9 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #executeReload(boolean)} instead
-     * @return
-     * @throws CasCException
-     * @throws IOException
+     * @return a json indicating the status of the reload action
+     * @throws CasCException In case of some CasC specific failure
+     * @throws IOException If there were RW operations exceptions
      */
     @Deprecated
     public JSONObject executeReload() throws CasCException, IOException {
@@ -158,9 +188,9 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #executeForceReload(boolean)} instead
-     * @return
-     * @throws CasCException
-     * @throws IOException
+     * @return a json indicating the status of the reload action
+     * @throws CasCException In case of some CasC specific failure
+     * @throws IOException If there were RW operations exceptions
      */
     @Deprecated
     public JSONObject executeForceReload() throws CasCException, IOException {
@@ -188,7 +218,7 @@ public class BundleReloadAction implements RootAction {
 
     /**
      * @deprecated use {@link #tryReload(boolean)} instead
-     * @return
+     * @return a boolean indicating if reload could be performed
      */
     @Deprecated
     public boolean tryReload() throws IOException, CasCException{

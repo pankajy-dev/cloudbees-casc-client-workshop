@@ -69,6 +69,20 @@
                                                     </f:form>
                                                 </div>
                                             </div>
+                                            <j:set var="items" value="${it.getItemsToDelete()}" />
+                                            <j:if test="${items.size() > 0}">
+                                                <div class="alert alert-info">
+                                                    <div class="alert__body">
+                                                        <header>Some items will be deleted when applying this bundle</header>
+                                                        <p>According to the bundle's remove strategy, the following items will be deleted during bundle update</p>
+                                                        <ul>
+                                                            <j:forEach items="${items}" var="item">
+                                                                <li>${item}</li>
+                                                            </j:forEach>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </j:if>
                                         </cbcipm:tabcontent>
                                     </j:when>
                                     <j:otherwise>

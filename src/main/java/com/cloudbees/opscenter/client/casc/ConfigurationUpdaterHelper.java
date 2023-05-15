@@ -14,6 +14,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginCatalogInOCValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
@@ -40,6 +41,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -238,6 +240,17 @@ public final class ConfigurationUpdaterHelper {
             } else {
                 json.accumulate("update-type", "RESTART");
             }
+        }
+        // Getting items that will be deleted on the update
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        try {
+            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+            JSONArray deletions = new JSONArray();
+            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
+            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
+            json.accumulate("items", responseContent);
+        } catch (CasCException ex){
+            LOGGER.log(Level.WARNING, "Error while checking deletions, invalid remove strategy provided");
         }
 
         return json;

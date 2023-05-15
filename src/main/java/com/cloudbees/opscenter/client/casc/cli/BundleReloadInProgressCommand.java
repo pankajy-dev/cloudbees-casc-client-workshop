@@ -27,7 +27,7 @@ public class BundleReloadInProgressCommand extends CLICommand {
      * Checks if bundle reload is currently running
      * User needs READ role to run this
      * @return 0 and prints a json {"in-progress": true | false}
-     * @throws Exception
+     * @throws Exception As described in CLICommand
      */
     @Override
     protected int run() throws Exception {

@@ -23,7 +23,7 @@ public class BundleVersionCheckerCommand extends CLICommand {
     /**
      * Check the bundle version and returns whether there's a newer version or not
      * @return 0 and a text indicating there's a new version of the bundle*
-     * @throws Exception
+     * @throws Exception As described in CLICommand
      */
     @Override
     protected int run() throws Exception {

@@ -1,10 +1,13 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
+import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
@@ -38,6 +41,9 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  * Configuration as Code Bundle Visualization.
@@ -334,6 +340,23 @@ public class BundleVisualizationLink extends ManagementLink {
     // used in jelly
     public boolean withDiff() {
         return ConfigurationStatus.INSTANCE.getChangesInNewVersion() != null;
+    }
+
+    // used in jelly
+    public List<String> getItemsToDelete() {
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        try {
+            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+            if (bundle.getItems() == null) { // Not needed after cloudbees-casc-items-api:2.25
+                return Collections.EMPTY_LIST;
+            } else {
+                return service.getDeletionsOnReload(bundle);
+            }
+
+        } catch (CasCException ex){
+            LOGGER.log(Level.WARNING, String.format("Bundle has an invalid items removeStrategy, not calculating items to delete"));
+        }
+        return Collections.EMPTY_LIST;
     }
 
     @RequirePOST
