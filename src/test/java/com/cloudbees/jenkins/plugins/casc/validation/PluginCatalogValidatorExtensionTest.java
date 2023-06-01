@@ -58,7 +58,7 @@ public class PluginCatalogValidatorExtensionTest extends AbstractIMTest {
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/invalidCatalog/"));
         assertThat("We should get validation results containing an entry", validations, hasSize(1));
-        assertThat("It should be a warning", validations.get(0).getLevel(), is(Validation.Level.ERROR));
+        assertThat("It should be an error", validations.get(0).getLevel(), is(Validation.Level.ERROR));
         assertThat("It should be a plugin catalog warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_CATALOG));
         assertThat("It should contain not valid plugins", validations.get(0).getMessage(), containsString("icon-shim"));
         assertThat("It should not contain valid plugins", validations.get(0).getMessage(), not(containsString("beer")));
