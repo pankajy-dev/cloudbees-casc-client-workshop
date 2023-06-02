@@ -45,7 +45,7 @@ public class PluginCatalogValidator extends AbstractValidator {
             return Collections.emptyList();
         }
 
-        List<Validation> errors = validate(catalog).stream().map( msg -> warning(msg)).collect(Collectors.toList());
+        List<Validation> errors = validate(catalog).stream().map( msg -> error(msg)).collect(Collectors.toList());
 
         return errors;
     }
