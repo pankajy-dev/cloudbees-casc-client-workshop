@@ -288,7 +288,8 @@ public class BundleVisualizationLink extends ManagementLink {
         }
         return new ValidationSection(
                 currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList()),
-                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()));
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()),
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.INFO).map(v -> v.getMessage()).collect(Collectors.toList()));
     }
 
     /**
@@ -488,19 +489,23 @@ public class BundleVisualizationLink extends ManagementLink {
 
         private final List<String> warnings;
         private final List<String> errors;
+        private final List<String> infoMessages;
 
         private ValidationSection() {
-            this(null, null);
+            this(null, null, null);
         }
 
-        private ValidationSection(List<String> warnings, List<String> errors) {
+        private ValidationSection(List<String> warnings, List<String> errors, List<String> info) {
             List<String> warnings_ = warnings != null ? new ArrayList<>(warnings) : new ArrayList<>();
             Collections.sort(warnings_);
             List<String> errors_ = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
             Collections.sort(errors_);
+            List<String> info_ = info != null ? new ArrayList<>(info) : new ArrayList<>();
+            Collections.sort(info_);
 
             this.warnings = Collections.unmodifiableList(warnings_);
             this.errors = Collections.unmodifiableList(errors_);
+            this.infoMessages = Collections.unmodifiableList(info_);
         }
 
         public boolean isEmpty() {
@@ -524,6 +529,8 @@ public class BundleVisualizationLink extends ManagementLink {
         public List<String> getErrors() {
             return errors;
         }
+
+        @NonNull List<String> getInfoMessages() {return infoMessages; }
     }
 
     /**
@@ -542,11 +549,13 @@ public class BundleVisualizationLink extends ManagementLink {
         private CandidateSection(BundleUpdateLog.CandidateBundle candidate) {
             List<String> warnings = new ArrayList<>();
             List<String> errors = new ArrayList<>();
+            List<String> infos = new ArrayList<>();
             String version = null;
             StringBuilder info = null;
             if (candidate != null) {
                 warnings = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList());
                 errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
+                infos = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.INFO).map(v -> v.getMessage()).collect(Collectors.toList());
                 version = candidate.getVersion();
                 info = new StringBuilder();
                 if (StringUtils.isNotBlank(candidate.getId())) {
@@ -562,7 +571,7 @@ public class BundleVisualizationLink extends ManagementLink {
                     info.append(" (checksum " + candidate.getChecksum() + ")");
                 }
             }
-            this.validations = new ValidationSection(warnings, errors);
+            this.validations = new ValidationSection(warnings, errors, infos);
             this.version = version;
             this.info = info == null ? null : info.toString();
         }
@@ -596,6 +605,7 @@ public class BundleVisualizationLink extends ManagementLink {
         private final Date date;
         private final long errors;
         private final long warnings;
+        private final long infoMessages;
         private final String folder;
 
         private UpdateLogRow(BundleUpdateLog.CandidateBundle candidate) {
@@ -606,6 +616,7 @@ public class BundleVisualizationLink extends ManagementLink {
             this.description = candidate == null ? null : candidate.getDescription();
             this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
             this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
+            this.infoMessages = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.INFO).count();
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
             Date d = null;
             if (candidate != null) {
@@ -653,6 +664,8 @@ public class BundleVisualizationLink extends ManagementLink {
         public long getWarnings() {
             return warnings;
         }
+
+        public long getInfoMessages() { return infoMessages; }
 
         public String getFolder() {
             return folder;
