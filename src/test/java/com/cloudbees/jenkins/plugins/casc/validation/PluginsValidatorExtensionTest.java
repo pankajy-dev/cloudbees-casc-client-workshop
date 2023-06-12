@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.casc.validation;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,17 +68,17 @@ public class PluginsValidatorExtensionTest extends AbstractIMTest {
                 containsString("cloudbees-casc-items-api"), containsString("credentials"), containsString("cloudbees-assurance"))));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/valid/"));
-        assertThat("We should get empty validation results", validations, hasSize(0));
+        assertThat("We should get empty validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/with-catalog/"));
-        assertThat("We should get empty validation results", validations, hasSize(0));
+        assertThat("We should get empty validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/invalid-with-catalog/"));
-        assertThat("We should get validation results containing an entry", validations, hasSize(1));
-        assertThat("It should be a warning", validations.get(0).getLevel(), is(Validation.Level.WARNING));
-        assertThat("It should be a plugins warning", validations.get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
-        assertThat("It should contain not valid plugins", validations.get(0).getMessage(), containsString("chucknorris"));
-        assertThat("It should not contain valid plugins", validations.get(0).getMessage(), not(anyOf(
+        assertThat("We should get validation results containing an entry", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(1));
+        assertThat("It should be a warning", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()).get(0).getLevel(), is(Validation.Level.WARNING));
+        assertThat("It should be a plugins warning", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()).get(0).getValidationCode(), is(ValidationCode.PLUGIN_AVAILABLE));
+        assertThat("It should contain not valid plugins", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()).get(0).getMessage(), containsString("chucknorris"));
+        assertThat("It should not contain valid plugins", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()).get(0).getMessage(), not(anyOf(
                 containsString("cloudbees-casc-items-api"), containsString("credentials"), containsString("cloudbees-assurance"))));
     }
 

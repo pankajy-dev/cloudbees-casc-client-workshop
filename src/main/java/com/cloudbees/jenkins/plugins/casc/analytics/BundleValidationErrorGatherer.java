@@ -26,7 +26,7 @@ public class BundleValidationErrorGatherer {
 
     public BundleValidationErrorGatherer(@NonNull List<Validation> validations) {
         toSend = new ArrayList<>();
-        List<ValidationCode> codes = validations.stream().map(validation -> validation.getValidationCode()).distinct().collect(Collectors.toList());
+        List<ValidationCode> codes = validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).map(validation -> validation.getValidationCode()).distinct().collect(Collectors.toList());
         for (ValidationCode code : codes) {
             List<Validation> byCode = validations.stream().filter(validation -> validation.getValidationCode() == code).collect(Collectors.toList());
             long errors = byCode.stream().filter(validation -> validation.getLevel() == Validation.Level.ERROR).count();

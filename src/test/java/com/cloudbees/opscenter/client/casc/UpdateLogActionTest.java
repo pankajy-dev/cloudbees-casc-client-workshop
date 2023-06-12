@@ -92,7 +92,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         ConfigurationBundleManager cbm = ConfigurationBundleManager.get();
         BundleUpdateLog updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 1 as current", cbm.getConfigurationBundle().getVersion(), is("1"));
-        assertThat("ConfigurationBundleManager has version 1 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 1 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // Updated to version 2 - Valid
@@ -101,7 +101,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
-        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // Updated to version 3 - Without version - Ignored
@@ -110,7 +110,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
-        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // Updated to version 4 - Invalid
@@ -119,7 +119,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 2 as current", cbm.getConfigurationBundle().getVersion(), is("2"));
-        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 2 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertThat("ConfigurationBundleManager has version 4 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("4"));
 
         // Updated to version 5 - Valid but with warnings
@@ -128,7 +128,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 5 as current", cbm.getConfigurationBundle().getVersion(), is("5"));
-        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations(), not(empty()));
+        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), not(empty()));
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // Updated to version 6 - Invalid
@@ -137,7 +137,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 5 as current", cbm.getConfigurationBundle().getVersion(), is("5"));
-        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations(), not(empty()));
+        assertThat("ConfigurationBundleManager has version 5 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), not(empty()));
         assertThat("ConfigurationBundleManager has version 6 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("6"));
 
         // Updated to version 7 - Valid
@@ -146,7 +146,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 7 as current", cbm.getConfigurationBundle().getVersion(), is("7"));
-        assertThat("ConfigurationBundleManager has version 7 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 7 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // BEE-17161
@@ -166,7 +166,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 9 as current", cbm.getConfigurationBundle().getVersion(), is("9"));
-        assertThat("ConfigurationBundleManager has version 9 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 9 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
 
         // Updated to version 10 - Valid structure / Invalid jenkins.yaml
@@ -175,7 +175,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 9 as current", cbm.getConfigurationBundle().getVersion(), is("9"));
-        assertThat("ConfigurationBundleManager has version 9 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 9 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertThat("ConfigurationBundleManager has version 10 as rejected candidate", updateLog.getCandidateBundle().getVersion(), is("10"));
         assertThat("ConfigurationBundleManager has version 10 as rejected candidate", updateLog.getCandidateBundle().getValidations().getValidations().stream().filter(v -> v.getLevel() == Validation.Level.ERROR).collect(Collectors.toList()), not(empty()));
         assertThat("ConfigurationBundleManager has version 10 as rejected candidate", updateLog.getCandidateBundle().getValidations().getValidations().stream().filter(v -> v.getLevel() == Validation.Level.WARNING).collect(Collectors.toList()), empty());
@@ -186,7 +186,7 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         cbm = ConfigurationBundleManager.get();
         updateLog = cbm.getUpdateLog();
         assertThat("ConfigurationBundleManager has version 11 as current", cbm.getConfigurationBundle().getVersion(), is("11"));
-        assertThat("ConfigurationBundleManager has version 11 as current validated", updateLog.getCurrentVersionValidations().getValidations(), empty());
+        assertThat("ConfigurationBundleManager has version 11 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
         // End of BEE-17161
     }

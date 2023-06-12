@@ -31,7 +31,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         JSONObject jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-1.zip", false);
-        assertVersions(jsonResult, "version-1.zip", "1", empty(), null, null, true);
+        assertVersions(jsonResult   , "version-1.zip", "1", empty(), null, null, true);
         assertUpdateType(jsonResult, "version-1.zip", null);
 
         // Updated to version 2 - Valid
