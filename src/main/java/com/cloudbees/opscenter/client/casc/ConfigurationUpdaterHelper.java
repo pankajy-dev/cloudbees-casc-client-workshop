@@ -264,6 +264,9 @@ public final class ConfigurationUpdaterHelper {
         if (vs.hasWarnings()) {
             list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
         }
+        if (vs.hasInfoMessages()) {
+            list.addAll(vs.getInfoMessages().stream().map(s -> Validation.Level.INFO + " - " + s).collect(Collectors.toList()));
+        }
 
         return list;
     }

@@ -520,6 +520,10 @@ public class BundleVisualizationLink extends ManagementLink {
             return !warnings.isEmpty();
         }
 
+        public boolean hasInfoMessages() {
+            return !infoMessages.isEmpty();
+        }
+
         @NonNull
         public List<String> getWarnings() {
             return warnings;
@@ -530,7 +534,8 @@ public class BundleVisualizationLink extends ManagementLink {
             return errors;
         }
 
-        @NonNull List<String> getInfoMessages() {return infoMessages; }
+        @NonNull
+        public List<String> getInfoMessages() {return infoMessages; }
     }
 
     /**

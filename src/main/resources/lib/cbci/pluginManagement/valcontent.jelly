@@ -25,7 +25,7 @@
         <div class="alert__body">
             <header>Validation output for version ${bundleVersion}</header>
             <j:choose>
-            <j:when test="${not validationObject.isEmpty()}">
+            <j:when test="${not empty validationObject.warnings or not empty validationObject.errors}">
                 <j:if test="${not empty validationObject.warnings}">
                     <p class="mb-0">Warnings (${validationObject.warnings.size()}):</p>
                     <ul>
@@ -44,7 +44,14 @@
                 </j:if>
             </j:when>
             <j:otherwise>
-                <p class="mb-0">This version has no errors or warnings</p>
+                <p class="mb-0">This version has no errors or warnings. <br/>
+                    The following validations were performed:
+                    <ul>
+                        <j:forEach items="${validationObject.infoMessages}" var="v">
+                            <li>${v}</li>
+                        </j:forEach>
+                    </ul>
+                </p>
             </j:otherwise>
             </j:choose>
         </div>
