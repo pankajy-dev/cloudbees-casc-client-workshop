@@ -350,6 +350,7 @@ public final class ConfigurationUpdaterHelper {
                 row.accumulate("date", new SimpleDateFormat("dd MMMM yyyy").format(updateLogRow.getDate()));
                 row.accumulate("errors", updateLogRow.getErrors());
                 row.accumulate("warnings", updateLogRow.getWarnings());
+                row.accumulate("info-messages", updateLogRow.getInfoMessages());
                 row.accumulate("folder", updateLogRow.getFolder());
                 logs.add(row);
             });
