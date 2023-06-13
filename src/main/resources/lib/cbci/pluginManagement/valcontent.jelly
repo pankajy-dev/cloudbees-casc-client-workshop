@@ -53,7 +53,7 @@
             </j:when>
             <j:otherwise>
                 <p class="mb-0">This version has no errors or warnings. <br/>
-                    The following validations were performed:
+                    The following validations were performed (${validationObject.infoMessages.size()}):
                     <ul>
                         <j:forEach items="${validationObject.infoMessages}" var="v">
                             <li>${v}</li>
