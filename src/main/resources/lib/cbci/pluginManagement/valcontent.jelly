@@ -42,6 +42,14 @@
                         </j:forEach>
                     </ul>
                 </j:if>
+                <j:if test="${not empty validationObject.infoMessages}">
+                    <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}):</p>
+                    <ul>
+                        <j:forEach items="${validationObject.infoMessages}" var="v">
+                            <li>${v}</li>
+                        </j:forEach>
+                    </ul>
+                </j:if>
             </j:when>
             <j:otherwise>
                 <p class="mb-0">This version has no errors or warnings. <br/>

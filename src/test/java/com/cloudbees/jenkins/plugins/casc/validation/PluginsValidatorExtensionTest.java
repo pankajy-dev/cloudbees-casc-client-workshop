@@ -68,10 +68,10 @@ public class PluginsValidatorExtensionTest extends AbstractIMTest {
                 containsString("cloudbees-casc-items-api"), containsString("credentials"), containsString("cloudbees-assurance"))));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/valid/"));
-        assertThat("We should get empty validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
+        assertThat("We should get only info validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/with-catalog/"));
-        assertThat("We should get empty validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
+        assertThat("We should get only info validation results", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/PluginsValidatorExtensionTest/invalid-with-catalog/"));
         assertThat("We should get validation results containing an entry", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(1));
