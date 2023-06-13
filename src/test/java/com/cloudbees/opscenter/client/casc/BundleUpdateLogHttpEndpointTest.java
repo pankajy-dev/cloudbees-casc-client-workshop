@@ -125,6 +125,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00006\"\n" +
                             "    },\n" +
                             "    {\n" +
@@ -132,6 +133,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 1,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00005\"\n" +
                             "    },\n" +
                             "    {\n" +
@@ -139,6 +141,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00004\"\n" +
                             "    },\n" +
                             "    {\n" +
@@ -146,6 +149,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 1,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00003\"\n" +
                             "    },\n" +
                             "    {\n" +
@@ -153,6 +157,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00002\"\n" +
                             "    },\n" +
                             "    {\n" +
@@ -160,6 +165,7 @@ public class BundleUpdateLogHttpEndpointTest {
                             "        \"date\": \"09 May 2022\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
+                            "        \"info-messages\": 0,\n" +
                             "        \"folder\": \"20220509_00001\"\n" +
                             "    }\n" +
                             "]"
