@@ -1,5 +1,5 @@
-CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
-URR_BRANCH=cloudbees-installation-manager-2.332.0.31 # TODO: Remove once im 2.332.0.31 is in URR
+#CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory} # TODO: Remove once im 2.332.0.31 is in URR
+RUN_CJOC_ATH=false # TODO: Remove once im 2.332.0.31 is in URR
 JAVA8=false
 DEFAULT_JDK=jdk11
 # TODO: Uncomment integration tests once im 2.332.0.31 is in URR
