@@ -64,7 +64,8 @@ public class PluginCatalogValidatorExtensionTest extends AbstractIMTest {
         assertThat("It should not contain valid plugins", validations.get(0).getMessage(), not(containsString("beer")));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog/"));
-        assertThat("We should get empty validation results", validations, hasSize(0));
+        assertThat("We should get only info validation results", validations, hasSize(1));
+        assertThat("We should get only info validation results", validations.get(0).getLevel(), is(Validation.Level.INFO));
     }
 
     public static final class OnePluginV2dot289 implements TestEnvelopeProvider {
