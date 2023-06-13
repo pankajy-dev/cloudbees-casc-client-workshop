@@ -1,5 +1,7 @@
 package com.cloudbees.opscenter.client.casc;
 
+import java.util.stream.Collectors;
+
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
@@ -54,13 +56,13 @@ public abstract class AbstractBundleVersionCheckerTest extends AbstractCJPTest {
         assertTrue("Bundle " + bundle + ": should contain current version", versions.containsKey("current-bundle"));
         JSONObject current = versions.getJSONObject("current-bundle");
         assertThat("Bundle " + bundle + ": current version is " + currentVersion, current.getString("version"), is(currentVersion));
-        assertThat("Bundle " + bundle + ": validating current validations", current.getJSONArray("validations"), currentValidations);
+        assertThat("Bundle " + bundle + ": validating current validations", current.getJSONArray("validations").stream().filter(msg -> !msg.toString().startsWith("INFO")).collect(Collectors.toList()), currentValidations);
         if (newVersion != null) {
             assertTrue("Bundle " + bundle + ": should contain new version", versions.containsKey("new-version"));
             JSONObject newVersionObj = versions.getJSONObject("new-version");
             assertThat("Bundle " + bundle + ": new version is " + newVersion, newVersionObj.getString("version"), is(newVersion));
             assertThat("Bundle " + bundle + ": new version valid is " + newIsValid, newVersionObj.getBoolean("valid"), is(newIsValid));
-            assertThat("Bundle " + bundle + ": validating new version", newVersionObj.getJSONArray("validations"), newValidations);
+            assertThat("Bundle " + bundle + ": validating new version", newVersionObj.getJSONArray("validations").stream().filter(msg -> !msg.toString().startsWith("INFO")).collect(Collectors.toList()), newValidations);
         } else {
             assertFalse("Bundle " + bundle + ": should not contain new version", versions.containsKey("new-version"));
         }

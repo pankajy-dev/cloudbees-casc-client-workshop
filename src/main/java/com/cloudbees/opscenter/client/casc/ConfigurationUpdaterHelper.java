@@ -264,6 +264,9 @@ public final class ConfigurationUpdaterHelper {
         if (vs.hasWarnings()) {
             list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
         }
+        if (vs.hasInfoMessages()) {
+            list.addAll(vs.getInfoMessages().stream().map(s -> Validation.Level.INFO + " - " + s).collect(Collectors.toList()));
+        }
 
         return list;
     }
@@ -347,6 +350,7 @@ public final class ConfigurationUpdaterHelper {
                 row.accumulate("date", new SimpleDateFormat("dd MMMM yyyy").format(updateLogRow.getDate()));
                 row.accumulate("errors", updateLogRow.getErrors());
                 row.accumulate("warnings", updateLogRow.getWarnings());
+                row.accumulate("info-messages", updateLogRow.getInfoMessages());
                 row.accumulate("folder", updateLogRow.getFolder());
                 logs.add(row);
             });
