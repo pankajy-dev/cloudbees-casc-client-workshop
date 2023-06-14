@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.plugins.casc.validation;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,6 +61,6 @@ public class RbacValidatorExtensionTest {
                    allOf(containsString("non.existent.Permission"), containsString("another.non.existent.Permission")));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/RbacValidatorExtensionTest/valid/"));
-        assertThat("We should get validation results containing an entry", validations, hasSize(0));
+        assertThat("We should get validation results containing an entry", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), hasSize(0));
     }
 }

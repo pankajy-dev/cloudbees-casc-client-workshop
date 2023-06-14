@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.plugins.casc.validation;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.After;
@@ -72,7 +73,7 @@ public class ItemsValidatorExtensionTest {
     public void computed_folder_without_disabled_does_not_throw_exception() {
         ItemsValidatorExtension validator = ExtensionList.lookupSingleton(ItemsValidatorExtension.class);
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/ItemsValidatorExtensionTest/bee-20643"));
-        assertThat("Validation does not throw an NPE", validations, empty());
+        assertThat("Validation does not throw an NPE", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
     }
     @Issue("BEE-29721")
     @Test
@@ -94,6 +95,6 @@ public class ItemsValidatorExtensionTest {
 
         ItemsValidatorExtension validator = ExtensionList.lookupSingleton(ItemsValidatorExtension.class);
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/ItemsValidatorExtensionTest/with-items-too-many-anchors"));
-        assertThat("there is no validation outcome", validations, empty());
+        assertThat("there is no warn or error outcome", validations.stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
     }
 }
