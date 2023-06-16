@@ -14,7 +14,7 @@
                 <td class="table__column table__column--date"><i:formatDate value="${date}" type="date" dateStyle="long"/></td>
                 <td class="table__column table__column--errors">${errors}</td>
                 <td class="table__column table__column--warnings">${warnings}</td>
-                <td class="table__column table__column--warnings">${infoMessages}</td>
+                <td class="table__column table__column--infoMessages">${infoMessages}</td>
                 <td class="table__column table__column--actions">
                     <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank">
                         <i class="fa fa-eye" title="Visualize"/>
@@ -90,7 +90,7 @@
                     <td class="table__header table__header--date">${%date}</td>
                     <td class="table__header table__header--errors">${%errors}</td>
                     <td class="table__header table__header--warnings">${%warnings}</td>
-                    <td class="table__header table__header--warnings">${%infoMessages}</td>
+                    <td class="table__header table__header--infoMessages">${%infoMessages}</td>
                     <td class="table__header table__header--actions"/>
                 </tr>
                 <j:forEach items="${it.truncatedUpdateLog}" var="u">
