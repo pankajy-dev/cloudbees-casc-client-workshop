@@ -17,6 +17,4 @@ updates:
       interval: "weekly"
     registries:
       - nexus-internal
-    reviewers:
-      - "cloudbees/team-pulsar"
 
