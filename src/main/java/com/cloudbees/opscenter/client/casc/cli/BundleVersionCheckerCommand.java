@@ -1,5 +1,7 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import org.kohsuke.args4j.Option;
+
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
@@ -11,6 +13,9 @@ import jenkins.model.Jenkins;
 @Extension
 public class BundleVersionCheckerCommand extends CLICommand {
     public final static String COMMAND_NAME = "casc-bundle-check-bundle-update";
+
+    @Option(name="-q", aliases = { "--quiet"}, usage="Enable quiet mode", required = false)
+    private String quietArg = null;
 
     @Override
     public String getShortDescription() { return "Checks if a new version of the configuration bundle is available.";}
@@ -40,7 +45,8 @@ public class BundleVersionCheckerCommand extends CLICommand {
                 reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
             }
 
-            stdout.println(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
+            Boolean quiet = quietArg == null ? null : Boolean.valueOf(quietArg);
+            stdout.println(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload, quiet));
         } catch (CheckNewBundleVersionException e) {
             stderr.println("Error checking the new bundle version: " + e.getMessage());
             return 1;

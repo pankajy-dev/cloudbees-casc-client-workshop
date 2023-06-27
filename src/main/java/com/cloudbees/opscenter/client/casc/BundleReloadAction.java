@@ -281,13 +281,15 @@ public class BundleReloadAction implements RootAction {
      * Check if there's a new version of the bundle available
      * <p>
      * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-update }
+     * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
+     *                                     or disabled (false). If not present, use the value from the config.
      * Permission required: READ
      * </p>
      * @return 200 and a boolean update-available field indicating if new version is available.
      */
     @GET
     @WebMethod(name = "check-bundle-update")
-    public HttpResponse doGetBundleNewerVersion() {
+    public HttpResponse doGetBundleNewerVersion(@QueryParameter("quiet") String quietParam) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         boolean update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
@@ -304,7 +306,8 @@ public class BundleReloadAction implements RootAction {
             reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
         }
 
-        return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
+        Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);
+        return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload, quiet));
     }
 
     /**

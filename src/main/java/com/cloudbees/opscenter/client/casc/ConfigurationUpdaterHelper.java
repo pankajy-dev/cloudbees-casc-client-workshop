@@ -200,9 +200,10 @@ public final class ConfigurationUpdaterHelper {
      * }
      * @param update true if there is a new version available suitable for installation.
      * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @param quiet true to activate the quiet mode
      * @return JSON response for CLI and HTTP Endpoint to check new versions
      */
-    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload, Boolean quiet) {
         JSONObject json = new JSONObject();
         json.accumulate("update-available", update);
 
@@ -214,7 +215,7 @@ public final class ConfigurationUpdaterHelper {
         currentBundle.accumulate("version", StringUtils.defaultString(bundleInfo.getBundleVersion(), "N/A"));
         JSONArray currentValidations = new JSONArray();
         if (Objects.equals(bundleInfo.getBundleVersion(), bundleInfo.getDownloadedBundleVersion())) {
-            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations()));
+            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations(), quiet));
         }
         currentBundle.accumulate("validations", currentValidations);
 
@@ -228,7 +229,7 @@ public final class ConfigurationUpdaterHelper {
             newAvailable.accumulate("valid", valid);
             BundleVisualizationLink.ValidationSection validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
             JSONArray newValidations = new JSONArray();
-            newValidations.addAll(getValidations(validations));
+            newValidations.addAll(getValidations(validations, quiet));
             newAvailable.accumulate("validations", newValidations);
             versionSummary.accumulate("new-version", newAvailable);
         }
@@ -256,7 +257,7 @@ public final class ConfigurationUpdaterHelper {
         return json;
     }
 
-    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs) {
+    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs, Boolean quietParam) {
         List<String> list = new ArrayList<>();
         if (vs.hasErrors()) {
             list.addAll(vs.getErrors().stream().map(s -> Validation.Level.ERROR + " - " + s).collect(Collectors.toList()));
@@ -264,7 +265,8 @@ public final class ConfigurationUpdaterHelper {
         if (vs.hasWarnings()) {
             list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
         }
-        if (vs.hasInfoMessages()) {
+        boolean quiet = quietParam != null ? quietParam : vs.isQuiet();
+        if (!quiet && vs.hasInfoMessages()) {
             list.addAll(vs.getInfoMessages().stream().map(s -> Validation.Level.INFO + " - " + s).collect(Collectors.toList()));
         }
 
