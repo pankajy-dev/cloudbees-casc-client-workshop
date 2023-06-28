@@ -497,11 +497,10 @@ public final class ConfigurationUpdaterHelper {
      * @return List of validation messages
      */
     @NonNull
-    public static List<Validation> fullValidation(Path bundleDir) {
-        List<Validation> validations = new ArrayList<>();
+    public static List<Validation> fullValidation(Path bundleDir, Boolean quietParam) {
 
         // Structural validations
-        PlainBundle bundle = new PathPlainBundle(bundleDir);
+        PlainBundle<Path> bundle = new PathPlainBundle(bundleDir);
         BundleValidator validator = new BundleValidator.Builder().withBundle(bundle)
                 .addValidator(new FileSystemBundleValidator())
                 .addValidator(new DescriptorValidator())
@@ -510,7 +509,7 @@ public final class ConfigurationUpdaterHelper {
                 .addValidator(new PluginsToInstallValidator())
                 .addValidator(new MultipleCatalogFilesValidator())
                 .build();
-        validations.addAll(validator.validate().getValidations());
+        ArrayList<Validation> validations = new ArrayList<>(validator.validate().getValidations());
 
         // Runtime validations
         try {
@@ -522,7 +521,15 @@ public final class ConfigurationUpdaterHelper {
         // Send event to Segment
         new BundleValidationErrorGatherer(validations).send();
 
-        return validations;
+        boolean quiet = quietParam != null ? quietParam : ConfigurationBundleManager.get().isQuiet();
+        if (quiet) {
+            return validations.stream()
+                              .filter(validation -> validation.getLevel() == Validation.Level.ERROR
+                                                    || validation.getLevel() == Validation.Level.WARNING)
+                              .collect(Collectors.toList());
+        } else {
+            return validations;
+        }
     }
 
     /**
@@ -530,14 +537,15 @@ public final class ConfigurationUpdaterHelper {
      * Also logs associated commit
      * @param bundleDir Path to the bundle to validate
      * @param commit The commit's hash for logging purposes
+     * @param quietParam Define if the quiet mode will be used or not
      * @return List of validation messages
      */
     @NonNull
-    public static List<Validation> fullValidation(Path bundleDir, String commit) {
+    public static List<Validation> fullValidation(Path bundleDir, String commit, Boolean quietParam) {
         if (StringUtils.isNotBlank(commit)) {
             LOGGER.log(Level.INFO, String.format("Validating bundles associated with commit %s", commit));
         }
-        return fullValidation(bundleDir);
+        return fullValidation(bundleDir, quietParam);
     }
 
     public static JSONObject getValidationJSON(@NonNull List<Validation> validations) {

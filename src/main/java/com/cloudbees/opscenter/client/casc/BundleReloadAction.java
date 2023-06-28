@@ -364,6 +364,8 @@ public class BundleReloadAction implements RootAction {
      * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
      * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
      * Parameters: {@code commit=[STRING] } optional parameter to indicate the commit hash associated with the bundles to validate
+     * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
+     *                                     or disabled (false). If not present, use the value from the config.
      * Permission required: MANAGE
      * @return
      *      <table>
@@ -376,7 +378,9 @@ public class BundleReloadAction implements RootAction {
      */
     @POST
     @WebMethod(name = "casc-bundle-validate")
-    public HttpResponse doBundleValidate(StaplerRequest req, @QueryParameter String commit) {
+    public HttpResponse doBundleValidate(StaplerRequest req,
+                                         @QueryParameter String commit,
+                                         @QueryParameter("quiet") String quietParam) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         Path tempFolder = null;
@@ -421,7 +425,8 @@ public class BundleReloadAction implements RootAction {
                 return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
 
-            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
+            Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit, quiet);
             return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error reading the zip file", e);

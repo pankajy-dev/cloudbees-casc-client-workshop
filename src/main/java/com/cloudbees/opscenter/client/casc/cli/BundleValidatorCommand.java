@@ -24,6 +24,9 @@ public class BundleValidatorCommand extends CLICommand {
     @Option(name="-c", aliases = { "--commit"}, usage="Logs the indicated commit in the instance logs for further tracking", required = false)
     private String commit = null;
 
+    @Option(name="-q", aliases = { "--quiet"}, usage="Enable quiet mode", required = false)
+    private String quietArg = null;
+
     @Override
     public String getShortDescription() { return "Validates a bundle on this instance. The bundle must be a zip file containing the bundle structure. Example of use: java -jar jenkins-cli.jar " + COMMAND_NAME + " < /path/to/bundle.zip";}
 
@@ -86,7 +89,8 @@ public class BundleValidatorCommand extends CLICommand {
                 throw new IllegalArgumentException("Invalid bundle - Missing descriptor");
             }
 
-            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
+            Boolean quiet = quietArg == null ? null : Boolean.valueOf(quietArg);
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit, quiet);
             stdout.println(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } finally {
             if (tempFolder != null && Files.exists(tempFolder)) {
