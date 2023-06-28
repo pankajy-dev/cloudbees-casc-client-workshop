@@ -1,0 +1,8 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
+    <f:section title="${%title}">
+        <f:entry field="quiet">
+            <f:checkbox field="quiet" title="${%quiet_config}"/>
+        </f:entry>
+    </f:section>
+</j:jelly>
