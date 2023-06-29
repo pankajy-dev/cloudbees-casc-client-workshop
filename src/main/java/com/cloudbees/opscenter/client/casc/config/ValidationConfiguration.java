@@ -15,8 +15,8 @@ import jenkins.model.GlobalConfiguration;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 
 @Extension
-@Symbol("bundleVisualization")
-public class ValidationConfiguration extends GlobalConfiguration {
+@Symbol("bundleValVisualization")
+public class BundleValidationVisualizationConfiguration extends GlobalConfiguration {
 
     /**
      * See BEE-35011 for details
