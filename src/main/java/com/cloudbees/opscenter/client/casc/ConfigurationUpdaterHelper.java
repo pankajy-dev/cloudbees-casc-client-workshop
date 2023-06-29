@@ -181,6 +181,7 @@ public final class ConfigurationUpdaterHelper {
 
     /**
      * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * <pre>
      * {
      *     "update-available": true,
      *     "versions": {
@@ -198,6 +199,42 @@ public final class ConfigurationUpdaterHelper {
      *     },
      *     "update-type": "RELOAD"
      * }
+     * </pre>
+     * Note that the produced JSON will include all the validation messages.
+     *
+     * @param update true if there is a new version available suitable for installation.
+     * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     * @see ConfigurationUpdaterHelper#getUpdateCheckJsonResponse(boolean, boolean, Boolean)
+     */
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return getUpdateCheckJsonResponse(update, isHotReload, false);
+    }
+
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * <pre>
+     * {
+     *     "update-available": true,
+     *     "versions": {
+     *         "current-bundle": {
+     *             "version": "2",
+     *             "validations": []
+     *         },
+     *         "new-version": {
+     *             "version": "5",
+     *             "valid": true,
+     *             "validations": [
+     *                 "WARNING - [CATALOGVAL] - More than one plugin catalog file used in zip-core-casc-1652255664849. Using only first read file."
+     *             ]
+     *         }
+     *     },
+     *     "update-type": "RELOAD"
+     * }
+     * </pre>
+     * If quiet mode is activated (true) then the validations will contain only WARNING and ERROR messages.
+     *
      * @param update true if there is a new version available suitable for installation.
      * @param isHotReload true if the new version can be applied with a Hot Reload
      * @param quiet true to activate the quiet mode
@@ -492,8 +529,25 @@ public final class ConfigurationUpdaterHelper {
     }
 
     /**
-     * Make a full validation of the bundle: structural and runtime validations
+     * Make a full validation of the bundle: structural and runtime validations.
+     * The returned list will contain all the validation messages.
+     *
      * @param bundleDir Path to the bundle to validate
+     * @return List of validation messages
+     * @see ConfigurationUpdaterHelper#fullValidation(Path, String, Boolean)
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir) {
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return fullValidation(bundleDir, false);
+    }
+
+    /**
+     * Make a full validation of the bundle: structural and runtime validations.
+     * If quiet mode is activated (true), then the returned list will contain only WARNING and ERROR messages.
+     *
+     * @param bundleDir Path to the bundle to validate
+     * @param quietParam if true, the quiet mode will be enabled
      * @return List of validation messages
      */
     @NonNull
@@ -534,7 +588,22 @@ public final class ConfigurationUpdaterHelper {
 
     /**
      * Make a full validation of the bundle: structural and runtime validations.
+     * The returned list will contain all the validation messages.
      * Also logs associated commit
+     * @param bundleDir Path to the bundle to validate
+     * @param commit The commit's hash for logging purposes
+     * @return List of validation messages
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir, String commit) {
+        return fullValidation(bundleDir, commit);
+    }
+
+    /**
+     * Make a full validation of the bundle: structural and runtime validations.
+     * Also logs associated commit
+     * If quiet mode is activated (true), then the returned list will contain only WARNING and ERROR messages.
+     *
      * @param bundleDir Path to the bundle to validate
      * @param commit The commit's hash for logging purposes
      * @param quietParam Define if the quiet mode will be used or not
