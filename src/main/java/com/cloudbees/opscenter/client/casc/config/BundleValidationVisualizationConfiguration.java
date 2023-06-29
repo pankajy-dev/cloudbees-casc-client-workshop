@@ -15,7 +15,7 @@ import jenkins.model.GlobalConfiguration;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 
 @Extension
-@Symbol("bundleValVisualization")
+@Symbol("validationVisualization")
 public class BundleValidationVisualizationConfiguration extends GlobalConfiguration {
 
     /**
@@ -30,12 +30,12 @@ public class BundleValidationVisualizationConfiguration extends GlobalConfigurat
      */
     private boolean quiet = false;
 
-    public ValidationConfiguration() {
+    public BundleValidationVisualizationConfiguration() {
         load();
     }
 
-    public static ValidationConfiguration get() {
-        return ExtensionList.lookupSingleton(ValidationConfiguration.class);
+    public static BundleValidationVisualizationConfiguration get() {
+        return ExtensionList.lookupSingleton(BundleValidationVisualizationConfiguration.class);
     }
 
     @Initializer(after = InitMilestone.SYSTEM_CONFIG_ADAPTED, before = InitMilestone.JOB_LOADED)
