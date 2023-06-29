@@ -53,10 +53,8 @@ public class ValidationConfiguration extends GlobalConfiguration {
 
     @DataBoundSetter
     public void setQuiet(boolean newValue) {
-        if (this.quiet != newValue) {
-            this.quiet = newValue;
-            save();
-            updateConfigurationBundleManager();
-        }
+        this.quiet = newValue;
+        save();
+        updateConfigurationBundleManager();
     }
 }
