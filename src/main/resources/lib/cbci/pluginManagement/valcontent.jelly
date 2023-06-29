@@ -55,7 +55,7 @@
                             </j:forEach>
                         </ul>
                     </j:otherwise>
-                    </j:when>
+                    </j:choose>
                 </j:if>
             </j:when>
             <j:when test="${validationObject.quiet}">
