@@ -156,6 +156,11 @@
       <artifactId>matrix-auth</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.configuration-as-code</groupId>
+      <artifactId>test-harness</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.cloudbees.jenkins.modules</groupId>
