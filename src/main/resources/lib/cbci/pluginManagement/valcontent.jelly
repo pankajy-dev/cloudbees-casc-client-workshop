@@ -43,17 +43,19 @@
                     </ul>
                 </j:if>
                 <j:if test="${not empty validationObject.infoMessages}">
-                    <j:if test="${validationObject.quiet}">
+                    <j:choose>
+                    <j:when test="${validationObject.quiet}">
                         <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}), not displayed in quiet mode.</p>
-                    </j:if>
-                    <j:if test="${not validationObject.quiet}">
+                    </j:when>
+                    <j:otherwise>
                         <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}):</p>
                         <ul>
                             <j:forEach items="${validationObject.infoMessages}" var="v">
                                 <li>${v}</li>
                             </j:forEach>
                         </ul>
-                    </j:if>
+                    </j:otherwise>
+                    </j:when>
                 </j:if>
             </j:when>
             <j:when test="${validationObject.quiet}">
