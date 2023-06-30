@@ -596,7 +596,8 @@ public final class ConfigurationUpdaterHelper {
      */
     @NonNull
     public static List<Validation> fullValidation(Path bundleDir, String commit) {
-        return fullValidation(bundleDir, commit);
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return fullValidation(bundleDir, commit, false);
     }
 
     /**
