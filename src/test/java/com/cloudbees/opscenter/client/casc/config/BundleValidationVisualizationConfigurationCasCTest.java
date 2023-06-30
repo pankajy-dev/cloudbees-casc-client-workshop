@@ -18,7 +18,7 @@ import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
 
-public class BundleValidationVisualizationConfigurationTest {
+public class BundleValidationVisualizationConfigurationCasCTest {
     @ClassRule
     @ConfiguredWithCode("configuration-as-code.yml")
     public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
