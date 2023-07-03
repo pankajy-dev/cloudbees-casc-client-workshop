@@ -237,7 +237,7 @@ public final class ConfigurationUpdaterHelper {
      *
      * @param update true if there is a new version available suitable for installation.
      * @param isHotReload true if the new version can be applied with a Hot Reload
-     * @param quiet true to activate the quiet mode
+     * @param quiet true to activate the quiet mode, false to deactivate it, 'null' to use the value from ConfigurationBundleManager.
      * @return JSON response for CLI and HTTP Endpoint to check new versions
      */
     public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload, Boolean quiet) {
@@ -547,7 +547,7 @@ public final class ConfigurationUpdaterHelper {
      * If quiet mode is activated (true), then the returned list will contain only WARNING and ERROR messages.
      *
      * @param bundleDir Path to the bundle to validate
-     * @param quietParam if true, the quiet mode will be enabled
+     * @param quietParam true to activate the quiet mode, false to deactivate it, 'null' to use the value from ConfigurationBundleManager.
      * @return List of validation messages
      */
     @NonNull
