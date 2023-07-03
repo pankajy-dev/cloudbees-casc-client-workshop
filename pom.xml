@@ -60,7 +60,7 @@
       <dependency>
         <groupId>com.cloudbees.jenkins.modules</groupId>
         <artifactId>cloudbees-installation-manager</artifactId>
-        <version>2.332.0.32</version> <!-- TODO remove once in URR -->
+        <version>2.332.0.33-20230703.085558-11</version> <!-- TODO remove once in URR -->
       </dependency>
 
     </dependencies>
