@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
+import static com.cloudbees.opscenter.client.casc.CasCMatchers.hasInfoMessage;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,6 +96,26 @@ public class BundleValidatorCommandTest {
         assertThat("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages").stream().filter(msg -> !msg.toString().startsWith("INFO")).collect(Collectors.toList()),
                    contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
         assertFalse("Validation results don't include commit", response.containsKey("commit"));
+
+        // Valid but with warnings - not quiet mode
+        result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/only-with-warnings.zip")))
+                .asUser(admin.getId())
+                .withArgs("--quiet", "false")
+                .invoke();
+        assertThat("User admin should have permissions", result.returnCode(), is(0));
+        response = JSONObject.fromObject(result.stdout());
+        assertThat("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages"), hasInfoMessage());
+
+        // Valid but with warnings - quiet mode
+        result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/only-with-warnings.zip")))
+                .asUser(admin.getId())
+                .withArgs("--quiet", "true")
+                .invoke();
+        assertThat("User admin should have permissions", result.returnCode(), is(0));
+        response = JSONObject.fromObject(result.stdout());
+        assertThat("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages"), not(hasInfoMessage()));
 
         // No valid
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
