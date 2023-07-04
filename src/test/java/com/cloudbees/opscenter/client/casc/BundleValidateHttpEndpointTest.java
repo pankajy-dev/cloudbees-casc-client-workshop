@@ -117,6 +117,7 @@ public class BundleValidateHttpEndpointTest {
         assertThat("only-with-warnings.zip should have validation messages",
                    response.getJSONArray("validation-messages"),
                    contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+        assertThat("valid-bundle.zip should have info messages", response.getJSONArray("validation-messages"), not(CasCMatchers.hasInfoMessage()));
         conn.disconnect();
 
         // No valid
