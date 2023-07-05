@@ -48,9 +48,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateAvailable(jsonResult, "version-2.zip", true);
         assertVersions(jsonResult, "version-2.zip", "1", empty(), "2", empty(), true);
         assertUpdateType(jsonResult, "version-2.zip", "RELOAD");
-        new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
-        // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        // BEE-34438: this bundle is not reloaded to check if subsequent new versions are detected
 
         // Updated to version 3 - Without version - Ignored
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-3.zip").toFile().getAbsolutePath());
@@ -58,7 +56,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-3.zip", false);
-        assertVersions(jsonResult, "version-3.zip", "2", empty(), null, null, true);
+        assertVersions(jsonResult, "version-3.zip", "1", empty(), null, null, true);
         assertUpdateType(jsonResult, "version-3.zip", null);
 
         // Updated to version 4 - Invalid
@@ -67,7 +65,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-4.zip", true);
-        assertVersions(jsonResult, "version-4.zip", "2", empty(), "4", contains("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer."), false);
+        assertVersions(jsonResult, "version-4.zip", "1", empty(), "4", contains("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer."), false);
         assertUpdateType(jsonResult, "version-4.zip", null);
 
         // Updated to version 5 - Valid but with warnings
@@ -76,7 +74,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-5.zip", true);
-        assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
+        assertVersions(jsonResult, "version-5.zip", "1", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
         assertUpdateType(jsonResult, "version-5.zip", "RELOAD");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete

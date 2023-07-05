@@ -30,12 +30,8 @@ public class BundleVersionCheckerCommand extends CLICommand {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         try {
             boolean reload = false;
-            boolean update;
-            if (ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
-                update = true;
-            } else {
-                update = ConfigurationUpdaterHelper.checkForUpdates();
-            }
+            // BEE-34438: always check for updates to ensure subsequent bundle versions will be detected
+            boolean update = ConfigurationUpdaterHelper.checkForUpdates();
             if (update) {
                 reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
             }
