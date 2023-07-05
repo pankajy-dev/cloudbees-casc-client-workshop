@@ -288,18 +288,24 @@ public class BundleReloadAction implements RootAction {
     @GET
     @WebMethod(name = "check-bundle-update")
     public HttpResponse doGetBundleNewerVersion() {
+        // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
-        boolean update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
         boolean reload = false;
-        if (!update) {
-            try {
-                update = ConfigurationUpdaterHelper.checkForUpdates();
-            } catch (CheckNewBundleVersionException ex) {
-                LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
-                return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
+        // First, check if an update is available
+        // Dev memo: this must go first because it will update the version of the bundle if needed
+        boolean update;
+        try {
+            update = ConfigurationUpdaterHelper.checkForUpdates();
+        } catch (CheckNewBundleVersionException ex) {
+            LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+            return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+        if (!update) {
+            // maybe the bundle is the same, but it is not yet applied, also check if an update is available
+            update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        }
+
         if (update) {
             reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
         }
