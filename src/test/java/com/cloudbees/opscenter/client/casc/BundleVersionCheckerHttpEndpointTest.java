@@ -120,7 +120,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         assertUpdateType(jsonResult, "version-11.zip", "RELOAD");
     }
 
-    private WebResponse requestWithToken(HttpMethod method, URL fullURL, User asUser, CJPRule.WebClient wc)
+    public static WebResponse requestWithToken(HttpMethod method, URL fullURL, User asUser, CJPRule.WebClient wc)
             throws IOException {
 
         try {

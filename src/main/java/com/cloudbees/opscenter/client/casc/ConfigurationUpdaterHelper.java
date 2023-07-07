@@ -182,6 +182,7 @@ public final class ConfigurationUpdaterHelper {
 
     /**
      * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * <pre>
      * {
      *     "update-available": true,
      *     "versions": {
@@ -199,11 +200,48 @@ public final class ConfigurationUpdaterHelper {
      *     },
      *     "update-type": "RELOAD"
      * }
+     * </pre>
+     * Note that the produced JSON will include all the validation messages.
+     *
      * @param update true if there is a new version available suitable for installation.
      * @param isHotReload true if the new version can be applied with a Hot Reload
      * @return JSON response for CLI and HTTP Endpoint to check new versions
+     * @see ConfigurationUpdaterHelper#getUpdateCheckJsonResponse(boolean, boolean, Boolean)
      */
     public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return getUpdateCheckJsonResponse(update, isHotReload, false);
+    }
+
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
+     * <pre>
+     * {
+     *     "update-available": true,
+     *     "versions": {
+     *         "current-bundle": {
+     *             "version": "2",
+     *             "validations": []
+     *         },
+     *         "new-version": {
+     *             "version": "5",
+     *             "valid": true,
+     *             "validations": [
+     *                 "WARNING - [CATALOGVAL] - More than one plugin catalog file used in zip-core-casc-1652255664849. Using only first read file."
+     *             ]
+     *         }
+     *     },
+     *     "update-type": "RELOAD"
+     * }
+     * </pre>
+     * If quiet mode is activated (true) then the validations will contain only WARNING and ERROR messages.
+     *
+     * @param update true if there is a new version available suitable for installation.
+     * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @param quiet true to activate the quiet mode, false to deactivate it, 'null' to use the value from ConfigurationBundleManager.
+     * @return JSON response for CLI and HTTP Endpoint to check new versions
+     */
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload, Boolean quiet) {
         JSONObject json = new JSONObject();
         json.accumulate("update-available", update);
 
@@ -215,7 +253,7 @@ public final class ConfigurationUpdaterHelper {
         currentBundle.accumulate("version", StringUtils.defaultString(bundleInfo.getBundleVersion(), "N/A"));
         JSONArray currentValidations = new JSONArray();
         if (Objects.equals(bundleInfo.getBundleVersion(), bundleInfo.getDownloadedBundleVersion())) {
-            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations()));
+            currentValidations.addAll(getValidations(bundleInfo.getBundleValidations(), quiet));
         }
         currentBundle.accumulate("validations", currentValidations);
 
@@ -229,7 +267,7 @@ public final class ConfigurationUpdaterHelper {
             newAvailable.accumulate("valid", valid);
             BundleVisualizationLink.ValidationSection validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
             JSONArray newValidations = new JSONArray();
-            newValidations.addAll(getValidations(validations));
+            newValidations.addAll(getValidations(validations, quiet));
             newAvailable.accumulate("validations", newValidations);
             versionSummary.accumulate("new-version", newAvailable);
         }
@@ -257,7 +295,7 @@ public final class ConfigurationUpdaterHelper {
         return json;
     }
 
-    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs) {
+    private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs, Boolean quietParam) {
         List<String> list = new ArrayList<>();
         if (vs.hasErrors()) {
             list.addAll(vs.getErrors().stream().map(s -> Validation.Level.ERROR + " - " + s).collect(Collectors.toList()));
@@ -265,7 +303,8 @@ public final class ConfigurationUpdaterHelper {
         if (vs.hasWarnings()) {
             list.addAll(vs.getWarnings().stream().map(s -> Validation.Level.WARNING + " - " + s).collect(Collectors.toList()));
         }
-        if (vs.hasInfoMessages()) {
+        boolean quiet = quietParam != null ? quietParam : vs.isQuiet();
+        if (!quiet && vs.hasInfoMessages()) {
             list.addAll(vs.getInfoMessages().stream().map(s -> Validation.Level.INFO + " - " + s).collect(Collectors.toList()));
         }
 
@@ -491,16 +530,32 @@ public final class ConfigurationUpdaterHelper {
     }
 
     /**
-     * Make a full validation of the bundle: structural and runtime validations
+     * Make a full validation of the bundle: structural and runtime validations.
+     * The returned list will contain all the validation messages.
+     *
      * @param bundleDir Path to the bundle to validate
      * @return List of validation messages
+     * @see ConfigurationUpdaterHelper#fullValidation(Path, String, Boolean)
      */
     @NonNull
     public static List<Validation> fullValidation(Path bundleDir) {
-        List<Validation> validations = new ArrayList<>();
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return fullValidation(bundleDir, false);
+    }
+
+    /**
+     * Make a full validation of the bundle: structural and runtime validations.
+     * If quiet mode is activated (true), then the returned list will contain only WARNING and ERROR messages.
+     *
+     * @param bundleDir Path to the bundle to validate
+     * @param quietParam true to activate the quiet mode, false to deactivate it, 'null' to use the value from ConfigurationBundleManager.
+     * @return List of validation messages
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir, Boolean quietParam) {
 
         // Structural validations
-        PlainBundle bundle = new PathPlainBundle(bundleDir);
+        PlainBundle<Path> bundle = new PathPlainBundle(bundleDir);
         BundleValidator validator = new BundleValidator.Builder().withBundle(bundle)
                 .addValidator(new FileSystemBundleValidator())
                 .addValidator(new DescriptorValidator())
@@ -510,7 +565,7 @@ public final class ConfigurationUpdaterHelper {
                 .addValidator(new PluginsToInstallValidator())
                 .addValidator(new MultipleCatalogFilesValidator())
                 .build();
-        validations.addAll(validator.validate().getValidations());
+        ArrayList<Validation> validations = new ArrayList<>(validator.validate().getValidations());
 
         // Runtime validations
         try {
@@ -522,11 +577,20 @@ public final class ConfigurationUpdaterHelper {
         // Send event to Segment
         new BundleValidationErrorGatherer(validations).send();
 
-        return validations;
+        boolean quiet = quietParam != null ? quietParam : ConfigurationBundleManager.get().isQuiet();
+        if (quiet) {
+            return validations.stream()
+                              .filter(validation -> validation.getLevel() == Validation.Level.ERROR
+                                                    || validation.getLevel() == Validation.Level.WARNING)
+                              .collect(Collectors.toList());
+        } else {
+            return validations;
+        }
     }
 
     /**
      * Make a full validation of the bundle: structural and runtime validations.
+     * The returned list will contain all the validation messages.
      * Also logs associated commit
      * @param bundleDir Path to the bundle to validate
      * @param commit The commit's hash for logging purposes
@@ -534,10 +598,26 @@ public final class ConfigurationUpdaterHelper {
      */
     @NonNull
     public static List<Validation> fullValidation(Path bundleDir, String commit) {
+        // Dev memo: quiet mode is off by default, see BEE-35011
+        return fullValidation(bundleDir, commit, false);
+    }
+
+    /**
+     * Make a full validation of the bundle: structural and runtime validations.
+     * Also logs associated commit
+     * If quiet mode is activated (true), then the returned list will contain only WARNING and ERROR messages.
+     *
+     * @param bundleDir Path to the bundle to validate
+     * @param commit The commit's hash for logging purposes
+     * @param quietParam Define if the quiet mode will be used or not
+     * @return List of validation messages
+     */
+    @NonNull
+    public static List<Validation> fullValidation(Path bundleDir, String commit, Boolean quietParam) {
         if (StringUtils.isNotBlank(commit)) {
             LOGGER.log(Level.INFO, String.format("Validating bundles associated with commit %s", commit));
         }
-        return fullValidation(bundleDir);
+        return fullValidation(bundleDir, quietParam);
     }
 
     public static JSONObject getValidationJSON(@NonNull List<Validation> validations) {

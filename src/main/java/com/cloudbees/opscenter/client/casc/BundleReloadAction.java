@@ -281,13 +281,15 @@ public class BundleReloadAction implements RootAction {
      * Check if there's a new version of the bundle available
      * <p>
      * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-update }
+     * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
+     *                                     or disabled (false). If not present, use the value from the config.
      * Permission required: READ
      * </p>
      * @return 200 and a boolean update-available field indicating if new version is available.
      */
     @GET
     @WebMethod(name = "check-bundle-update")
-    public HttpResponse doGetBundleNewerVersion() {
+    public HttpResponse doGetBundleNewerVersion(@QueryParameter("quiet") String quietParam) {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
@@ -310,7 +312,8 @@ public class BundleReloadAction implements RootAction {
             reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
         }
 
-        return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload));
+        Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);
+        return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload, quiet));
     }
 
     /**
@@ -367,6 +370,8 @@ public class BundleReloadAction implements RootAction {
      * Since the bundle has to be included in the call, this method can only be POST. The bundle must be included in zip file.
      * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-validate }
      * Parameters: {@code commit=[STRING] } optional parameter to indicate the commit hash associated with the bundles to validate
+     * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
+     *                                     or disabled (false). If not present, use the value from the config.
      * Permission required: MANAGE
      * @return
      *      <table>
@@ -379,7 +384,9 @@ public class BundleReloadAction implements RootAction {
      */
     @POST
     @WebMethod(name = "casc-bundle-validate")
-    public HttpResponse doBundleValidate(StaplerRequest req, @QueryParameter String commit) {
+    public HttpResponse doBundleValidate(StaplerRequest req,
+                                         @QueryParameter String commit,
+                                         @QueryParameter("quiet") String quietParam) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         Path tempFolder = null;
@@ -424,7 +431,8 @@ public class BundleReloadAction implements RootAction {
                 return new JsonHttpResponse(error, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
 
-            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit);
+            Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);
+            List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(bundleDir, commit, quiet);
             return new JsonHttpResponse(ConfigurationUpdaterHelper.getValidationJSON(validations, commit));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error reading the zip file", e);

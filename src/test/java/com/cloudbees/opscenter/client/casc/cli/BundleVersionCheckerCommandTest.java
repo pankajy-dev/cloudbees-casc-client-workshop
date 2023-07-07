@@ -4,10 +4,8 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
-
 import hudson.cli.CLICommandInvoker;
 import hudson.model.FreeStyleProject;
-
 import net.sf.json.JSONObject;
 import org.junit.Test;
 
@@ -16,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
-
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -150,4 +147,5 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat("We should get a list with 2 items", jsonResult.getJSONObject("items").getJSONArray("deletions"), hasSize(2));
         assertThat("Created items should be in deletions list", jsonResult.getJSONObject("items").getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too"));
     }
+
 }

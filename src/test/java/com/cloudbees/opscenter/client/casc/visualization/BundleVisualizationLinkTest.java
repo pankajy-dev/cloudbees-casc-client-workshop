@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
@@ -25,11 +26,14 @@ import org.mockito.MockedStatic;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -124,6 +128,40 @@ public class BundleVisualizationLinkTest {
             assertTrue(ConfigurationStatus.INSTANCE.isErrorInNewVersion());
             assertTrue(bundleVisualizationLink.isErrorInNewVersion());
             assertThat(bundleVisualizationLink.getErrorMessage(), containsString("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404"));
+        }
+    }
+
+    /**
+     * BundleVisualizationLinkTest should create the ValiationSection using the boolean from ConfigurationBundleManager
+     */
+    @Test
+    public void testValiationSectionQuietConfig() {
+        doTestValiationSectionQuietConfig(false);
+        doTestValiationSectionQuietConfig(true);
+    }
+
+    private void doTestValiationSectionQuietConfig(boolean quiet) {
+        try (ACLContext ctx = ACL.as(adminUser);
+                MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(
+                        ConfigurationBundleManager.class)) {
+
+            BundleUpdateLog.BundleValidationYaml mockedValidations = mock(BundleUpdateLog.BundleValidationYaml.class);
+            List<Validation.Serialized> validations = new ArrayList<>();
+            validations.add(new Validation.Serialized(Validation.Level.INFO, "Unit test", ValidationCode.UNDEFINED));
+            when(mockedValidations.getValidations()).thenReturn(validations);
+
+            BundleUpdateLog mockedUpdateLog = mock(BundleUpdateLog.class);
+            when(mockedUpdateLog.getCurrentVersionValidations()).thenReturn(mockedValidations);
+
+            ConfigurationBundleManager mockedConfManager = mock(ConfigurationBundleManager.class);
+            when(mockedConfManager.getUpdateLog()).thenReturn(mockedUpdateLog);
+            when(mockedConfManager.isQuiet()).thenReturn(quiet);
+
+            configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
+            configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
+
+            BundleVisualizationLink visualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            assertEquals(quiet, visualizationLink.getBundleValidations().isQuiet());
         }
     }
 }

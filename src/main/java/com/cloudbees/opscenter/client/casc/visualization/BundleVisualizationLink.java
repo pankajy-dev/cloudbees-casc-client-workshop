@@ -289,7 +289,8 @@ public class BundleVisualizationLink extends ManagementLink {
         return new ValidationSection(
                 currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList()),
                 currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList()),
-                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.INFO).map(v -> v.getMessage()).collect(Collectors.toList()));
+                currentVersionValidations.getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.INFO).map(v -> v.getMessage()).collect(Collectors.toList()),
+                ConfigurationBundleManager.get().isQuiet());
     }
 
     /**
@@ -490,12 +491,14 @@ public class BundleVisualizationLink extends ManagementLink {
         private final List<String> warnings;
         private final List<String> errors;
         private final List<String> infoMessages;
+        private final boolean quiet;
 
         private ValidationSection() {
-            this(null, null, null);
+            // Dev memo: quiet mode if "false" by default, see BEE-35011
+            this(null, null, null, false);
         }
 
-        private ValidationSection(List<String> warnings, List<String> errors, List<String> info) {
+        private ValidationSection(List<String> warnings, List<String> errors, List<String> info, boolean quiet) {
             List<String> warnings_ = warnings != null ? new ArrayList<>(warnings) : new ArrayList<>();
             Collections.sort(warnings_);
             List<String> errors_ = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
@@ -506,6 +509,7 @@ public class BundleVisualizationLink extends ManagementLink {
             this.warnings = Collections.unmodifiableList(warnings_);
             this.errors = Collections.unmodifiableList(errors_);
             this.infoMessages = Collections.unmodifiableList(info_);
+            this.quiet = quiet;
         }
 
         public boolean isEmpty() {
@@ -536,6 +540,10 @@ public class BundleVisualizationLink extends ManagementLink {
 
         @NonNull
         public List<String> getInfoMessages() {return infoMessages; }
+
+        public boolean isQuiet() {
+            return quiet;
+        }
     }
 
     /**
@@ -576,7 +584,8 @@ public class BundleVisualizationLink extends ManagementLink {
                     info.append(" (checksum " + candidate.getChecksum() + ")");
                 }
             }
-            this.validations = new ValidationSection(warnings, errors, infos);
+            boolean quiet = ConfigurationBundleManager.get().isQuiet();
+            this.validations = new ValidationSection(warnings, errors, infos, quiet);
             this.version = version;
             this.info = info == null ? null : info.toString();
         }

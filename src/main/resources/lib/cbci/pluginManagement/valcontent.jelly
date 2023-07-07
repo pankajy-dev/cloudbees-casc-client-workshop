@@ -43,13 +43,25 @@
                     </ul>
                 </j:if>
                 <j:if test="${not empty validationObject.infoMessages}">
-                    <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}):</p>
-                    <ul>
-                        <j:forEach items="${validationObject.infoMessages}" var="v">
-                            <li>${v}</li>
-                        </j:forEach>
-                    </ul>
+                    <j:choose>
+                    <j:when test="${validationObject.quiet}">
+                        <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}), not displayed in quiet mode.</p>
+                    </j:when>
+                    <j:otherwise>
+                        <p class="mb-0">Correct validations (${validationObject.infoMessages.size()}):</p>
+                        <ul>
+                            <j:forEach items="${validationObject.infoMessages}" var="v">
+                                <li>${v}</li>
+                            </j:forEach>
+                        </ul>
+                    </j:otherwise>
+                    </j:choose>
                 </j:if>
+            </j:when>
+            <j:when test="${validationObject.quiet}">
+                <p class="mb-0">This version has no errors or warnings. <br/>
+                    Some validations were performed (${validationObject.infoMessages.size()}) but are not displayed in quiet mode.
+                </p>
             </j:when>
             <j:otherwise>
                 <p class="mb-0">This version has no errors or warnings. <br/>
