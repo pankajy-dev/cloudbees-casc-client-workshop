@@ -14,6 +14,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PlainBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginCatalogInOCValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.PluginsToInstallValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.YamlSchemaValidator;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
@@ -559,6 +560,7 @@ public final class ConfigurationUpdaterHelper {
                 .addValidator(new FileSystemBundleValidator())
                 .addValidator(new DescriptorValidator())
                 .addValidator(new ContentBundleValidator())
+                .addValidator(new YamlSchemaValidator())
                 .addValidator(new PluginCatalogInOCValidator())
                 .addValidator(new PluginsToInstallValidator())
                 .addValidator(new MultipleCatalogFilesValidator())
