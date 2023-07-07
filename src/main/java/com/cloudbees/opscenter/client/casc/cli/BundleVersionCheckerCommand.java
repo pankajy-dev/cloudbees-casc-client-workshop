@@ -27,15 +27,18 @@ public class BundleVersionCheckerCommand extends CLICommand {
      */
     @Override
     protected int run() throws Exception {
+        // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.BundleReloadAction.doGetBundleNewerVersion
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         try {
             boolean reload = false;
-            boolean update;
-            if (ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
-                update = true;
-            } else {
-                update = ConfigurationUpdaterHelper.checkForUpdates();
+            // First, check if an update is available
+            // Dev memo: this must go first because it will update the version of the bundle if needed
+            boolean update = ConfigurationUpdaterHelper.checkForUpdates();
+            if (!update) {
+                // maybe the bundle is the same, but it is not yet applied, also check if an update is available
+                update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
             }
+
             if (update) {
                 reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
             }

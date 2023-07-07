@@ -17,6 +17,7 @@ import org.junit.Before;
 
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.beer12;
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.e;
+import static org.hamcrest.CoreMatchers.anything;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -48,6 +49,10 @@ public abstract class AbstractBundleVersionCheckerTest extends AbstractCJPTest {
         } else {
             assertFalse("Bundle " + bundle + ": should not contain update-type", jsonResult.containsKey("update-type"));
         }
+    }
+
+    protected void assertVersions(JSONObject jsonResult, String bundle, String currentVersion, String newVersion, boolean newIsValid) {
+        assertVersions(jsonResult, bundle, currentVersion, anything(), newVersion, anything(), newIsValid);
     }
 
     protected void assertVersions(JSONObject jsonResult, String bundle, String currentVersion, Matcher currentValidations, String newVersion, Matcher newValidations, boolean newIsValid) {
