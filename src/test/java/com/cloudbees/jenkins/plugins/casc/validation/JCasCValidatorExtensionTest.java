@@ -15,7 +15,6 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 public class JCasCValidatorExtensionTest {
 
@@ -39,7 +38,8 @@ public class JCasCValidatorExtensionTest {
         assertThat("unparsed-file-bundle: should be an error in JCASC", v.getMessage(), is("[JCASC] - The bundle.yaml file references jenkins.yaml in the Jenkins Configuration as Code section that is empty or has an invalid yaml format. Impossible to validate Jenkins Configuration as Code."));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-valid-jcasc-bundle"));
-        assertThat("with-valid-jcasc-bundle: should not have errors or warnings", validations, empty());
+        assertThat("with-valid-jcasc-bundle: should not have errors or warnings, just 1 info", validations.get(0).getMessage(), is("[JCASC] - [JCasCValidator] All configurations validated successfully."));
+        assertThat("with-valid-jcasc-bundle: should not have errors or warnings, just 1 info", validations.get(0).getLevel(), is(Validation.Level.INFO));
 
         validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-invalid-jcasc-bundle"));
         v = validations.get(0);
@@ -69,6 +69,6 @@ public class JCasCValidatorExtensionTest {
         JCasCValidatorExtension validator = ExtensionList.lookupSingleton(JCasCValidatorExtension.class);
 
         List<Validation> validations = validator.validate(Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/JCasCValidatorExtensionTest/with-invalid-jcasc-too-many-anchors"));
-        assertThat("there is no validation outcome", validations, IsCollectionWithSize.hasSize(0));
+        assertThat("there is no validation error/warning, just 1 info message", validations, IsCollectionWithSize.hasSize(1));
     }
 }
