@@ -88,7 +88,7 @@ public class JCasCValidatorExtension extends AbstractValidator {
                     final Mapping entries = YamlUtils.loadFrom(sources, context);
                     Map<Source, String> checks = ConfigurationAsCode.get().checkWith(entries, context);
                     if (checks.isEmpty()) {
-                        return Collections.emptyList();
+                        return Collections.singletonList(Validation.info(ValidationCode.JCASC_CONFIGURATION, "[JCasCValidator] All configurations validated successfully."));
                     }
 
                     String validationMessage = checks.entrySet().stream().map(entry -> "\t- " + entry.getValue()).collect(Collectors.joining(System.lineSeparator()));
