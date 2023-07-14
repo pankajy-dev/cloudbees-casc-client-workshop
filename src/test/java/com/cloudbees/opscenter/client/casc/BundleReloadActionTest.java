@@ -8,11 +8,11 @@ import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import hudson.ExtensionList;
