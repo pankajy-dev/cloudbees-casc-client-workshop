@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>179</version>
+    <version>183</version>
     <relativePath />
   </parent>
 
@@ -49,6 +49,12 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>4.2.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.cloudbees.jenkins.modules</groupId>
+        <artifactId>cloudbees-installation-manager</artifactId>
+        <version>2.332.0.35</version> <!-- TODO remove once in URR -->
       </dependency>
 
     </dependencies>
