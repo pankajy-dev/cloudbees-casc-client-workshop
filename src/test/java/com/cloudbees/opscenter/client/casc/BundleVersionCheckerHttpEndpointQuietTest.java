@@ -3,8 +3,8 @@ package com.cloudbees.opscenter.client.casc;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebResponse;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebResponse;
 import net.sf.json.JSONObject;
 import org.junit.Test;
 
