@@ -1,0 +1,7 @@
+unclassified:
+  bundleUpdateTiming:
+    automaticRestart: true
+    automaticReload: true
+    skipNewVersions: true
+    reloadAlwaysOnRestart: true
+    rejectWarnings: true
