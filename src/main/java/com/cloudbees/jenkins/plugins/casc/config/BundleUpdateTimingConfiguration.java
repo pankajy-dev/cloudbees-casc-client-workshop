@@ -4,8 +4,11 @@ import java.util.logging.Logger;
 
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import net.sf.json.JSONObject;
 
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -164,5 +167,12 @@ public class BundleUpdateTimingConfiguration extends GlobalConfiguration {
             LOGGER.fine("Saving when Bundle Update Timing is disabled. Ignoring request");
         }
         load(); // Make sure we keep the latest stored values
+    }
+
+    @Override
+    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+        boolean configured = super.configure(req, json); // Will call the setters, so saving just after that preventing several saving operations
+        this.save();
+        return configured;
     }
 }

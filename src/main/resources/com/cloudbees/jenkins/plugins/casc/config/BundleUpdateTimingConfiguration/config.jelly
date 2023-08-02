@@ -1,0 +1,22 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <j:if test="${instance.isEnabled()}">
+        <f:section title="${%title}">
+            <f:entry field="automaticReload">
+                <f:checkbox field="automaticReload" title="${%automaticReload_config}"/>
+            </f:entry>
+            <f:entry field="automaticRestart">
+                <f:checkbox field="automaticRestart" title="${%automaticRestart_config}"/>
+            </f:entry>
+            <f:entry field="skipNewVersions">
+                <f:checkbox field="skipNewVersions" title="${%skipNewVersions_config}"/>
+            </f:entry>
+            <f:entry field="reloadAlwaysOnRestart">
+                <f:checkbox field="reloadAlwaysOnRestart" title="${%reloadAlwaysOnRestart_config}"/>
+            </f:entry>
+            <f:entry field="rejectWarnings">
+                <f:checkbox field="rejectWarnings" title="${%rejectWarnings_config}"/>
+            </f:entry>
+        </f:section>
+    </j:if>
+</j:jelly>
