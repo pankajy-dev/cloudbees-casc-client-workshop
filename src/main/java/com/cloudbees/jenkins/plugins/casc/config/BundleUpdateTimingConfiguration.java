@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.plugins.casc;
+package com.cloudbees.jenkins.plugins.casc.config;
 
 import java.util.logging.Logger;
 
