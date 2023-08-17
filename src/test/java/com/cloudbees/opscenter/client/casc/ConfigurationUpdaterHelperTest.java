@@ -75,6 +75,44 @@ public class ConfigurationUpdaterHelperTest {
         assertFalse("'quiet' is set, the bundle should not contains INFO messages", hasInfo);
     }
 
+    @WithEnvelope(V2dot319.class) //We need a fairly recent version
+    @Test
+    public void shouldHotReloadWhenReloadAutomaticEnabled() {
+        assertTrue(false);
+    }
+
+    @WithEnvelope(V2dot319.class) //We need a fairly recent version
+    @Test
+    public void shouldAutoRestartWhenRestartAutomaticEnabled() {
+        assertTrue(false);
+    }
+
+    @WithEnvelope(V2dot319.class) //We need a fairly recent version
+    @Test
+    public void shouldNotAutoUpdateWhenSkipVersionEnabled() {
+        assertTrue(false);
+    }
+
+     // may need to be IT tests
+    @WithEnvelope(V2dot319.class) //We need a fairly recent version
+    @Test
+    public void shoulDisplayAdminMonitorIfHotReloadNotPossible() {
+        assertTrue(false);
+    }
+
+    // may need to be IT tests
+    @WithEnvelope(V2dot319.class) //We need a fairly recent version
+    @Test
+    public void configScreenShouldShowSkipVersionButton() {
+        assertTrue(false);
+    }
+
+
+
+
+
+
+
     public static final class V2dot319 implements TestEnvelopeProvider {
         @NonNull
         public Envelope call() {
