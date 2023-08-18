@@ -74,7 +74,7 @@ public final class ConfigurationUpdaterHelper {
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
                     ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
-                    boolean newVersionIsValid = newCandidate != null && newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
+                    boolean newVersionIsValid = newCandidate != null && !BundleValidator.shouldBeRejected(newCandidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).collect(Collectors.toList()));
 
                     if (newVersionIsValid) {
                         // Runtime validations
@@ -86,7 +86,7 @@ public final class ConfigurationUpdaterHelper {
                             newCandidate.getValidations().addValidations(validations.stream().map(v -> v.serialize()).collect(Collectors.toList()));
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             newCandidate.getValidations().update(candidatePath.resolve(BundleUpdateLog.VALIDATIONS_FILE));
-                            newVersionIsValid = newCandidate.getValidations().getValidations().stream().noneMatch(v -> v.getLevel() == Validation.Level.ERROR);
+                            newVersionIsValid = !BundleValidator.shouldBeRejected(validations);;
                         }
                     }
 
