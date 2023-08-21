@@ -91,7 +91,7 @@ public final class ConfigurationUpdaterHelper {
                         }
                     }
 
-                    if (newVersionIsValid && !BundleUpdateTimingManager.get().isSkipNewVersions()) {
+                    if (newVersionIsValid) {
                         try {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath.resolve("bundle"));
@@ -107,8 +107,7 @@ public final class ConfigurationUpdaterHelper {
                         // then we do not want to promote this bundle
                         if (BundleUpdateTimingManager.isEnabled()) {
                             BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
-                             weCanPromote = ((bundleUpdateTimingManager.isAutomaticReload() || bundleUpdateTimingManager.isAutomaticRestart()) &&
-                                                !bundleUpdateTimingManager.isSkipNewVersions());
+                             weCanPromote = ((bundleUpdateTimingManager.isAutomaticReload() || bundleUpdateTimingManager.isAutomaticRestart()));
                         }
 
                         if (weCanPromote) {
