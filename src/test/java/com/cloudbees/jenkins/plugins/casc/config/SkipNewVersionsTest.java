@@ -1,0 +1,240 @@
+package com.cloudbees.jenkins.plugins.casc.config;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+
+import hudson.ExtensionList;
+
+import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
+import com.cloudbees.jenkins.cjp.installmanager.WithBundleUpdateTiming;
+import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
+import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Test cases (instance up and running. See SkipNewVersionsTest in installation-manager for when the instance is starting):
+ * I. With bundle update timing enabled:
+ *  a. Skip All Versions is true and the new version is skipped
+ *  b. Skip All Versions is true, but automatic reload and restart is true, so the new version is not skipped
+ *  c. Skip All Versions is false, and the new version is installed
+ * II. With bundle update timing disabled:
+ *  a. Skip All Versions is true, but the new version is installed
+ *  b. Skip All Versions is true, but automatic reload and restart is true, and the new version is installed
+ *  c. Skip All Versions is false, and the new version is installed
+ */
+public class SkipNewVersionsTest extends AbstractCJPTest {
+
+    @Test
+    @WithBundleUpdateTiming("true")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsTrueAndEnabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(true);
+        configuration.setAutomaticReload(false);
+        configuration.setAutomaticRestart(false);
+        configuration.save();
+
+        assertTrue("Skip All New Versions is configured", configuration.isSkipNewVersions());
+        assertFalse("There is no automatic reload/restart", configuration.isAutomaticReload());
+        assertFalse("There is no automatic reload/restart", configuration.isAutomaticRestart());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is skipped", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertTrue("Marker file for skipped version is there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+    @Test
+    @WithBundleUpdateTiming("false")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsTrueAndDisabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(true);
+        configuration.setAutomaticReload(false);
+        configuration.setAutomaticRestart(false);
+        configuration.save();
+
+        assertFalse("Skip All New Versions won't be configured as Bundle Update Timing is disabled", configuration.isSkipNewVersions());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
+        assertFalse("Automatic restart won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticRestart());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is NOT skipped (Bundle Update Timing disabled)", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+    @Test
+    @WithBundleUpdateTiming("true")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsTrueButAutomaticReloadAndEnabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(true);
+        configuration.setAutomaticReload(true);
+        configuration.setAutomaticRestart(true);
+        configuration.save();
+
+        assertTrue("Skip All New Versions is configured", configuration.isSkipNewVersions());
+        assertTrue("There is an automatic reload/restart", configuration.isAutomaticReload());
+        assertTrue("There is an automatic reload/restart", configuration.isAutomaticRestart());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is NOT skipped as there's an automatic reload/restart", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertTrue("Marker file for skipped version is there as the marker file is created anyway", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+    @Test
+    @WithBundleUpdateTiming("false")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsTrueButAutomaticReloadAndDisabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(true);
+        configuration.setAutomaticReload(true);
+        configuration.setAutomaticRestart(true);
+        configuration.save();
+
+        assertFalse("Skip All New Versions won't be configured as Bundle Update Timing is disabled", configuration.isSkipNewVersions());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
+        assertFalse("Automatic restart won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticRestart());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is NOT skipped (Bundle Update Timing disabled)", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+    @Test
+    @WithBundleUpdateTiming("true")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsFalseAndEnabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(false);
+        configuration.save();
+
+        assertFalse("Skip All New Versions is NOT configured", configuration.isSkipNewVersions());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is NOT skipped", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+    @Test
+    @WithBundleUpdateTiming("false")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/initial-bundle-version")
+    public void skipAllVersionsFalseAndDisabled() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
+
+        configuration.setSkipNewVersions(false);
+        configuration.save();
+
+        assertFalse("Skip All New Versions won't be configured as Bundle Update Timing is disabled", configuration.isSkipNewVersions());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        assertThat("New bundle is NOT skipped (Bundle Update Timing disabled)", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
+        assertThat("New entry in the Update Log", updateLog, hasSize(2));
+        Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
+        assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+    }
+
+}
