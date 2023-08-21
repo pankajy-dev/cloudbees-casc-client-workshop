@@ -179,10 +179,6 @@ public final class ConfigurationUpdaterHelper {
                         }
 
                         return true;
-                    } else {
-                        // skipNewVersions was enabled, so mark this as skipped
-                        // TODO: implement once i learn how...
-                        return false;
                     }
                 } else {
                     // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
