@@ -24,6 +24,7 @@ import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
+import hudson.lifecycle.RestartNotSupportedException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -101,85 +102,86 @@ public final class ConfigurationUpdaterHelper {
                             LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
                         }
 
-                        // default behavior is to promote the bundle if possible
-                        boolean weCanPromote = true;
-                        // If bundleUpdateTiming is enabled but auto-reload or auto-restart are disabled
-                        // then we do not want to promote this bundle
-                        if (BundleUpdateTimingManager.isEnabled()) {
-                            BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
-                             weCanPromote = ((bundleUpdateTimingManager.isAutomaticReload() || bundleUpdateTimingManager.isAutomaticRestart()));
+                        // promote method already has the logic for promoting and skipping when it corresponds, so just a matter of performing the
+                        // Hot Reload / Safe Restart
+                        ConfigurationBundleManager.promote();
+                        // Send validation errors from promoted version
+                        BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
+                        if (vYaml != null) {
+                            List<Validation> validations = vYaml.getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                            new BundleValidationErrorGatherer(validations).send();
                         }
 
-                        if (weCanPromote) {
-                            ConfigurationBundleManager.promote();
-                            // Send validation errors from promoted version
-                            BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
-                            if (vYaml != null) {
-                                List<Validation> validations = vYaml.getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
-                                new BundleValidationErrorGatherer(validations).send();
-                            }
-                        } else {
-                            // Send validation errors from invalid candidate
-                            if (newCandidate != null) {
-                                List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
-                                new BundleValidationErrorGatherer(validations).send();
-                            }
+                    } else {
+                        // Send validation errors from invalid candidate
+                        if (newCandidate != null) {
+                            List<Validation> validations = newCandidate.getValidations().getValidations().stream().map(v -> Validation.deserialize(v)).collect(Collectors.toList());
+                            new BundleValidationErrorGatherer(validations).send();
                         }
-
-                        LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
-                                ConfigurationBundleManager.get().getConfigurationBundle().getVersion()));
-//                                newVersionIsValid ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
-                        ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionIsValid);
-                        ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionIsValid);
-
-                        if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
-                            // If there is no previous known version, store it
-                            ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
-                            ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
-                        }
-                        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-
-                        try {
-                            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-                            boolean hotReloadable = service.isHotReloadable(bundle);
-                            bundle.setHotReloadable(hotReloadable);
-
-                            /**
-                             * If not feasible the automatic reload or not configured, then checks the automatic restart. If configured
-                             * Display an administrative monitor → User must know a Safe restart will happen (Do not offer dismiss or ignore)
-                             * ConfigurationBundleManager#promote
-                             * Execute Jenkins.get().safeRestart();
-                             * If not configured the safe restart, then
-                             * Checks the Use case 4 and depending. If skipping, then do not execute the promote method and mark as skipped.
-                             * If not skipping, then the UI offers the Safe Restart and Reload buttons together with the new button “Skip Version” (use case 3). Details below.
-                             * Clicking on Reload Configuration or in Safe Restart will perform the promote action before reloading or before restarting
-                             */
-
-                            // If reload.automatic and the hot reload is feasible, then the ConfigurationBundleManager#promote method is
-                            // executed and the action BundleReloadAction#tryReload is performed
-                            if (hotReloadable) {
-                                if ((BundleUpdateTimingManager.isEnabled()) && (BundleUpdateTimingManager.get().isAutomaticReload())) {
-                                    // try to apply the hot reload
-                                    BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
-                                    if (bundleReloadAction.executeReload(true).getBoolean("reload")){
-                                        LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
-                                    } else {
-                                        // hot reload failed, need to display admin monitor or something?
-                                    }
-                                } // If not feasible the automatic reload or not configured, then checks the automatic restart
-                                else if ((BundleUpdateTimingManager.isEnabled() && (BundleUpdateTimingManager.get().isAutomaticRestart()))) {
-                                    // display admin monitor
-                                    // restart the instance
-                                }
-                            }
-                        } catch (IllegalStateException e) {
-                            LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        return true;
                     }
+
+                    LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
+                            newVersionIsValid ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
+                    ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionIsValid);
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionIsValid);
+
+                    if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
+                        // If there is no previous known version, store it
+                        ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
+                        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
+                    }
+                    ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+
+                    boolean hotReloadable = false;
+                    try {
+                        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                        hotReloadable = service.isHotReloadable(bundle);
+                        bundle.setHotReloadable(hotReloadable);
+                    } catch (IllegalStateException e) {
+                        LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+                    }
+
+                    /*
+                     * If not feasible the automatic reload or not configured, then checks the automatic restart. If configured
+                     * Display an administrative monitor → User must know a Safe restart will happen (Do not offer dismiss or ignore)
+                     * ConfigurationBundleManager#promote
+                     * Execute Jenkins.get().safeRestart();
+                     * If not configured the safe restart, then
+                     * Checks the Use case 4 and depending. If skipping, then do not execute the promote method and mark as skipped.
+                     * If not skipping, then the UI offers the Safe Restart and Reload buttons together with the new button “Skip Version” (use case 3). Details below.
+                     * Clicking on Reload Configuration or in Safe Restart will perform the promote action before reloading or before restarting
+                     */
+                    if (BundleUpdateTimingManager.isEnabled()) {
+                        BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
+                        boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload() && hotReloadable;
+                        boolean automaticRestart = bundleUpdateTimingManager.isAutomaticRestart();
+                        if (automaticReload) {
+                            // try to apply the hot reload
+                            BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
+                            if (bundleReloadAction.executeReload(true).getBoolean("reload")) {
+                                LOGGER.log(Level.INFO, "New bundle version reloaded as for an automatic reload. Async reload in progress");
+                            } else {
+                                if (automaticRestart) {
+                                    // TODO Add admin monitor
+                                    try {
+                                        Jenkins.get().safeRestart();
+                                    } catch (RestartNotSupportedException e) {
+                                        throw new CasCException("Safe restart cannot be performed", e);
+                                    }
+                                }
+                                LOGGER.log(Level.WARNING, "Hot reloaded failed. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
+                            }
+                        } else if (automaticRestart) {
+                            // TODO Add admin monitor
+                            try {
+                                Jenkins.get().safeRestart();
+                            } catch (RestartNotSupportedException e) {
+                                throw new CasCException("Safe restart cannot be performed", e);
+                            }
+                        }
+                    }
+
+                    return true;
                 } else {
                     // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
                     // accessing the first time to Bundle update tab
@@ -189,7 +191,7 @@ public final class ConfigurationUpdaterHelper {
             }
 
             return false;
-        } catch (CasCException | RuntimeException e) {
+        } catch (CasCException | IOException | RuntimeException e) {
             // Thrown by com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager#failBundleLoading
             // Generally RuntimeException > InvalidBundleException > Real cause
             Throwable cause = e.getCause() != null ? e.getCause() : e; // If e is a NPE, then the cause is null
