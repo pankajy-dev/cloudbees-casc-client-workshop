@@ -79,7 +79,7 @@
       <groupId>com.cloudbees.jenkins.modules</groupId>
       <artifactId>cloudbees-installation-manager</artifactId>
       <scope>provided</scope>
-      <version>2.332.0.38</version> <!-- TODO remove once in URR -->
+      <version>2.332.0.39</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -161,7 +161,7 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.38</version> <!-- TODO remove once in URR -->
+      <version>2.332.0.39</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>
