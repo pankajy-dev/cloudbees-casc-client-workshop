@@ -158,9 +158,10 @@ public final class ConfigurationUpdaterHelper {
                         if (automaticReload) {
                             // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
-                            if (bundleReloadAction.executeReload(true).getBoolean("reload")) {
+                            if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {
                                 LOGGER.log(Level.INFO, "New bundle version reloaded as for an automatic reload. Async reload in progress");
                             } else {
+                                LOGGER.log(Level.WARNING, "Hot reloaded failed. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                                 if (automaticRestart) {
                                     // TODO Add admin monitor
                                     try {
@@ -169,14 +170,18 @@ public final class ConfigurationUpdaterHelper {
                                         throw new CasCException("Safe restart cannot be performed", e);
                                     }
                                 }
-                                LOGGER.log(Level.WARNING, "Hot reloaded failed. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                             }
-                        } else if (automaticRestart) {
-                            // TODO Add admin monitor
-                            try {
-                                Jenkins.get().safeRestart();
-                            } catch (RestartNotSupportedException e) {
-                                throw new CasCException("Safe restart cannot be performed", e);
+                        } else {
+                            if (!hotReloadable) {
+                                LOGGER.log(Level.INFO, "New bundle version cannot be hot reloaded. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
+                            }
+                            if (automaticRestart) {
+                                // TODO Add admin monitor
+                                try {
+                                    Jenkins.get().safeRestart();
+                                } catch (RestartNotSupportedException e) {
+                                    throw new CasCException("Safe restart cannot be performed", e);
+                                }
                             }
                         }
                     }
