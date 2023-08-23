@@ -10,7 +10,7 @@
         <l:header>
             <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
-            <link rel="stylesheet" href="${resURL}/css/font-awesome/css/font-awesome.css" type="text/css"/>
+            <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/css/font-awesome/css/font-awesome.css" type="text/css"/>
         </l:header>
         <l:main-panel>
             <common:layout>
