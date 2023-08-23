@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import hudson.ExtensionList;
@@ -18,6 +19,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
@@ -40,6 +42,16 @@ import static org.junit.Assert.assertTrue;
  *  c. Skip All Versions is false, and the new version is installed
  */
 public class SkipNewVersionsTest extends AbstractCJPTest {
+
+    @Before
+    public void setUp() {
+        // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
+        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationBundleManager.reset();
+    }
+
 
     @Test
     @WithBundleUpdateTiming("true")

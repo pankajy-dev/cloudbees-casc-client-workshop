@@ -1,0 +1,6 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <div class="alert alert-info">
+        A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.
+    </div>
+</j:jelly>

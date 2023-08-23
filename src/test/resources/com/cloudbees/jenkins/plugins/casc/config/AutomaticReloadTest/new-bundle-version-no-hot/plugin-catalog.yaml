@@ -1,0 +1,9 @@
+type: plugin-catalog
+version: '1'
+name: test-catalog
+displayName: Test Catalog
+configurations:
+  - description: Bundle catalog
+    includePlugins:
+      beer:
+        url: %%URL%%/beer-1.2.hpi
