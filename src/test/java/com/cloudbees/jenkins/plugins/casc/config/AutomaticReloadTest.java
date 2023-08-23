@@ -96,6 +96,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
         ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
         ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationBundleManager.reset();
     }
 
     // I.a.i
