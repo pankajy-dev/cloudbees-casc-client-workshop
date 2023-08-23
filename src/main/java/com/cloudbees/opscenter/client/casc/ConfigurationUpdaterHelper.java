@@ -19,6 +19,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.YamlSchemaValida
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -163,9 +164,10 @@ public final class ConfigurationUpdaterHelper {
                             } else {
                                 LOGGER.log(Level.WARNING, "Hot reloaded failed. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                                 if (automaticRestart) {
-                                    // TODO Add admin monitor
+                                    SafeRestartMonitor.get().show();
                                     try {
                                         Jenkins.get().safeRestart();
+                                        SafeRestartMonitor.get().hide();
                                     } catch (RestartNotSupportedException e) {
                                         throw new CasCException("Safe restart cannot be performed", e);
                                     }
@@ -176,10 +178,11 @@ public final class ConfigurationUpdaterHelper {
                                 LOGGER.log(Level.INFO, "New bundle version cannot be hot reloaded. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                             }
                             if (automaticRestart) {
-                                // TODO Add admin monitor
+                                SafeRestartMonitor.get().show();
                                 try {
                                     Jenkins.get().safeRestart();
                                 } catch (RestartNotSupportedException e) {
+                                    SafeRestartMonitor.get().hide();
                                     throw new CasCException("Safe restart cannot be performed", e);
                                 }
                             }
