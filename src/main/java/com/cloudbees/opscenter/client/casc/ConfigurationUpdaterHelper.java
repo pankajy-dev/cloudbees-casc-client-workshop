@@ -167,8 +167,8 @@ public final class ConfigurationUpdaterHelper {
                                     SafeRestartMonitor.get().show();
                                     try {
                                         Jenkins.get().safeRestart();
-                                        SafeRestartMonitor.get().hide();
                                     } catch (RestartNotSupportedException e) {
+                                        SafeRestartMonitor.get().hide();
                                         throw new CasCException("Safe restart cannot be performed", e);
                                     }
                                 }
