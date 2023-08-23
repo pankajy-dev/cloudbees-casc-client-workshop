@@ -6,7 +6,7 @@ import hudson.model.AdministrativeMonitor;
 
 /**
  * Administrative monitor that warns the administrators when a Safe restart has been scheduled because a new bundle version is going to be applied.
- * It is intended that the monitor cannot be dismissed. If the user wants it to stop, that can be done through Jenkins > Manage > Configure
+ * It is intended that the monitor cannot be dismissed. If the user wants it to stop, that can be done through Jenkins &lt; Manage &lt; Configure
  * It is intended that the monitor cannot be hidden until the instance does not restart, so the users are aware the instance will be restarted shortly.
  */
 @Extension
