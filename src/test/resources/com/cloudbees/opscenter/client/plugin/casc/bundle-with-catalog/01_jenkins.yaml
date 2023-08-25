@@ -10,3 +10,7 @@ jenkins:
           password: Qmas9pHXb9wpvp36FaAQ2SBN7XBxsG3h
         - id: manager
           password: VzHAzoGzHeoq4JF797p8Mb7qL2Ycv54A
+unclassified:
+  cascItemsConfiguration:
+    variableInterpolationEnabledForAdmin: true
+    variableInterpolationEnabledForNonAdmin: true

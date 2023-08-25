@@ -1,2 +1,6 @@
 jenkins:
   systemMessage: "New System message: ${JENKINS_DESCRIPTION}"
+unclassified:
+  cascItemsConfiguration:
+    variableInterpolationEnabledForAdmin: true
+    variableInterpolationEnabledForNonAdmin: true
