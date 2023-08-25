@@ -73,6 +73,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-api</artifactId>
+      <version>2.35</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
