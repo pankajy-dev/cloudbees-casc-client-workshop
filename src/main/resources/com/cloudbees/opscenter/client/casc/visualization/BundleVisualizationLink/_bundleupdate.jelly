@@ -14,6 +14,25 @@
             <common:layout>
                 <j:choose>
                     <j:when test="${it.isBundleUsed()}">
+                        <j:if test="${it.instanceWillSkip()}">
+                        <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
+                            <div class="alert alert-warning">
+                                <div class="alert__body">
+                                    <header>This instance's configuration will skip all the new bundle versions.</header>
+                                    <j:choose>
+                                        <j:when test="${it.isAlwaysOnRestart()}">
+                                            As the <i>Always reload on restart</i> configuration is set, any skipped new bundle version will be applied when the instance is
+                                            restarted.
+                                        </j:when>
+                                        <j:otherwise>
+                                            If you want skipped bundle versions to be applied, you can enable <i>Always reload on restart</i> to be applied on a restart or you
+                                            can disable <i>Skip new bundle versions</i> in Manage Jenkins &gt; System &gt; CasC Bundle Update Timing configuration.
+                                        </j:otherwise>
+                                    </j:choose>
+                                </div>
+                            </div>
+                        </cbcipm:tabcontent>
+                        </j:if>
                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                             <strong>You are using bundle ${it.bundleInformation}.</strong>
                             <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleInfo}"/>
@@ -89,9 +108,16 @@
                                         <j:if test="${it.isCandidateAvailable()}" >
                                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                             <j:set var="candidate" value="${it.candidate}"/>
-                                            A new version of the <b>Configuration Bundle (${candidate.info})</b> is available, but it cannot be applied because it has
-                                            validation
-                                            errors.
+                                            <j:choose>
+                                                <j:when test="${it. candidate.skipped}">
+                                                    A new version of the <b>Configuration Bundle (${candidate.info})</b> is available, but it cannot be applied because it has
+                                                    been skipped.
+                                                </j:when>
+                                                <j:otherwise>
+                                                    A new version of the <b>Configuration Bundle (${candidate.info})</b> is available, but it cannot be applied because it has
+                                                    validation errors.
+                                                </j:otherwise>
+                                            </j:choose>
                                             <cbcipm:valcontent validationObject="${candidate.validations}" bundleVersion="${candidate.info}"/>
                                         </cbcipm:tabcontent>
                                         </j:if>

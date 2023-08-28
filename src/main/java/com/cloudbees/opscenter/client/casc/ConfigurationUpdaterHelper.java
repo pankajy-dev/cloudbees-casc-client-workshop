@@ -93,6 +93,7 @@ public final class ConfigurationUpdaterHelper {
                         }
                     }
 
+                    boolean newVersionAvailable = false;
                     if (newVersionIsValid) {
                         try {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
@@ -105,7 +106,8 @@ public final class ConfigurationUpdaterHelper {
 
                         // promote method already has the logic for promoting and skipping when it corresponds, so just a matter of performing the
                         // Hot Reload / Safe Restart
-                        ConfigurationBundleManager.promote();
+                        ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+                        newVersionAvailable = !promoted.getVersion().equals(versionBeforeUpdate);
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
                         if (vYaml != null) {
@@ -122,9 +124,9 @@ public final class ConfigurationUpdaterHelper {
                     }
 
                     LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
-                            newVersionIsValid ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
-                    ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionIsValid);
-                    ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionIsValid);
+                            newVersionAvailable ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
+                    ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionAvailable);
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionAvailable);
 
                     if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
                         // If there is no previous known version, store it
