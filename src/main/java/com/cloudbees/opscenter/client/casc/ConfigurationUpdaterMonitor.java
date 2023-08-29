@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
@@ -13,6 +15,8 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Administrative monitor that warns the administrators when a new configuration bundle is available. It can be found at
@@ -22,7 +26,7 @@ import java.io.IOException;
 public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     @Override
     public boolean isActivated() {
-        return isUpdateAvailable() || isCandidateAvailable();
+        return /* New version, which might or not be skipped */ isUpdateAvailable() || /* New invalid version */ isCandidateAvailable();
     }
 
     public boolean isUpdateAvailable() {
@@ -30,7 +34,21 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isCandidateAvailable() {
-        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        boolean isCandidateAvailable = ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        // The candidate might be:
+        // * invalid (and rejected) bundle
+        // * Skipped valid bundle
+        // We only want the monitor saying the new bundle is invalid. If the instance is configured to skip the bundle,
+        // we don't need to do anything. It's just noise
+        if (isCandidateAvailable) {
+            BundleUpdateLog.CandidateBundle candidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+            if (candidate != null) {
+                // At this point of the code, candidate cannot be null, but spotbugs is complaining
+                Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidate.getFolder());
+                isCandidateAvailable = Files.exists(candidatePath.resolve(BundleUpdateLog.INVALID_MARKER_FILE));
+            }
+        }
+        return isCandidateAvailable;
     }
 
     public String getCandidateVersion() {
