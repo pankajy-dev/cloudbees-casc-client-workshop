@@ -2,8 +2,6 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
-import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
@@ -15,8 +13,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 /**
  * Administrative monitor that warns the administrators when a new configuration bundle is available. It can be found at
@@ -44,8 +40,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
             BundleUpdateLog.CandidateBundle candidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
             if (candidate != null) {
                 // At this point of the code, candidate cannot be null, but spotbugs is complaining
-                Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidate.getFolder());
-                isCandidateAvailable = Files.exists(candidatePath.resolve(BundleUpdateLog.INVALID_MARKER_FILE));
+                isCandidateAvailable = candidate.isInvalid();
             }
         }
         return isCandidateAvailable;

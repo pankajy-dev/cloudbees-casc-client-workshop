@@ -170,8 +170,7 @@ public class BundleVisualizationLink extends ManagementLink {
     // used in jelly
     public boolean instanceWillSkip() {
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
-        boolean canSkip = !configuration.isAutomaticReload() && !configuration.isAutomaticRestart();
-        return  canSkip && configuration.isSkipNewVersions();
+        return  configuration.canSkipNewVersions() && configuration.isSkipNewVersions();
     }
 
     /**
@@ -606,9 +605,8 @@ public class BundleVisualizationLink extends ManagementLink {
                     info.append(" (checksum " + candidate.getChecksum() + ")");
                 }
 
-                Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidate.getFolder());
-                skipped = Files.exists(candidatePath.resolve(BundleUpdateLog.SKIPPED_MARKER_FILE));
-                invalid = Files.exists(candidatePath.resolve(BundleUpdateLog.INVALID_MARKER_FILE));
+                skipped = candidate.isSkipped();
+                invalid = candidate.isInvalid();
             }
             boolean quiet = ConfigurationBundleManager.get().isQuiet();
             this.validations = new ValidationSection(warnings, errors, infos, quiet);
@@ -675,9 +673,8 @@ public class BundleVisualizationLink extends ManagementLink {
                 } catch (ParseException e) {
                     d = null;
                 }
-                Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(candidate.getFolder());
-                skipped = Files.exists(candidatePath.resolve(BundleUpdateLog.SKIPPED_MARKER_FILE));
-                invalid = Files.exists(candidatePath.resolve(BundleUpdateLog.INVALID_MARKER_FILE));
+                skipped = candidate.isSkipped();
+                invalid = candidate.isInvalid();
             }
             this.date = d;
             this.skipped = skipped;
