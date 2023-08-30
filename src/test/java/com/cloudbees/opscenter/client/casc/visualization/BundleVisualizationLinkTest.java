@@ -99,6 +99,9 @@ public class BundleVisualizationLinkTest {
             when(mockedConfManager.getUpdateLog()).thenReturn(mockedUpdateLog);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::getBundleFolder).thenCallRealMethod();
+            ConfigurationBundle mockedPromoted = mock(ConfigurationBundle.class);
+            when(mockedPromoted.getVersion()).thenReturn("3");
+            configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::promote).thenReturn(mockedPromoted);
 
             BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
             bundleVisualizationLink.doBundleUpdate();

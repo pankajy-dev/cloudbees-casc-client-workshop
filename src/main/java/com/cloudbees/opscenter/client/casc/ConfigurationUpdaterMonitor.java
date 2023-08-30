@@ -22,7 +22,7 @@ import java.io.IOException;
 public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     @Override
     public boolean isActivated() {
-        return isUpdateAvailable() || isCandidateAvailable();
+        return /* New version, which might or not be skipped */ isUpdateAvailable() || /* New invalid version */ isCandidateAvailable();
     }
 
     public boolean isUpdateAvailable() {
@@ -30,7 +30,20 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isCandidateAvailable() {
-        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        boolean isCandidateAvailable = ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        // The candidate might be:
+        // * invalid (and rejected) bundle
+        // * Skipped valid bundle
+        // We only want the monitor saying the new bundle is invalid. If the instance is configured to skip the bundle,
+        // we don't need to do anything. It's just noise
+        if (isCandidateAvailable) {
+            BundleUpdateLog.CandidateBundle candidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+            if (candidate != null) {
+                // At this point of the code, candidate cannot be null, but spotbugs is complaining
+                isCandidateAvailable = candidate.isInvalid();
+            }
+        }
+        return isCandidateAvailable;
     }
 
     public String getCandidateVersion() {

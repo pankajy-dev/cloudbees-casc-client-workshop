@@ -1,32 +1,5 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
-import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
-import com.cloudbees.jenkins.plugins.casc.CasCException;
-import com.cloudbees.opscenter.client.casc.BundleExporter;
-import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
-import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
-import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.Extension;
-import hudson.ExtensionList;
-import hudson.model.ManagementLink;
-import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.HttpResponses;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,8 +15,35 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.model.ManagementLink;
+import hudson.security.Permission;
+import jenkins.model.Jenkins;
+
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.opscenter.client.casc.BundleExporter;
+import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
+import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
+import com.cloudbees.opscenter.client.casc.PluginCatalogExporter;
 
 /**
  * Configuration as Code Bundle Visualization.
@@ -162,6 +162,23 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     public boolean isBundleUsed(){
         return ConfigurationBundleManager.isSet();
+    }
+
+    /**
+     * @return if the instance can promote new bundle versions
+     */
+    // used in jelly
+    public boolean instanceWillSkip() {
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        return  configuration.canSkipNewVersions() && configuration.isSkipNewVersions();
+    }
+
+    /**
+     * @return if the instance will apply new bundle versions on restart
+     */
+    // used by jelly
+    public boolean isAlwaysOnRestart() {
+        return BundleUpdateTimingConfiguration.get().isReloadAlwaysOnRestart();
     }
 
     /**
@@ -554,6 +571,8 @@ public class BundleVisualizationLink extends ManagementLink {
         private final ValidationSection validations;
         private final String version;
         private final String info;
+        private final boolean invalid;
+        private final boolean skipped;
 
         private CandidateSection() {
             this(null);
@@ -565,6 +584,8 @@ public class BundleVisualizationLink extends ManagementLink {
             List<String> infos = new ArrayList<>();
             String version = null;
             StringBuilder info = null;
+            boolean skipped = false;
+            boolean invalid = false;
             if (candidate != null) {
                 warnings = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.WARNING).map(v -> v.getMessage()).collect(Collectors.toList());
                 errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
@@ -583,11 +604,16 @@ public class BundleVisualizationLink extends ManagementLink {
                 if (StringUtils.isNotBlank(candidate.getChecksum())) {
                     info.append(" (checksum " + candidate.getChecksum() + ")");
                 }
+
+                skipped = candidate.isSkipped();
+                invalid = candidate.isInvalid();
             }
             boolean quiet = ConfigurationBundleManager.get().isQuiet();
             this.validations = new ValidationSection(warnings, errors, infos, quiet);
             this.version = version;
             this.info = info == null ? null : info.toString();
+            this.skipped = skipped;
+            this.invalid = invalid;
         }
 
         @NonNull
@@ -605,8 +631,12 @@ public class BundleVisualizationLink extends ManagementLink {
             return info;
         }
 
-        public boolean isCandidate() {
-            return StringUtils.isNotBlank(version) || !validations.isEmpty();
+        public boolean isInvalid() {
+            return invalid;
+        }
+
+        public boolean isSkipped() {
+            return skipped;
         }
     }
 
@@ -621,6 +651,8 @@ public class BundleVisualizationLink extends ManagementLink {
         private final long warnings;
         private final long infoMessages;
         private final String folder;
+        private final boolean skipped;
+        private final boolean invalid;
 
         private UpdateLogRow(BundleUpdateLog.CandidateBundle candidate) {
             this.id =  candidate == null ? null : candidate.getId();
@@ -633,14 +665,20 @@ public class BundleVisualizationLink extends ManagementLink {
             this.infoMessages = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.INFO).count();
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
             Date d = null;
+            boolean skipped = false;
+            boolean invalid = false;
             if (candidate != null) {
                 try {
                     d = formatter.parse(candidate.getFolder().substring(0, candidate.getFolder().indexOf("_")));
                 } catch (ParseException e) {
                     d = null;
                 }
+                skipped = candidate.isSkipped();
+                invalid = candidate.isInvalid();
             }
             this.date = d;
+            this.skipped = skipped;
+            this.invalid = invalid;
         }
 
         public boolean isEmpty() {
@@ -687,6 +725,14 @@ public class BundleVisualizationLink extends ManagementLink {
 
         public String getDescription() {
             return description;
+        }
+
+        public boolean isSkipped() {
+            return skipped;
+        }
+
+        public boolean isInvalid() {
+            return invalid;
         }
     }
 }

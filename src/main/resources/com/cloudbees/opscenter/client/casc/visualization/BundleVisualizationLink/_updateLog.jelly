@@ -15,6 +15,13 @@
                 <td class="table__column table__column--errors">${errors}</td>
                 <td class="table__column table__column--warnings">${warnings}</td>
                 <td class="table__column table__column--infoMessages">${infoMessages}</td>
+                <td class="table__column table__column--infoMessages">
+                    <j:choose>
+                        <j:when test="${invalid}">${%invalid}</j:when>
+                        <j:when test="${skipped}">${%skipped}</j:when>
+                        <j:otherwise>${%valid}</j:otherwise>
+                    </j:choose>
+                </td>
                 <td class="table__column table__column--actions">
                     <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank">
                         <i class="fa fa-eye" title="Visualize"/>
@@ -91,11 +98,12 @@
                     <td class="table__header table__header--errors">${%errors}</td>
                     <td class="table__header table__header--warnings">${%warnings}</td>
                     <td class="table__header table__header--infoMessages">${%infoMessages}</td>
+                    <td class="table__header table__header--status">${%status}</td>
                     <td class="table__header table__header--actions"/>
                 </tr>
                 <j:forEach items="${it.truncatedUpdateLog}" var="u">
                     <local:row id="${u.id}" version="${u.fullVersion}" description="${u.description}" date="${u.date}" errors="${u.errors}" warnings="${u.warnings}"
-                               infoMessages="${u.infoMessages}" folder="${u.folder}"/>
+                               infoMessages="${u.infoMessages}" folder="${u.folder}" skipped="${u.skipped}" invalid="${u.invalid}"/>
                 </j:forEach>
             </table>
         </cbcipm:tabcontent>

@@ -152,6 +152,14 @@ public class BundleUpdateTimingConfiguration extends GlobalConfiguration {
         this.rejectWarnings = rejectWarnings;
     }
 
+    /**
+     * Returns if Skip All New Version can be applied
+     * @return if true, new versions can be skipped. Otherwise, Skip All New Versions is ignored
+     */
+    public boolean canSkipNewVersions() {
+        return !isAutomaticReload() && !isAutomaticRestart();
+    }
+
     @Override
     @SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC", justification = "Claiming the access to setter method is not synchronized when save is synchronized. False positive")
     public synchronized void save() {
