@@ -106,7 +106,7 @@ public final class ConfigurationUpdaterHelper {
 
                         // promote method already has the logic for promoting and skipping when it corresponds, so just a matter of performing the
                         // Hot Reload / Safe Restart
-                        ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+                        ConfigurationBundle promoted = ConfigurationBundleManager.promote(true); // Plugin is ready, so the instance is up and running
                         newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
