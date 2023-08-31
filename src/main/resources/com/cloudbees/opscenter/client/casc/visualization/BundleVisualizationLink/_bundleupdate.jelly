@@ -85,6 +85,9 @@
                                                                 </j:otherwise>
                                                             </j:choose>
                                                         </j:if>
+                                                        <j:if test="${it.isUpdateTimingEnabled()}">
+                                                            <f:submit name="skip" value="Skip"/>
+                                                        </j:if>
                                                     </f:form>
                                                 </div>
                                             </div>

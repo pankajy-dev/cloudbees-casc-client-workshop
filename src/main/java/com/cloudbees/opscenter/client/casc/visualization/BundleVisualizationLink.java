@@ -182,6 +182,14 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     /**
+     * @return if the instance has Bundle Updte Timing enabled
+     */
+    // used by jelly
+    public boolean isUpdateTimingEnabled() {
+        return BundleUpdateTimingConfiguration.get().isEnabled();
+    }
+
+    /**
      * @return True/False if there is/isn't a new version fo the casc bundle available.
      */
     //used in jelly
@@ -383,11 +391,28 @@ public class BundleVisualizationLink extends ManagementLink {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         if (req.hasParameter("restart")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
+                    return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
+                    return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("force")) {
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
+        } else if (req.hasParameter("skip")) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationUpdaterHelper.skipCandidate();
+            }
+            return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
         } else {
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
         }

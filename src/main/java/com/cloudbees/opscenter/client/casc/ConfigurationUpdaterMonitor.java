@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
@@ -57,6 +59,14 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         return candidateBundle.getVersion();
     }
 
+    /**
+     * @return if the instance has Bundle Updte Timing enabled
+     */
+    // used by jelly
+    public boolean isUpdateTimingEnabled() {
+        return BundleUpdateTimingConfiguration.get().isEnabled();
+    }
+
     @Override
     public String getDisplayName() {
         return "Configuration Bundle Update check";
@@ -82,11 +92,26 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         if (req.hasParameter("restart")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+            return HttpResponses.redirectViaContextPath("/manage");
+        } else if (req.hasParameter("skip")) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationUpdaterHelper.skipCandidate();
+            }
             return HttpResponses.redirectViaContextPath("/manage");
         } else {
             return HttpResponses.redirectViaContextPath("/manage");

@@ -106,8 +106,17 @@ public final class ConfigurationUpdaterHelper {
 
                         // promote method already has the logic for promoting and skipping when it corresponds, so just a matter of performing the
                         // Hot Reload / Safe Restart
-                        ConfigurationBundle promoted = ConfigurationBundleManager.promote();
-                        newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
+                        if (BundleUpdateTimingManager.isEnabled()) {
+                            // Update Bundle Timing enabled, so we don't promote:
+                            // 1. The bundle might be promoted by an automatic reload
+                            // 2. The bundle might be promoted by an automatic restart
+                            // 3. The bundle might be promoted by a manual interaction
+                            newVersionAvailable = !newCandidate.isSkipped() && !newCandidate.isInvalid();
+                        } else {
+                            // If bundle update timing is disabled, then we have to promote
+                            ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+                            newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
+                        }
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
                         if (vYaml != null) {
@@ -160,6 +169,7 @@ public final class ConfigurationUpdaterHelper {
                         boolean automaticRestart = bundleUpdateTimingManager.isAutomaticRestart();
                         if (automaticReload) {
                             // try to apply the hot reload
+                            promoteCandidate();
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {
                                 LOGGER.log(Level.INFO, "New bundle version reloaded as for an automatic reload. Async reload in progress");
@@ -180,6 +190,7 @@ public final class ConfigurationUpdaterHelper {
                                 LOGGER.log(Level.INFO, "New bundle version cannot be hot reloaded. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                             }
                             if (automaticRestart) {
+                                promoteCandidate();
                                 SafeRestartMonitor.get().show();
                                 try {
                                     Jenkins.get().safeRestart();
@@ -695,5 +706,48 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return json;
+    }
+
+    /**
+     * Perform the manual skip of candidate
+     * @return true if it was possible to skip it. False otherwise
+     */
+    public synchronized static boolean skipCandidate() {
+        try {
+            BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
+            BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(updateLog.getCandidateBundle());
+            boolean skipped = candidateBundle.isSkipped();
+            ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
+            return skipped;
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+            return false;
+        }
+    }
+
+    /**
+     * Promote the candidate so the instance can be reloaded or restarted
+     * @return true if it was possible to promote it. False otherwise
+     */
+    public synchronized static boolean promoteCandidate() {
+        final ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        final BundleUpdateLog.CandidateBundle candidateBundle = bundleManager.getUpdateLog().getCandidateBundle();
+        final ConfigurationBundle currentBundle = bundleManager.getConfigurationBundle();
+
+        if (candidateBundle.isInvalid()) {
+            LOGGER.log(Level.WARNING, "Attempt to promote a candidate with validations errors. Ignoring");
+            return false;
+        }
+
+        if (candidateBundle.isSkipped()) {
+            LOGGER.log(Level.WARNING, "Attempt to promote a skipped candidate. Ignoring");
+            return false;
+        }
+
+        // TODO ConfigurationBundleManager.promote(true); once https://github.com/cloudbees/cloudbees-casc-client-plugin/pull/177 is merged
+        ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+        String currentVersion = StringUtils.defaultString(currentBundle.getVersion());
+        String promotedVersion = StringUtils.defaultString(promoted.getVersion());
+        return !promotedVersion.equals(currentVersion);
     }
 }
