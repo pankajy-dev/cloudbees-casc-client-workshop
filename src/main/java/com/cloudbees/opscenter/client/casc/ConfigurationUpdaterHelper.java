@@ -142,16 +142,6 @@ public final class ConfigurationUpdaterHelper {
                         ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
                         ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
                     }
-                    ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-
-                    boolean hotReloadable = false;
-                    try {
-                        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-                        hotReloadable = service.isHotReloadable(bundle);
-                        bundle.setHotReloadable(hotReloadable);
-                    } catch (IllegalStateException e) {
-                        LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
-                    }
 
                     /*
                      * If not feasible the automatic reload or not configured, then checks the automatic restart. If configured
@@ -165,11 +155,16 @@ public final class ConfigurationUpdaterHelper {
                      */
                     if (BundleUpdateTimingManager.isEnabled()) {
                         BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
-                        boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload() && hotReloadable;
+                        boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload();
                         boolean automaticRestart = bundleUpdateTimingManager.isAutomaticRestart();
-                        if (automaticReload) {
-                            // try to apply the hot reload
+                        boolean hotReloadable = false;
+                        if (automaticRestart || automaticReload) {
                             promoteCandidate();
+                            hotReloadable = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+                        }
+
+                        if (automaticReload && hotReloadable) {
+                            // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {
                                 LOGGER.log(Level.INFO, "New bundle version reloaded as for an automatic reload. Async reload in progress");
@@ -190,7 +185,6 @@ public final class ConfigurationUpdaterHelper {
                                 LOGGER.log(Level.INFO, "New bundle version cannot be hot reloaded. If configured, an automatic safe restart will happen. Otherwise, the manual reload must be performed");
                             }
                             if (automaticRestart) {
-                                promoteCandidate();
                                 SafeRestartMonitor.get().show();
                                 try {
                                     Jenkins.get().safeRestart();
@@ -200,6 +194,16 @@ public final class ConfigurationUpdaterHelper {
                                 }
                             }
                         }
+                    } else {
+                        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+                        try {
+                            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                            boolean hotReloadable = service.isHotReloadable(bundle);
+                            bundle.setHotReloadable(hotReloadable);
+                        } catch (IllegalStateException e) {
+                            LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+                        }
+
                     }
 
                     return true;
@@ -746,6 +750,15 @@ public final class ConfigurationUpdaterHelper {
 
         // TODO ConfigurationBundleManager.promote(true); once https://github.com/cloudbees/cloudbees-casc-client-plugin/pull/177 is merged
         ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+
+        try {
+            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+            boolean hotReloadable = service.isHotReloadable(promoted);
+            ConfigurationBundleManager.get().getConfigurationBundle().setHotReloadable(hotReloadable);
+        } catch (IllegalStateException e) {
+            LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+        }
+
         String currentVersion = StringUtils.defaultString(currentBundle.getVersion());
         String promotedVersion = StringUtils.defaultString(promoted.getVersion());
         return !promotedVersion.equals(currentVersion);

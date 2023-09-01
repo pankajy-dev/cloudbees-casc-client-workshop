@@ -361,6 +361,13 @@ public class BundleVisualizationLink extends ManagementLink {
 
     //used in jelly
     public boolean isHotReloadable() {
+        if (isUpdateTimingEnabled()) {
+            ConfigurationBundle candidateAsConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+            if (candidateAsConfigurationBundle != null) {
+                ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                return service.isHotReloadable(candidateAsConfigurationBundle);
+            }
+        }
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
