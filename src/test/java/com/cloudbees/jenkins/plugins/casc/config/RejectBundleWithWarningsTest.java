@@ -2,15 +2,16 @@ package com.cloudbees.jenkins.plugins.casc.config;
 
 import java.nio.file.Paths;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.WithBundleUpdateTiming;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
-import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,6 +40,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class RejectBundleWithWarningsTest extends AbstractCJPTest {
 
+    @Before
+    public void setUp() {
+        // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
+        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationBundleManager.reset();
+    }
+
     // I.a.i
     @Test
     @WithBundleUpdateTiming("true")
@@ -50,9 +60,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(true);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertTrue("Reject Bundles with warnings is configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -75,9 +87,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(true);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertTrue("Reject Bundles with warnings is configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -100,9 +114,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(true);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertTrue("Reject Bundles with warnings is configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -125,9 +141,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(true);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertTrue("Reject Bundles with warnings is configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -150,9 +168,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings is NOT configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -175,9 +195,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings is NOT configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -200,9 +222,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings is NOT configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -225,9 +249,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings is NOT configured", configuration.isRejectWarnings());
+        assertTrue("Let's force the bundle to be reloaded if valid", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -250,9 +276,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings won't be configured as Bundle Update Timing is disabled", configuration.isRejectWarnings());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -275,9 +303,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings won't be configured as Bundle Update Timing is disabled", configuration.isRejectWarnings());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -300,9 +330,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings won't be configured as Bundle Update Timing is disabled", configuration.isRejectWarnings());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -325,9 +357,11 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertFalse("Bundle Update Timing is disabled", configuration.isEnabled());
 
         configuration.setRejectWarnings(false);
+        configuration.setAutomaticReload(true);
         configuration.save();
 
         assertFalse("Reject Bundles with warnings won't be configured as Bundle Update Timing is disabled", configuration.isRejectWarnings());
+        assertFalse("Automatic reload won't be configured as Bundle Update Timing is disabled", configuration.isAutomaticReload());
 
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));

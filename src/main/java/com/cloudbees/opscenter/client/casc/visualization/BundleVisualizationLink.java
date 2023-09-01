@@ -236,6 +236,10 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     public String getUpdateVersion(){
         if(isUpdateAvailable()) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                return candidate != null ? candidate.getVersion() : null;
+            }
             return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
         }
         return null;
@@ -364,8 +368,7 @@ public class BundleVisualizationLink extends ManagementLink {
         if (isUpdateTimingEnabled()) {
             ConfigurationBundle candidateAsConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
             if (candidateAsConfigurationBundle != null) {
-                ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-                return service.isHotReloadable(candidateAsConfigurationBundle);
+                return candidateAsConfigurationBundle.isHotReloadable();
             }
         }
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();

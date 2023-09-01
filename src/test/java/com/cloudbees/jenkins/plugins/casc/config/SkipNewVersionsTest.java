@@ -5,12 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
 import hudson.ExtensionList;
+
+import jenkins.model.Jenkins;
 
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.WithBundleUpdateTiming;
@@ -19,15 +22,18 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
+import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -210,13 +216,27 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
-        assertThat("New bundle is NOT skipped", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        assertThat("New bundle is NOT skipped, but not promoted automatically", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+        assertThat("New bundle is NOT skipped, but not promoted automatically", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
+        assertThat("New bundle is NOT skipped, but not promoted automatically", bundleUpdateTab.getUpdateVersion(), is("2"));
+        assertThat("New bundle is NOT skipped, but not promoted automatically", bundleUpdateTab.getBundleVersion(), is("1"));
 
         List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
         assertThat("New entry in the Update Log", updateLog, hasSize(2));
         Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
         assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
         assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
+
+        // Let's reload as if the user had clicked the button, as it's not skipped
+        assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
+        ConfigurationUpdaterHelper.promoteCandidate();
+        ExtensionList.lookupSingleton(BundleReloadAction.class).executeReload(false);
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
+        assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+        assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
+        assertThat("New bundle is now loaded", bundleUpdateTab.getBundleVersion(), is("2"));
     }
 
     @Test
