@@ -151,7 +151,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         List<Path> updateLog = bundleManager.getUpdateLog().getHistoricalRecords();
         assertThat("New entry in the Update Log", updateLog, hasSize(2));
         Path newest = updateLog.get(0); // getHistoricalRecords return a SORTED list
-        assertTrue("Marker file for skipped version is there as the marker file is created anyway", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
+        assertFalse("Marker file for skipped version is removed as the bundle is promoted", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
         assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
     }
 

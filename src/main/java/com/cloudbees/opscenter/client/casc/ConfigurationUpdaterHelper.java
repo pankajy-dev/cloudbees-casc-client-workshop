@@ -114,7 +114,7 @@ public final class ConfigurationUpdaterHelper {
                             newVersionAvailable = !newCandidate.isSkipped() && !newCandidate.isInvalid();
                         } else {
                             // If bundle update timing is disabled, then we have to promote
-                            ConfigurationBundle promoted = ConfigurationBundleManager.promote();
+                            ConfigurationBundle promoted = ConfigurationBundleManager.promote(true); // Plugin is ready, so the instance is up and running
                             newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
                         }
                         // Send validation errors from promoted version
