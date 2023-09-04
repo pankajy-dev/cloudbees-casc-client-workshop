@@ -13,8 +13,6 @@ import org.junit.Test;
 
 import hudson.ExtensionList;
 
-import jenkins.model.Jenkins;
-
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.WithBundleUpdateTiming;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
@@ -216,7 +214,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is NOT skipped, but not promoted automatically", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("New bundle is NOT skipped, but not promoted automatically", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle is NOT skipped, but not promoted automatically", bundleUpdateTab.getUpdateVersion(), is("2"));

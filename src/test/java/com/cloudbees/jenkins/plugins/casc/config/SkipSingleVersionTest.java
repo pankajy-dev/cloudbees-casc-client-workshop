@@ -96,7 +96,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
-        BundleVisualizationLink link = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink link = BundleVisualizationLink.get();
         assertTrue("Bundle Update tab shows the button bar", link.isUpdateAvailable());
         assertThat("Bundle Update tab shows the new version", link.getUpdateVersion(), is("2"));
         assertTrue("Bundle Update tab shows the Reload button", link.isHotReloadable());
@@ -146,7 +146,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
-        BundleVisualizationLink link = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink link = BundleVisualizationLink.get();
         assertTrue("Bundle Update tab shows the button bar", link.isUpdateAvailable());
         assertThat("Bundle Update tab shows the new version", link.getUpdateVersion(), is("2"));
         assertTrue("Bundle Update tab shows the Reload button", link.isHotReloadable());
@@ -310,7 +310,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertNull("There is no candidate", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate", bundleManager.getUpdateLog().getCandidateBundle());
 
-        BundleVisualizationLink link = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink link = BundleVisualizationLink.get();
         assertFalse("Bundle Update tab doesn't show the button bar", link.isUpdateAvailable());
         assertNull("Bundle Update tab doesn't the new version", link.getUpdateVersion());
         ConfigurationUpdaterMonitor monitor = ExtensionList.lookupSingleton(ConfigurationUpdaterMonitor.class);
@@ -353,7 +353,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
-        BundleVisualizationLink link = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink link = BundleVisualizationLink.get();
         assertFalse("Bundle Update tab doesn't show the button bar", link.isUpdateAvailable());
         assertNull("Bundle Update tab doesn't the new version", link.getUpdateVersion());
         ConfigurationUpdaterMonitor monitor = ExtensionList.lookupSingleton(ConfigurationUpdaterMonitor.class);
@@ -390,7 +390,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertNull("There is a candidate, but it's already promoted", bundleManager.getUpdateLog().getCandidateBundle());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getCandidateAsConfigurationBundle());
 
-        BundleVisualizationLink link = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink link = BundleVisualizationLink.get();
         assertTrue("Bundle Update tab shows the button bar", link.isUpdateAvailable());
         assertThat("Bundle Update tab shows the new version", link.getUpdateVersion(), is("2"));
         assertTrue("Bundle Update tab shows the Reload button", link.isHotReloadable());

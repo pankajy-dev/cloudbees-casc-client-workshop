@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
@@ -29,7 +30,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isUpdateAvailable() {
-        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        return BundleVisualizationLink.get().isUpdateAvailable();
     }
 
     public boolean isCandidateAvailable() {
@@ -74,13 +75,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
-        if (isUpdateTimingEnabled()) {
-            ConfigurationBundle candidateAsConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
-            if (candidateAsConfigurationBundle != null) {
-                return candidateAsConfigurationBundle.isHotReloadable();
-            }
-        }
-        return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+        return BundleVisualizationLink.get().isHotReloadable();
     }
 
     /**
@@ -88,14 +83,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     @CheckForNull
     public String getUpdateVersion(){
-        if(isUpdateAvailable()) {
-            if (isUpdateTimingEnabled()) {
-                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
-                return candidate != null ? candidate.getVersion() : null;
-            }
-            return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
-        }
-        return null;
+        return BundleVisualizationLink.get().getUpdateVersion();
     }
 
     /**
@@ -103,10 +91,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canManualSkip() {
-        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
-        BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
-        boolean skipped = candidateBundle == null ? true : candidateBundle.isSkipped();
-        return  configuration.canSkipNewVersions() && !skipped;
+        return BundleVisualizationLink.get().canManualSkip();
     }
 
     @RequirePOST

@@ -94,6 +94,10 @@ public class BundleVisualizationLink extends ManagementLink {
         return BundleExporter.all();
     }
 
+    public static BundleVisualizationLink get() {
+        return ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+    }
+
     // stapler
     public HttpResponse doIndex() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);

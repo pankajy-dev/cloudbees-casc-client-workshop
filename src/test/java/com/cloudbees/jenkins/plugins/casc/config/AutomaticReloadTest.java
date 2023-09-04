@@ -11,7 +11,6 @@ import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -125,7 +124,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Just in case the async reload hasn't finished
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is loaded", bundleUpdateTab.getUpdateVersion());
         assertThat("New bundle is loaded", bundleUpdateTab.getBundleVersion(), is("2"));
@@ -158,7 +157,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Just in case the async reload hasn't finished
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is loaded", bundleUpdateTab.getUpdateVersion());
         assertThat("New bundle is loaded", bundleUpdateTab.getBundleVersion(), is("2"));
@@ -204,7 +203,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Just in case the async reload hasn't finished
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't promoted", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("New bundle isn't promoted", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle isn't promoted", bundleUpdateTab.getUpdateVersion(), is("2"));
@@ -235,7 +234,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/new-bundle-version-no-hot").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("No automatic reload, so new bundle no promoted", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("No automatic reload, so new bundle no promoted", bundleUpdateTab.getUpdateVersion(), is("2"));
         assertThat("No automatic reload, so new bundle no promoted", bundleUpdateTab.getBundleVersion(), is("1"));
@@ -288,7 +287,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Just in case the async reload hasn't finished
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't hot loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle isn't hot loaded", bundleUpdateTab.getUpdateVersion(), is("2"));
         assertThat("New bundle isn't hot loaded", bundleUpdateTab.getBundleVersion(), is("1"));
@@ -318,7 +317,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/new-bundle-version-no-hot").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
-        BundleVisualizationLink bundleUpdateTab = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't hot loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle isn't hot loaded", bundleUpdateTab.getUpdateVersion(), is("2"));
         assertThat("New bundle isn't hot loaded", bundleUpdateTab.getBundleVersion(), is("1"));

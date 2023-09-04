@@ -319,7 +319,7 @@ public final class ConfigurationUpdaterHelper {
         json.accumulate("update-available", update);
 
         // Using BundleVisualizationLink so information is the same as in UI
-        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleInfo = BundleVisualizationLink.get();
         JSONObject versionSummary = new JSONObject();
 
         JSONObject currentBundle = new JSONObject();
@@ -447,7 +447,7 @@ public final class ConfigurationUpdaterHelper {
      */
     public static JSONObject getUpdateLog() {
         // Using BundleVisualizationLink so information is the same as in UI
-        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleInfo = BundleVisualizationLink.get();
 
         JSONObject json = new JSONObject();
 

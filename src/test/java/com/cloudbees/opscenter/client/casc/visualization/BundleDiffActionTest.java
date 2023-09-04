@@ -60,7 +60,7 @@ public class BundleDiffActionTest extends AbstractCJPTest {
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/visualization/BundleDiffActionTest/version-1")
     public void smokes() throws Exception {
         try (ACLContext a = ACL.as(User.getById("admin", false))) {
-            final BundleVisualizationLink bundleUpdate = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            final BundleVisualizationLink bundleUpdate = BundleVisualizationLink.get();
             final BundleDiffAction diffAction = ExtensionList.lookupSingleton(BundleDiffAction.class);
 
             bundleUpdate.doBundleUpdate();

@@ -8,7 +8,6 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
-import hudson.ExtensionList;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -67,11 +66,11 @@ public class BundleVisualizationLinkTest {
     @Test
     public void checkPermissions() throws Exception {
         try (ACLContext ctx = ACL.as(adminUser)) {
-            ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate();
+            BundleVisualizationLink.get().doBundleUpdate();
         }
 
         try (ACLContext ctx = ACL.as(readUser)) {
-            AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate());
+            AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> BundleVisualizationLink.get().doBundleUpdate());
             assertThat(exception.getMessage(), containsString("bob is missing the Overall/Administer permission"));
         }
     }
@@ -103,7 +102,7 @@ public class BundleVisualizationLinkTest {
             when(mockedPromoted.getVersion()).thenReturn("3");
             configurationBundleManagerMockedStatic.when(() -> ConfigurationBundleManager.promote(true)).thenReturn(mockedPromoted);
 
-            BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            BundleVisualizationLink bundleVisualizationLink = BundleVisualizationLink.get();
             bundleVisualizationLink.doBundleUpdate();
             assertTrue(ConfigurationStatus.INSTANCE.isUpdateAvailable());
             assertTrue(bundleVisualizationLink.isUpdateAvailable());
@@ -124,7 +123,7 @@ public class BundleVisualizationLinkTest {
             when(mockedConfManager.getConfigurationBundle()).thenReturn(mockedBundle);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 
-            BundleVisualizationLink bundleVisualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            BundleVisualizationLink bundleVisualizationLink = BundleVisualizationLink.get();
             bundleVisualizationLink.doBundleUpdate();
             assertFalse(ConfigurationStatus.INSTANCE.isUpdateAvailable());
             assertFalse(bundleVisualizationLink.isUpdateAvailable());
@@ -163,7 +162,7 @@ public class BundleVisualizationLinkTest {
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::get).thenReturn(mockedConfManager);
 
-            BundleVisualizationLink visualizationLink = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+            BundleVisualizationLink visualizationLink = BundleVisualizationLink.get();
             assertEquals(quiet, visualizationLink.getBundleValidations().isQuiet());
         }
     }

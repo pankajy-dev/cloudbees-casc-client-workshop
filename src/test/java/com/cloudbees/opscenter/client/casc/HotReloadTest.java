@@ -129,7 +129,7 @@ public class HotReloadTest extends AbstractIMTest {
         // Variables, so full reload
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-2").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         boolean reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
@@ -139,7 +139,7 @@ public class HotReloadTest extends AbstractIMTest {
         // Only jcasc, so partial reload
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-3").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Only JCasC has changed, thus partial reload. Expected JCasCReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
@@ -149,7 +149,7 @@ public class HotReloadTest extends AbstractIMTest {
         // Only items, so partial reload
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-4").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         assertTrue(reloaded);
         assertThat("Only items has changed, thus partial reload. Not expected JCasCReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName()))));
