@@ -91,7 +91,7 @@ public final class ConfigurationUpdaterHelper {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             newCandidate.getValidations().update(candidatePath.resolve(BundleUpdateLog.VALIDATIONS_FILE));
                             newVersionIsValid = !BundleValidator.shouldBeRejected(validations);
-                            // TODO Now we need to "refresh" the BundleUpdateLog and the newCandidate
+                            ConfigurationBundleManager.refreshUpdateLog();
                         }
                     }
 
@@ -729,6 +729,7 @@ public final class ConfigurationUpdaterHelper {
             BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
             boolean skipped = candidateBundle.isSkipped();
             ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
+            ConfigurationBundleManager.refreshUpdateLog();
             return skipped;
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
