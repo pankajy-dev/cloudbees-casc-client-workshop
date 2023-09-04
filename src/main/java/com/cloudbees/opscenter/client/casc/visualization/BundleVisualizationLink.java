@@ -396,6 +396,17 @@ public class BundleVisualizationLink extends ManagementLink {
         return Collections.EMPTY_LIST;
     }
 
+    /**
+     * @return true if the Skip button must appear
+     */
+    // used in jelly
+    public boolean canManualSkip() {
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+        boolean skipped = candidateBundle == null ? true : candidateBundle.isSkipped();
+        return  configuration.canSkipNewVersions() && !skipped;
+    }
+
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);

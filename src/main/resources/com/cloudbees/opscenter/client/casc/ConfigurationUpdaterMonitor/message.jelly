@@ -15,7 +15,7 @@
             <header>A new version of the <b>Configuration Bundle ${version}</b> is available.</header>
             <p>You can perform a restart now to apply the new Configuration Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
             <j:if test="${it.isHotReloadable()}"><p>You can also apply the new Configuration Bundle without restarting, using the "Reload Configuration" button.</p></j:if>
-            <j:if test="${it.isUpdateTimingEnabled()}"><p>If you do not want to apply this Bundle version, you can click on the "Skip" button.</p></j:if>
+            <j:if test="${it.canManualSkip()}"><p>If you do not want to apply this Bundle version, you can click on the "Skip" button.</p></j:if>
         </div>
     </j:when>
     <j:otherwise>

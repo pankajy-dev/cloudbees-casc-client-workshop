@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
@@ -73,6 +74,12 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
+        if (isUpdateTimingEnabled()) {
+            ConfigurationBundle candidateAsConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+            if (candidateAsConfigurationBundle != null) {
+                return candidateAsConfigurationBundle.isHotReloadable();
+            }
+        }
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
@@ -82,9 +89,24 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     @CheckForNull
     public String getUpdateVersion(){
         if(isUpdateAvailable()) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                return candidate != null ? candidate.getVersion() : null;
+            }
             return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
         }
         return null;
+    }
+
+    /**
+     * @return true if the Skip button must appear
+     */
+    // used in jelly
+    public boolean canManualSkip() {
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+        boolean skipped = candidateBundle == null ? true : candidateBundle.isSkipped();
+        return  configuration.canSkipNewVersions() && !skipped;
     }
 
     @RequirePOST
