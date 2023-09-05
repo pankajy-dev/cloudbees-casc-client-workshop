@@ -20,6 +20,7 @@ import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
@@ -76,6 +77,7 @@ public final class ConfigurationUpdaterHelper {
                 String idBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getId();
                 String checksumBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getChecksum();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    PromotionErrorMonitor.get().hide();
                     ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && !BundleValidator.shouldBeRejected(newCandidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).collect(Collectors.toList()));
