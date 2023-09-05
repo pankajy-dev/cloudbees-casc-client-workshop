@@ -255,6 +255,10 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     public String getUpdateInfo(){
         if(isUpdateAvailable()) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                return candidate != null ? candidate.getBundleInfo() : null;
+            }
             return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
         }
         return null;
