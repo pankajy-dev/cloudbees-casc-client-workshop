@@ -1,7 +1,12 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
@@ -26,7 +31,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isUpdateAvailable() {
-        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        return BundleVisualizationLink.get().isUpdateAvailable();
     }
 
     public boolean isCandidateAvailable() {
@@ -57,13 +62,21 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         return candidateBundle.getVersion();
     }
 
+    /**
+     * @return if the instance has Bundle Updte Timing enabled
+     */
+    // used by jelly
+    public boolean isUpdateTimingEnabled() {
+        return BundleUpdateTimingConfiguration.get().isEnabled();
+    }
+
     @Override
     public String getDisplayName() {
         return "Configuration Bundle Update check";
     }
 
     public boolean isHotReloadable() {
-        return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+        return BundleVisualizationLink.get().isHotReloadable();
     }
 
     /**
@@ -71,10 +84,15 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     @CheckForNull
     public String getUpdateVersion(){
-        if(isUpdateAvailable()) {
-            return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
-        }
-        return null;
+        return BundleVisualizationLink.get().getUpdateVersion();
+    }
+
+    /**
+     * @return true if the Skip button must appear
+     */
+    // used in jelly
+    public boolean canManualSkip() {
+        return BundleVisualizationLink.get().canManualSkip();
     }
 
     @RequirePOST
@@ -82,11 +100,28 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         if (req.hasParameter("restart")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    PromotionErrorMonitor.get().show();
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    PromotionErrorMonitor.get().show();
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+            return HttpResponses.redirectViaContextPath("/manage");
+        } else if (req.hasParameter("skip")) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationUpdaterHelper.skipCandidate();
+            }
             return HttpResponses.redirectViaContextPath("/manage");
         } else {
             return HttpResponses.redirectViaContextPath("/manage");

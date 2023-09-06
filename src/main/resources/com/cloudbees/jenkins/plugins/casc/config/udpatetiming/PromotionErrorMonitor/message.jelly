@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <div class="alert alert-danger">
+        <l:isAdmin>
+        <form method="post" action="${rootURL}/${it.url}/act" name="${it.id}">
+            <f:submit value="Hide"/>
+        </form>
+        </l:isAdmin>
+        <p>The new version of the Configuration as Code Bundle couldn't be applied, so the Reload or Restart operation has been cancelled.</p>
+        <p>You can found the reason in the logs, and you can retry again from <a href="${rootURL}/casc-bundle-export-ui/bundleUpdate">Manage Jenkins &gt; CloudBees Configuration
+            as Code export and update &gt; Bundle update</a>.</p>
+    </div>
+</j:jelly>

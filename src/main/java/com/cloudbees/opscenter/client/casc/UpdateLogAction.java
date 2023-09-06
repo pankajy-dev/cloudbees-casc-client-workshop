@@ -6,7 +6,6 @@ import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
@@ -59,7 +58,7 @@ public class UpdateLogAction implements RootAction {
         if (BundleUpdateLog.retentionPolicy() == 0) {
             return HttpResponses.notFound();
         }
-        return ExtensionList.lookupSingleton(BundleVisualizationLink.class).doUpdateLog();
+        return BundleVisualizationLink.get().doUpdateLog();
     }
 
     // Visible for testing

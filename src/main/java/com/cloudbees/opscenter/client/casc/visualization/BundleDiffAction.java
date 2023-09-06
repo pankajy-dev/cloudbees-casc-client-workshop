@@ -7,7 +7,6 @@ import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -164,7 +163,7 @@ public class BundleDiffAction implements RootAction {
         BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
-            return ExtensionList.lookupSingleton(BundleVisualizationLink.class).getBundleVersion();
+            return BundleVisualizationLink.get().getBundleVersion();
         }
 
         BundleLoader.BundleDescriptor bundleDescriptor = changes.getOrigin().getBundleDescriptor();
@@ -183,7 +182,7 @@ public class BundleDiffAction implements RootAction {
         BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
-            return ExtensionList.lookupSingleton(BundleVisualizationLink.class).getUpdateVersion();
+            return BundleVisualizationLink.get().getUpdateVersion();
         }
 
         BundleLoader.BundleDescriptor bundleDescriptor = changes.getOther().getBundleDescriptor();

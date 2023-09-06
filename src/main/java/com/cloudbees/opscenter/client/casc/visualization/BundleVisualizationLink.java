@@ -38,6 +38,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
@@ -92,6 +93,10 @@ public class BundleVisualizationLink extends ManagementLink {
     // used in jelly
     public List<BundleExporter> getExporters() {
         return BundleExporter.all();
+    }
+
+    public static BundleVisualizationLink get() {
+        return ExtensionList.lookupSingleton(BundleVisualizationLink.class);
     }
 
     // stapler
@@ -182,6 +187,14 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     /**
+     * @return if the instance has Bundle Updte Timing enabled
+     */
+    // used by jelly
+    public boolean isUpdateTimingEnabled() {
+        return BundleUpdateTimingConfiguration.get().isEnabled();
+    }
+
+    /**
      * @return True/False if there is/isn't a new version fo the casc bundle available.
      */
     //used in jelly
@@ -228,6 +241,10 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     public String getUpdateVersion(){
         if(isUpdateAvailable()) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                return candidate != null ? candidate.getVersion() : null;
+            }
             return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
         }
         return null;
@@ -239,6 +256,10 @@ public class BundleVisualizationLink extends ManagementLink {
     @CheckForNull
     public String getUpdateInfo(){
         if(isUpdateAvailable()) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                return candidate != null ? candidate.getBundleInfo() : null;
+            }
             return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
         }
         return null;
@@ -353,6 +374,12 @@ public class BundleVisualizationLink extends ManagementLink {
 
     //used in jelly
     public boolean isHotReloadable() {
+        if (isUpdateTimingEnabled()) {
+            ConfigurationBundle candidateAsConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+            if (candidateAsConfigurationBundle != null) {
+                return candidateAsConfigurationBundle.isHotReloadable();
+            }
+        }
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
     }
 
@@ -378,16 +405,48 @@ public class BundleVisualizationLink extends ManagementLink {
         return Collections.EMPTY_LIST;
     }
 
+    /**
+     * @return true if the Skip button must appear
+     */
+    // used in jelly
+    public boolean canManualSkip() {
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+        boolean skipped = candidateBundle == null ? true : candidateBundle.isSkipped();
+        return  configuration.canSkipNewVersions() && !skipped;
+    }
+
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         if (req.hasParameter("restart")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
+                    PromotionErrorMonitor.get().show();
+                    // Redirecting to Manage as this way the administrative monitor shows up and the user is aware something went wrong
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            if (isUpdateTimingEnabled()) {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
+                    PromotionErrorMonitor.get().show();
+                    // Redirecting to Manage as this way the administrative monitor shows up and the user is aware something went wrong
+                    return HttpResponses.redirectViaContextPath("/manage");
+                }
+            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("force")) {
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
+        } else if (req.hasParameter("skip")) {
+            if (isUpdateTimingEnabled()) {
+                ConfigurationUpdaterHelper.skipCandidate();
+            }
+            return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
         } else {
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");
         }

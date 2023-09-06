@@ -29,7 +29,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.assertNotNull;
@@ -61,7 +60,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
 
         // Version 2 declares the remove-all in the bundle descriptor, so it must override the none strategy from the items.yaml
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-2").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -89,7 +88,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // remove strategy is none, so the removed item will remain and another will have a change
         // none of them is removed, so the builds remain
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-3").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -110,7 +109,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // remove strategy is sync, so the removed item won't remain and another will have a change
         // Only one job is removed, so the builds remain
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-4").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -135,7 +134,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         assertNotNull("Just created", fsp1);
 
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-5").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -161,7 +160,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         assertNotNull("Just created", fsp1);
 
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-6").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -182,7 +181,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // remove strategy is none, so the removed item will remain (created for version 6)
         // builds remain
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-7").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -224,7 +223,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         assertThat("Developers should have a user now", developers.getUsers(), hasSize(1));
 
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-2").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -243,7 +242,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // Version 3 doesn't set the remove strategy but introduces a change in the rbac.yaml, so it must be reloaded
         // remove strategy is update, so the removed group will remain
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-3").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -262,7 +261,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // Version 4 doesn't set the remove strategy but introduces a change in the rbac.yaml, so it must be reloaded
         // remove strategy is sync, so the removed group won't remain and another will have a change
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-4").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -290,7 +289,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         assertThat(global.size(), Matchers.is(3));
 
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-5").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
@@ -310,7 +309,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         // there's a change, so it must be reflected
         // remove strategy is update, so the manually added group remains
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-6").toFile().getAbsolutePath());
-        ExtensionList.lookupSingleton(BundleVisualizationLink.class).doBundleUpdate(); // Force the bundle update
+        BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
         await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 

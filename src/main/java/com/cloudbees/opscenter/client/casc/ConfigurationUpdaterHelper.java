@@ -19,6 +19,8 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.YamlSchemaValida
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.analytics.BundleValidationErrorGatherer;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
@@ -75,6 +77,7 @@ public final class ConfigurationUpdaterHelper {
                 String idBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getId();
                 String checksumBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getChecksum();
                 if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                    PromotionErrorMonitor.get().hide();
                     ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && !BundleValidator.shouldBeRejected(newCandidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).collect(Collectors.toList()));
@@ -89,7 +92,8 @@ public final class ConfigurationUpdaterHelper {
                             newCandidate.getValidations().addValidations(validations.stream().map(v -> v.serialize()).collect(Collectors.toList()));
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             newCandidate.getValidations().update(candidatePath.resolve(BundleUpdateLog.VALIDATIONS_FILE));
-                            newVersionIsValid = !BundleValidator.shouldBeRejected(validations);;
+                            newVersionIsValid = !BundleValidator.shouldBeRejected(validations);
+                            ConfigurationBundleManager.refreshUpdateLog();
                         }
                     }
 
@@ -106,8 +110,19 @@ public final class ConfigurationUpdaterHelper {
 
                         // promote method already has the logic for promoting and skipping when it corresponds, so just a matter of performing the
                         // Hot Reload / Safe Restart
-                        ConfigurationBundle promoted = ConfigurationBundleManager.promote(true); // Plugin is ready, so the instance is up and running
-                        newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
+                        if (BundleUpdateTimingManager.isEnabled()) {
+                            // Update Bundle Timing enabled, so we don't promote:
+                            // 1. The bundle might be promoted by an automatic reload
+                            // 2. The bundle might be promoted by an automatic restart
+                            // 3. The bundle might be promoted by a manual interaction
+                            boolean isInvalid = newCandidate.isInvalid();
+                            boolean toSkip = BundleUpdateTimingConfiguration.get().canSkipNewVersions() && newCandidate.isSkipped();
+                            newVersionAvailable = !toSkip && !isInvalid;
+                        } else {
+                            // If bundle update timing is disabled, then we have to promote
+                            ConfigurationBundle promoted = ConfigurationBundleManager.promote(true); // Plugin is ready, so the instance is up and running
+                            newVersionAvailable = !versionBeforeUpdate.equals(promoted.getVersion());
+                        }
                         // Send validation errors from promoted version
                         BundleUpdateLog.BundleValidationYaml vYaml = ConfigurationBundleManager.get().getUpdateLog().getCurrentVersionValidations();
                         if (vYaml != null) {
@@ -133,16 +148,6 @@ public final class ConfigurationUpdaterHelper {
                         ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
                         ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
                     }
-                    ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-
-                    boolean hotReloadable = false;
-                    try {
-                        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-                        hotReloadable = service.isHotReloadable(bundle);
-                        bundle.setHotReloadable(hotReloadable);
-                    } catch (IllegalStateException e) {
-                        LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
-                    }
 
                     /*
                      * If not feasible the automatic reload or not configured, then checks the automatic restart. If configured
@@ -156,9 +161,19 @@ public final class ConfigurationUpdaterHelper {
                      */
                     if (BundleUpdateTimingManager.isEnabled()) {
                         BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
-                        boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload() && hotReloadable;
+                        boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload();
                         boolean automaticRestart = bundleUpdateTimingManager.isAutomaticRestart();
-                        if (automaticReload) {
+                        boolean hotReloadable = isHotReloadable(ConfigurationBundleManager.get().getCandidateAsConfigurationBundle());
+
+                        if (automaticRestart || (automaticReload && hotReloadable)) {
+                            promoteCandidate();
+                        }
+                        ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+                        if (candidate != null) {
+                            candidate.setHotReloadable(hotReloadable);
+                        }
+
+                        if (automaticReload && hotReloadable) {
                             // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {
@@ -189,6 +204,10 @@ public final class ConfigurationUpdaterHelper {
                                 }
                             }
                         }
+                    } else {
+                        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+                        boolean hotReloadable = isHotReloadable(bundle);
+                        bundle.setHotReloadable(hotReloadable);
                     }
 
                     return true;
@@ -302,7 +321,7 @@ public final class ConfigurationUpdaterHelper {
         json.accumulate("update-available", update);
 
         // Using BundleVisualizationLink so information is the same as in UI
-        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleInfo = BundleVisualizationLink.get();
         JSONObject versionSummary = new JSONObject();
 
         JSONObject currentBundle = new JSONObject();
@@ -430,7 +449,7 @@ public final class ConfigurationUpdaterHelper {
      */
     public static JSONObject getUpdateLog() {
         // Using BundleVisualizationLink so information is the same as in UI
-        BundleVisualizationLink bundleInfo = ExtensionList.lookupSingleton(BundleVisualizationLink.class);
+        BundleVisualizationLink bundleInfo = BundleVisualizationLink.get();
 
         JSONObject json = new JSONObject();
 
@@ -695,5 +714,79 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return json;
+    }
+
+    /**
+     * Perform the manual skip of candidate
+     * @return true if it was possible to skip it. False otherwise
+     */
+    public synchronized static boolean skipCandidate() {
+        try {
+            BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
+            BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
+            if (fromUpdateLog == null) {
+                LOGGER.log(Level.WARNING, "Attempt to skip a candidate that doesn't exist. Ignoring");
+                return false;
+            }
+            BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
+            boolean skipped = candidateBundle.isSkipped();
+            ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
+            ConfigurationBundleManager.refreshUpdateLog();
+            return skipped;
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+            return false;
+        }
+    }
+
+    /**
+     * Promote the candidate so the instance can be reloaded or restarted
+     * @return true if it was possible to promote it. False otherwise
+     */
+    public synchronized static boolean promoteCandidate() {
+        final ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        final BundleUpdateLog.CandidateBundle candidateBundle = bundleManager.getUpdateLog().getCandidateBundle();
+        final ConfigurationBundle currentBundle = bundleManager.getConfigurationBundle();
+
+        if (candidateBundle == null) {
+            LOGGER.log(Level.WARNING, "Attempt to promote a candidate that doesn't exist. Ignoring request");
+            return false;
+        }
+
+        if (candidateBundle.isInvalid()) {
+            LOGGER.log(Level.WARNING, "Attempt to promote a candidate with validations errors. Ignoring");
+            return false;
+        }
+
+        if (BundleUpdateTimingConfiguration.get().canSkipNewVersions() && candidateBundle.isSkipped()) {
+            LOGGER.log(Level.WARNING, "Attempt to promote a skipped candidate. Ignoring");
+            return false;
+        }
+
+        ConfigurationBundle promoted = ConfigurationBundleManager.promote(true); // Plugin is active, so up and running
+        boolean hotReloadable = isHotReloadable(promoted);
+        ConfigurationBundleManager.get().getConfigurationBundle().setHotReloadable(hotReloadable);
+
+        String currentVersion = StringUtils.defaultString(currentBundle.getVersion());
+        String promotedVersion = StringUtils.defaultString(promoted.getVersion());
+        return !promotedVersion.equals(currentVersion);
+    }
+
+    /**
+     * Checks if the bundle is hot-reloadable
+     * @param bundle to check. If null, then the method returns false
+     * @return true if the bundle is hot-reloadable, false if it isn't.
+     */
+    public static boolean isHotReloadable(ConfigurationBundle bundle) {
+        if (bundle != null) {
+            try {
+                ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+                return service.isHotReloadable(bundle);
+            } catch (IllegalStateException e) {
+                LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+            }
+        }
+
+        return false;
     }
 }

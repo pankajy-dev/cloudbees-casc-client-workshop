@@ -1,0 +1,9 @@
+jenkins:
+  systemMessage: "From Version 1"
+unclassified:
+  bundleUpdateTiming:
+    automaticReload: false
+    automaticRestart: false
+    rejectWarnings: false
+    reloadAlwaysOnRestart: false
+    skipNewVersions: false
