@@ -91,6 +91,9 @@
                                                     </f:form>
                                                 </div>
                                             </div>
+                                            <j:if test="${it.isUpdateTimingEnabled()}" >
+                                            <cbcipm:valcontent validationObject="${it.candidate.validations}" bundleVersion="${it.getUpdateInfo()}"/>
+                                            </j:if>
                                             <j:set var="items" value="${it.getItemsToDelete()}" />
                                             <j:if test="${items.size() > 0}">
                                                 <div class="alert alert-info">
@@ -112,7 +115,7 @@
                                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                                             <j:set var="candidate" value="${it.candidate}"/>
                                             <j:choose>
-                                                <j:when test="${it. candidate.skipped}">
+                                                <j:when test="${it.candidate.skipped}">
                                                     A new version of the <b>Configuration Bundle (${candidate.info})</b> is available, but it cannot be applied because it has
                                                     been skipped.
                                                 </j:when>

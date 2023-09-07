@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.servlet.ServletException;
 
 public final class ConfigurationUpdaterHelper {
     private static final Logger LOGGER = Logger.getLogger(ConfigurationUpdaterHelper.class.getName());
@@ -153,7 +154,7 @@ public final class ConfigurationUpdaterHelper {
                      * If not feasible the automatic reload or not configured, then checks the automatic restart. If configured
                      * Display an administrative monitor → User must know a Safe restart will happen (Do not offer dismiss or ignore)
                      * ConfigurationBundleManager#promote
-                     * Execute Jenkins.get().safeRestart();
+                     * Execute Jenkins.get().doSafeRestart();
                      * If not configured the safe restart, then
                      * Checks the Use case 4 and depending. If skipping, then do not execute the promote method and mark as skipped.
                      * If not skipping, then the UI offers the Safe Restart and Reload buttons together with the new button “Skip Version” (use case 3). Details below.
@@ -183,8 +184,9 @@ public final class ConfigurationUpdaterHelper {
                                 if (automaticRestart) {
                                     SafeRestartMonitor.get().show();
                                     try {
-                                        Jenkins.get().safeRestart();
-                                    } catch (RestartNotSupportedException e) {
+                                        Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
+                                        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+                                    } catch (RestartNotSupportedException | IOException | ServletException e) {
                                         SafeRestartMonitor.get().hide();
                                         throw new CasCException("Safe restart cannot be performed", e);
                                     }
@@ -197,8 +199,9 @@ public final class ConfigurationUpdaterHelper {
                             if (automaticRestart) {
                                 SafeRestartMonitor.get().show();
                                 try {
-                                    Jenkins.get().safeRestart();
-                                } catch (RestartNotSupportedException e) {
+                                    Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
+                                    ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+                                } catch (RestartNotSupportedException | IOException | ServletException e) {
                                     SafeRestartMonitor.get().hide();
                                     throw new CasCException("Safe restart cannot be performed", e);
                                 }

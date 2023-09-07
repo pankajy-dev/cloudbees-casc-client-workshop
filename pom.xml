@@ -26,6 +26,7 @@
     <frontend-version>1.10.0</frontend-version>
     <useBeta>true</useBeta> <!-- Jenkins.MANAGE is still Beta.class -->
     <no-test-jar>false</no-test-jar> <!-- to allow other plugins to extend abstract test classes like ProjectItem.java -->
+    <jenkins.version>2.414.2-cb-1</jenkins.version> <!-- TODO Remove once in parent pom -->
   </properties>
 
   <scm>
