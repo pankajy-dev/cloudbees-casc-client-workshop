@@ -319,8 +319,18 @@ public final class ConfigurationUpdaterHelper {
         }
         json.accumulate("versions", versionSummary);
 
-        if (update && !bundleInfo.isCandidateAvailable()) {
-            json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
+        if (update) {
+            if (BundleUpdateTimingManager.isEnabled()) {
+                BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                if (candidateBundle != null && !candidateBundle.isInvalid()) {
+                    json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
+                } else if (candidateBundle == null && updateType != null) {
+                    // Automatic reload in place
+                    json.accumulate("update-type", updateType.label);
+                }
+            } else if (!bundleInfo.isCandidateAvailable()) {
+                json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
+            }
         }
         // Getting items that will be deleted on the update
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
@@ -773,7 +783,11 @@ public final class ConfigurationUpdaterHelper {
                 return UpdateType.AUTOMATIC_RELOAD;
             }
             if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
-                // Automatic reload finished or automatic restart scheduled
+                // Skipped, automatic reload finished or automatic restart scheduled
+                BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                if (candidateBundle != null && candidateBundle.isSkipped()) {
+                    return UpdateType.SKIPPED;
+                }
                 return SafeRestartMonitor.get().isActivated() ? UpdateType.AUTOMATIC_RESTART : UpdateType.AUTOMATIC_RELOAD;
             }
             BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();

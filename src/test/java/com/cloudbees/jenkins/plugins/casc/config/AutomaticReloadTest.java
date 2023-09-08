@@ -26,7 +26,6 @@ import net.sf.json.JSONObject;
 
 import hudson.ExtensionList;
 import hudson.cli.CLICommandInvoker;
-import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import jenkins.model.Jenkins;
 
