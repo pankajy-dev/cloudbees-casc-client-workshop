@@ -1,9 +1,12 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -79,6 +82,16 @@ public class BundleReloadAction implements RootAction {
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+            if (configuration.isEnabled()) {
+                if (configuration.isAutomaticReload()) {
+                    return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Automatic reload configured. It's not possible to manually reload the bundle. If there is any issue, proceed with a restart"));
+                } else {
+                    if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                        return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle could not be promoted. Proceed with a restart"));
+                    }
+                }
+            }
             return new JsonHttpResponse(executeReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
@@ -293,7 +306,7 @@ public class BundleReloadAction implements RootAction {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
-        boolean reload = false;
+        UpdateType reload = null;
         // First, check if an update is available
         // Dev memo: this must go first because it will update the version of the bundle if needed
         boolean update;
@@ -304,12 +317,12 @@ public class BundleReloadAction implements RootAction {
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         if (!update) {
-            // maybe the bundle is the same, but it is not yet applied, also check if an update is available
+            // maybe the bundle is the same, but it is not yet applied, also check if an update is available (Only possible if Bundle Update Timing is disabled)
             update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
         }
 
         if (update) {
-            reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+            reload = ConfigurationUpdaterHelper.getUpdateTypeForCliAndEndpoint();
         }
 
         Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);

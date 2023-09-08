@@ -31,7 +31,7 @@ public class ConfigurationUpdaterHelperTest {
     @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog")
     @Test
     public void getUpdateCheckJsonResponseQuiet() {
-        boolean hasInfo = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, false, false)
+        boolean hasInfo = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, UpdateType.RESTART, false)
                                                     .getJSONObject("versions")
                                                     .getJSONObject("current-bundle")
                                                     .getJSONArray("validations")
@@ -44,7 +44,7 @@ public class ConfigurationUpdaterHelperTest {
     @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog")
     @Test
     public void getUpdateCheckJsonResponse() {
-        JSONObject updateCheckJsonResponse = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, false, true);
+        JSONObject updateCheckJsonResponse = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, UpdateType.RESTART, true);
         boolean hasInfo = updateCheckJsonResponse.getJSONObject("versions")
                                                .getJSONObject("current-bundle")
                                                .getJSONArray("validations")
