@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -18,6 +19,7 @@ import jenkins.util.Timer;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -460,6 +462,63 @@ public class BundleReloadAction implements RootAction {
                 }
             }
         }
+    }
+
+    /**
+     * Skip the candidate bundle if there's an available version.
+     * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-skip }
+     * Output:
+     * {
+     *     "skipped": true/false,
+     *     "error": "Error promoting the candidate"
+     * }
+     * Permission required: MANAGE
+     * @return
+     *      <table>
+     *      <caption>Validation result</caption>
+     *      <tr><th>Code</th><th>Output</th></tr>
+     *      <tr><td>200</td><td>JSON output with the validation result</td></tr>
+     *      <tr><td>403</td><td>User does not have {@link Jenkins#MANAGE} permission</td></tr>
+     *      <tr><td>404</td><td>Bundle to promote cannot be found. Potentially already skipped or promoted</td></tr>
+     *      <tr><td>500</td><td>Wrong instance configuration that doesn't allow to skip</td></tr>
+     *      </table>
+     */
+    @POST
+    @WebMethod(name = "casc-bundle-skip")
+    public HttpResponse doSkipBundle(StaplerRequest req) {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        if (!configuration.isEnabled()) {
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true"), HttpServletResponse.SC_NOT_FOUND);
+        }
+
+        BundleVisualizationLink updateTab = BundleVisualizationLink.get();
+        if (!updateTab.isUpdateAvailable()) {
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "Bundle version to skip not found"), HttpServletResponse.SC_NOT_FOUND);
+        }
+
+        if (!updateTab.canManualSkip()) {
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored."), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+
+        boolean skipped;
+        String error = null;
+        try {
+            skipped = ConfigurationUpdaterHelper.doSkipCandidate();
+        } catch (IOException e) {
+            skipped = false;
+            error = e.getMessage();
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+        }
+
+        JSONObject response = new JSONObject();
+        response.accumulate("skipped", skipped);
+        if (StringUtils.isNotBlank(error)) {
+            response.accumulate("error", error);
+        }
+
+        return new JsonHttpResponse(response);
     }
 
 }

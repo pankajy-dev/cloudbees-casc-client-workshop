@@ -33,6 +33,8 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.File;
 import java.io.IOException;
@@ -699,21 +701,30 @@ public final class ConfigurationUpdaterHelper {
      */
     public synchronized static boolean skipCandidate() {
         try {
+            return doSkipCandidate();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+            return false;
+        }
+    }
+
+    /**
+     * Internal method to perform the manual skip of candidate. To be used only in this plugin as it doesn't handle the exceptions
+     * @return true if it was possible to skip it. False otherwise
+     * @throws IOException if the candidate cannot be skipped
+     */
+    @Restricted(NoExternalUse.class)
+    public synchronized static boolean doSkipCandidate() throws IOException {
             BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
             BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
             if (fromUpdateLog == null) {
-                LOGGER.log(Level.WARNING, "Attempt to skip a candidate that doesn't exist. Ignoring");
-                return false;
+                throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
             }
             BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
             boolean skipped = candidateBundle.isSkipped();
             ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
             ConfigurationBundleManager.refreshUpdateLog();
             return skipped;
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
-            return false;
-        }
     }
 
     /**
