@@ -46,11 +46,12 @@ public class BundleVersionSkipCommand extends CLICommand {
 
         BundleVisualizationLink updateTab = BundleVisualizationLink.get();
         if (!updateTab.isUpdateAvailable()) {
-            stderr.println("Bundle version to skip not found");
+            stderr.println("Bundle version to skip not found.");
             return 0;
         }
 
         if (!updateTab.canManualSkip()) {
+            // Just in case a Safe restart is scheduled and meanwhile the user try to skip it
             stderr.println("This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored.");
             return 0;
         }

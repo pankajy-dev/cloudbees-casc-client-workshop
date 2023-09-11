@@ -495,10 +495,11 @@ public class BundleReloadAction implements RootAction {
 
         BundleVisualizationLink updateTab = BundleVisualizationLink.get();
         if (!updateTab.isUpdateAvailable()) {
-            return new JsonHttpResponse(new JSONObject().accumulate("error", "Bundle version to skip not found"), HttpServletResponse.SC_NOT_FOUND);
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "Bundle version to skip not found."), HttpServletResponse.SC_NOT_FOUND);
         }
 
         if (!updateTab.canManualSkip()) {
+            // Just in case a Safe restart is scheduled and meanwhile the user try to skip it
             return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored."), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
