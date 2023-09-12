@@ -1,9 +1,13 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -15,6 +19,7 @@ import jenkins.util.Timer;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -79,6 +84,16 @@ public class BundleReloadAction implements RootAction {
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+            if (configuration.isEnabled()) {
+                if (configuration.isAutomaticReload()) {
+                    return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Automatic reload configured. It's not possible to manually reload the bundle. If there is any issue, proceed with a restart"));
+                } else {
+                    if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                        return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle could not be promoted. Proceed with a restart"));
+                    }
+                }
+            }
             return new JsonHttpResponse(executeReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
@@ -293,7 +308,7 @@ public class BundleReloadAction implements RootAction {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
-        boolean reload = false;
+        UpdateType reload = null;
         // First, check if an update is available
         // Dev memo: this must go first because it will update the version of the bundle if needed
         boolean update;
@@ -304,12 +319,12 @@ public class BundleReloadAction implements RootAction {
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         if (!update) {
-            // maybe the bundle is the same, but it is not yet applied, also check if an update is available
+            // maybe the bundle is the same, but it is not yet applied, also check if an update is available (Only possible if Bundle Update Timing is disabled)
             update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
         }
 
         if (update) {
-            reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+            reload = ConfigurationUpdaterHelper.getUpdateTypeForCliAndEndpoint();
         }
 
         Boolean quiet = quietParam == null ? null : Boolean.valueOf(quietParam);
@@ -447,6 +462,64 @@ public class BundleReloadAction implements RootAction {
                 }
             }
         }
+    }
+
+    /**
+     * Skip the candidate bundle if there's an available version.
+     * URL: {@code JENKINS_URL/casc-bundle-mgnt/casc-bundle-skip }
+     * Output:
+     * {
+     *     "skipped": true/false,
+     *     "error": "Error promoting the candidate"
+     * }
+     * Permission required: MANAGE
+     * @return
+     *      <table>
+     *      <caption>Validation result</caption>
+     *      <tr><th>Code</th><th>Output</th></tr>
+     *      <tr><td>200</td><td>JSON output with the validation result</td></tr>
+     *      <tr><td>403</td><td>User does not have {@link Jenkins#MANAGE} permission</td></tr>
+     *      <tr><td>404</td><td>Bundle to promote cannot be found. Potentially already skipped or promoted</td></tr>
+     *      <tr><td>500</td><td>Wrong instance configuration that doesn't allow to skip</td></tr>
+     *      </table>
+     */
+    @POST
+    @WebMethod(name = "casc-bundle-skip")
+    public HttpResponse doSkipBundle(StaplerRequest req) {
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
+
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        if (!configuration.isEnabled()) {
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true"), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+
+        BundleVisualizationLink updateTab = BundleVisualizationLink.get();
+        if (!updateTab.isUpdateAvailable()) {
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "Bundle version to skip not found."), HttpServletResponse.SC_NOT_FOUND);
+        }
+
+        if (!updateTab.canManualSkip()) {
+            // Just in case a Safe restart is scheduled and meanwhile the user try to skip it
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored."), HttpServletResponse.SC_OK);
+        }
+
+        boolean skipped;
+        String error = null;
+        try {
+            skipped = ConfigurationUpdaterHelper.doSkipCandidate();
+        } catch (IOException e) {
+            skipped = false;
+            error = e.getMessage();
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+        }
+
+        JSONObject response = new JSONObject();
+        response.accumulate("skipped", skipped);
+        if (StringUtils.isNotBlank(error)) {
+            response.accumulate("error", error);
+        }
+
+        return new JsonHttpResponse(response);
     }
 
 }

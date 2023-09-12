@@ -25,6 +25,7 @@ import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.lifecycle.RestartNotSupportedException;
@@ -32,6 +33,8 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.File;
 import java.io.IOException;
@@ -279,47 +282,14 @@ public final class ConfigurationUpdaterHelper {
      *     "update-type": "RELOAD"
      * }
      * </pre>
-     * Note that the produced JSON will include all the validation messages.
-     *
-     * @param update true if there is a new version available suitable for installation.
-     * @param isHotReload true if the new version can be applied with a Hot Reload
-     * @return JSON response for CLI and HTTP Endpoint to check new versions
-     * @see ConfigurationUpdaterHelper#getUpdateCheckJsonResponse(boolean, boolean, Boolean)
-     */
-    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload) {
-        // Dev memo: quiet mode is off by default, see BEE-35011
-        return getUpdateCheckJsonResponse(update, isHotReload, false);
-    }
-
-    /**
-     * Build the JSON response for CLI and HTTP Endpoint to check new versions. Example of response
-     * <pre>
-     * {
-     *     "update-available": true,
-     *     "versions": {
-     *         "current-bundle": {
-     *             "version": "2",
-     *             "validations": []
-     *         },
-     *         "new-version": {
-     *             "version": "5",
-     *             "valid": true,
-     *             "validations": [
-     *                 "WARNING - [CATALOGVAL] - More than one plugin catalog file used in zip-core-casc-1652255664849. Using only first read file."
-     *             ]
-     *         }
-     *     },
-     *     "update-type": "RELOAD"
-     * }
-     * </pre>
      * If quiet mode is activated (true) then the validations will contain only WARNING and ERROR messages.
      *
      * @param update true if there is a new version available suitable for installation.
-     * @param isHotReload true if the new version can be applied with a Hot Reload
+     * @param updateType available operation after the new version is detected
      * @param quiet true to activate the quiet mode, false to deactivate it, 'null' to use the value from ConfigurationBundleManager.
      * @return JSON response for CLI and HTTP Endpoint to check new versions
      */
-    public static JSONObject getUpdateCheckJsonResponse(boolean update, boolean isHotReload, Boolean quiet) {
+    public static JSONObject getUpdateCheckJsonResponse(boolean update, @CheckForNull UpdateType updateType, Boolean quiet) {
         JSONObject json = new JSONObject();
         json.accumulate("update-available", update);
 
@@ -351,11 +321,17 @@ public final class ConfigurationUpdaterHelper {
         }
         json.accumulate("versions", versionSummary);
 
-        if (update && !bundleInfo.isCandidateAvailable()) {
-            if (isHotReload) {
-                json.accumulate("update-type", "RELOAD");
-            } else {
-                json.accumulate("update-type", "RESTART");
+        if (update) {
+            if (BundleUpdateTimingManager.isEnabled()) {
+                BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                if (candidateBundle != null && !candidateBundle.isInvalid()) {
+                    json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
+                } else if (candidateBundle == null && updateType != null) {
+                    // Automatic reload in place
+                    json.accumulate("update-type", updateType.label);
+                }
+            } else if (!bundleInfo.isCandidateAvailable()) {
+                json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
             }
         }
         // Getting items that will be deleted on the update
@@ -725,21 +701,30 @@ public final class ConfigurationUpdaterHelper {
      */
     public synchronized static boolean skipCandidate() {
         try {
+            return doSkipCandidate();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+            return false;
+        }
+    }
+
+    /**
+     * Internal method to perform the manual skip of candidate. To be used only in this plugin as it doesn't handle the exceptions
+     * @return true if it was possible to skip it. False otherwise
+     * @throws IOException if the candidate cannot be skipped
+     */
+    @Restricted(NoExternalUse.class)
+    public synchronized static boolean doSkipCandidate() throws IOException {
             BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
             BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
             if (fromUpdateLog == null) {
-                LOGGER.log(Level.WARNING, "Attempt to skip a candidate that doesn't exist. Ignoring");
-                return false;
+                throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
             }
             BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
             boolean skipped = candidateBundle.isSkipped();
             ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
             ConfigurationBundleManager.refreshUpdateLog();
             return skipped;
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
-            return false;
-        }
     }
 
     /**
@@ -791,5 +776,45 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return false;
+    }
+
+    /**
+     * When using the CLI or the endpoint, it returns the expected reload type
+     * @return If bundle update timing is disable, RELOAD if the new version is hot-reloadable, otherwise RESTART
+     *         If bundle update timing is enable:
+     *              - If automatic reload and hot-reloadable: AUTOMATIC RELOAD
+     *              - If automatic restart: AUTOMATIC RESTART
+     *              - If skipped: SKIPPED
+     *              - Otherwise: RELOAD/RESTART/SKIP or RESTART/SKIP depending on whether the bundle is hot reloadable
+     */
+    public static UpdateType getUpdateTypeForCliAndEndpoint() {
+        if (BundleUpdateTimingManager.isEnabled()) {
+            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+                // Automatic reload in progress
+                return UpdateType.AUTOMATIC_RELOAD;
+            }
+            if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+                // Skipped, automatic reload finished or automatic restart scheduled
+                BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+                if (candidateBundle != null && candidateBundle.isSkipped()) {
+                    return UpdateType.SKIPPED;
+                }
+                return SafeRestartMonitor.get().isActivated() ? UpdateType.AUTOMATIC_RESTART : UpdateType.AUTOMATIC_RELOAD;
+            }
+            BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
+            ConfigurationBundle asConfigurationBundle = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
+            if (candidateBundle != null && asConfigurationBundle != null) {
+                if (candidateBundle.isSkipped()) {
+                    return UpdateType.SKIPPED;
+                }
+
+                return asConfigurationBundle.isHotReloadable() ? UpdateType.RELOAD_OR_SKIP : UpdateType.RESTART_OR_SKIP;
+            }
+
+            // Something went wrong and the promotion didn't happen, so let's force the restart. Should not happen, it's a safe restart
+            return UpdateType.RESTART;
+        }
+
+        return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable() ? UpdateType.RELOAD : UpdateType.RESTART;
     }
 }

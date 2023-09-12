@@ -6,6 +6,8 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
+import com.cloudbees.opscenter.client.casc.UpdateType;
+
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import jenkins.model.Jenkins;
@@ -35,7 +37,7 @@ public class BundleVersionCheckerCommand extends CLICommand {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.BundleReloadAction.doGetBundleNewerVersion
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         try {
-            boolean reload = false;
+            UpdateType reload = null;
             // First, check if an update is available
             // Dev memo: this must go first because it will update the version of the bundle if needed
             boolean update = ConfigurationUpdaterHelper.checkForUpdates();
@@ -45,7 +47,7 @@ public class BundleVersionCheckerCommand extends CLICommand {
             }
 
             if (update) {
-                reload = ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+                reload = ConfigurationUpdaterHelper.getUpdateTypeForCliAndEndpoint();
             }
 
             Boolean quiet = quietArg == null ? null : Boolean.valueOf(quietArg);
