@@ -500,7 +500,7 @@ public class BundleReloadAction implements RootAction {
 
         if (!updateTab.canManualSkip()) {
             // Just in case a Safe restart is scheduled and meanwhile the user try to skip it
-            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored."), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. There is an automatic reload or restart that makes the skip operation ignored."), HttpServletResponse.SC_OK);
         }
 
         boolean skipped;
