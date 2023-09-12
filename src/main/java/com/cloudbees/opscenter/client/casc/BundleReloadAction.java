@@ -490,7 +490,7 @@ public class BundleReloadAction implements RootAction {
 
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
         if (!configuration.isEnabled()) {
-            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true"), HttpServletResponse.SC_NOT_FOUND);
+            return new JsonHttpResponse(new JSONObject().accumulate("error", "This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true"), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
         BundleVisualizationLink updateTab = BundleVisualizationLink.get();

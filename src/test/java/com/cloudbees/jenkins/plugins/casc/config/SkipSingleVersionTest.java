@@ -806,7 +806,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         // Call the skip endpoint
         resp = requestWithToken(HttpMethod.POST, "casc-bundle-mgnt/casc-bundle-skip", wc);
         response = JSONObject.fromObject(resp.getContentAsString());
-        assertThat("Bundle update timing disabled", resp.getStatusCode(), is(404));
+        assertThat("Bundle update timing disabled", resp.getStatusCode(), is(500));
         assertNotNull("Bundle update timing disabled", response.get("error"));
         assertThat("Bundle update timing disabled", response.get("error"), is("This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true"));
     }
