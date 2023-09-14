@@ -33,10 +33,10 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterMonitor;
+import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import com.cloudbees.opscenter.client.casc.UpdateType;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionSkipCommand;
@@ -177,8 +177,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertTrue("Bundle Update tab shows the Skip button", link.canManualSkip());
 
         // Reload (as if the user had clicked on the button)
-        assertTrue("Candidate is promoted", ConfigurationUpdaterHelper.promoteCandidate());
-        ExtensionList.lookupSingleton(BundleReloadAction.class).executeReload(false);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -283,8 +282,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertTrue("Monitor shows the Skip button", monitor.canManualSkip());
 
         // Reload (as if the user had clicked on the button)
-        assertTrue("Candidate is promoted", ConfigurationUpdaterHelper.promoteCandidate());
-        ExtensionList.lookupSingleton(BundleReloadAction.class).executeReload(false);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));

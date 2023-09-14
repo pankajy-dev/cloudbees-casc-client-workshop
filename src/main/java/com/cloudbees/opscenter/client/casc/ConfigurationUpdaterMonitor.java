@@ -1,10 +1,8 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
-import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -100,20 +98,8 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         if (req.hasParameter("restart")) {
-            if (isUpdateTimingEnabled()) {
-                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
-                    PromotionErrorMonitor.get().show();
-                    return HttpResponses.redirectViaContextPath("/manage");
-                }
-            }
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
-            if (isUpdateTimingEnabled()) {
-                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
-                    PromotionErrorMonitor.get().show();
-                    return HttpResponses.redirectViaContextPath("/manage");
-                }
-            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
