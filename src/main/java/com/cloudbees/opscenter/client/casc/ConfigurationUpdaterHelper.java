@@ -5,6 +5,9 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateStatus;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ContentBundleValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.DescriptorValidator;
@@ -175,6 +178,8 @@ public final class ConfigurationUpdaterHelper {
                         }
 
                         if (automaticReload && hotReloadable) {
+                            BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD,
+                                                              BundleUpdateLogActionSource.AUTOMATIC);
                             // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {

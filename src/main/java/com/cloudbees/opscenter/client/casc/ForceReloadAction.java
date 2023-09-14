@@ -1,6 +1,10 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
@@ -49,6 +53,7 @@ public class ForceReloadAction implements RootAction {
     public HttpResponse doForceReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
+        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         if (isHotReloadable()) {
             if (!realAction.tryReload(true)){
                 LOGGER.log(Level.INFO, "Configuration Bundle force reload has been requested but the current bundle can not be reloaded");

@@ -2,13 +2,15 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
-import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
@@ -77,11 +79,13 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "reload-bundle")
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
+        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             return new JsonHttpResponse(executeReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -102,6 +106,7 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "force-reload-bundle")
     public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
+        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             return new JsonHttpResponse(executeForceReload(asynchronous));
@@ -143,6 +148,7 @@ public class BundleReloadAction implements RootAction {
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
             LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
+            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "A reload is already in progress, please wait for it to complete");
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
         }
         if (tryReload(async)) {
@@ -212,6 +218,12 @@ public class BundleReloadAction implements RootAction {
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
             return true;
+        } else {
+            if (!ConfigurationBundleManager.isSet()) {
+                BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "Bundle is not configured");
+            } else {
+                BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "Bundle is not hot reloadable");
+            }
         }
         return false;
     }
@@ -272,6 +284,7 @@ public class BundleReloadAction implements RootAction {
         } catch (IOException | CasCException ex) {
             LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
             ConfigurationStatus.INSTANCE.setErrorInReload(true);
+            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
         } finally {
             ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
         }

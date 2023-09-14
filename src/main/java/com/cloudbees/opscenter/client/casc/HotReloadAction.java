@@ -1,6 +1,10 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
@@ -49,6 +53,7 @@ public class HotReloadAction implements RootAction {
     public HttpResponse doReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
+        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         if (!realAction.tryReload(true)){
             LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
         }

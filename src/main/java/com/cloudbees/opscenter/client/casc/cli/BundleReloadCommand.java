@@ -11,6 +11,8 @@ import hudson.cli.CLICommand;
 
 import jenkins.model.Jenkins;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 
 @Extension
@@ -42,6 +44,8 @@ public class BundleReloadCommand extends CLICommand {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         BundleReloadAction action = ExtensionList.lookupSingleton(BundleReloadAction.class);
+        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD,
+                                                          BundleUpdateLog.BundleUpdateLogActionSource.CLI);
         JSONObject json = action.executeReload(async);
 
         int retValue = 0;
