@@ -21,6 +21,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import net.sf.json.JSONObject;
 
@@ -50,6 +51,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -734,6 +736,47 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("No automatic reload, so new bundle no promoted", bundleUpdateTab.getUpdateVersion(), is("3"));
         assertThat("No automatic reload, so new bundle no promoted", bundleUpdateTab.getBundleVersion(), is("2"));
         assertThat("No automatic reload, so new bundle no promoted", Jenkins.get().getSystemMessage(), is("From version 2"));
+    }
+
+    // Bug fixes
+    @Issue("BEE-40025")
+    @Test
+    @WithBundleUpdateTiming("true")
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/AutomaticReloadTest/initial-bundle-version")
+    public void automaticReloadAndRestartWithInvalidBundle() throws Exception {
+        // Check initial configuration
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        assertTrue("Bundle Update Timing is enabled", configuration.isEnabled());
+
+        configuration.setAutomaticReload(true);
+        configuration.setAutomaticRestart(true);
+        configuration.save();
+
+        assertTrue("There is the automatic reload", configuration.isAutomaticReload());
+        assertTrue("There is the automatic restart", configuration.isAutomaticRestart());
+
+        ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
+        assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+        assertThat("Initial version is 1", Jenkins.get().getSystemMessage(), is("From version 1"));
+
+        // Update version to 2
+        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/AutomaticReloadTest/new-invalid-bundle-version").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        // Just in case the async reload hasn't finished
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
+        BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
+        assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+        assertNull("New bundle is rejected", bundleUpdateTab.getUpdateVersion());
+        assertThat("New bundle is rejected", bundleUpdateTab.getBundleVersion(), is("1"));
+        assertThat("New bundle is rejected", Jenkins.get().getSystemMessage(), is("From version 1"));
+
+        Path bundleFolder = ConfigurationBundleManager.getBundleFolder();
+        Path bundleDescriptor = bundleFolder.resolve("bundle.yaml");
+        String descriptor = FileUtils.readFileToString(bundleDescriptor.toFile(), StandardCharsets.UTF_8);
+        assertThat("New bundle isn't automatically promoted", descriptor, containsString("version: \"1\""));
     }
 
     private WebResponse requestWithToken(HttpMethod method, String endpoint, CJPRule.WebClient wc) throws Exception {

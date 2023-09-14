@@ -163,7 +163,7 @@ public final class ConfigurationUpdaterHelper {
                      * If not skipping, then the UI offers the Safe Restart and Reload buttons together with the new button “Skip Version” (use case 3). Details below.
                      * Clicking on Reload Configuration or in Safe Restart will perform the promote action before reloading or before restarting
                      */
-                    if (BundleUpdateTimingManager.isEnabled()) {
+                    if (newVersionIsValid && BundleUpdateTimingManager.isEnabled()) {
                         BundleUpdateTimingManager bundleUpdateTimingManager = BundleUpdateTimingManager.get();
                         boolean automaticReload = bundleUpdateTimingManager.isAutomaticReload();
                         boolean automaticRestart = bundleUpdateTimingManager.isAutomaticRestart();
