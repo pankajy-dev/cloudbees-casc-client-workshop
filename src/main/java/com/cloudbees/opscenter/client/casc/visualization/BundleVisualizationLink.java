@@ -35,6 +35,8 @@ import jenkins.model.Jenkins;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
@@ -429,6 +431,9 @@ public class BundleVisualizationLink extends ManagementLink {
                     return HttpResponses.redirectViaContextPath("/manage");
                 }
             }
+            BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RESTART,
+                                                              BundleUpdateLogActionSource.API,
+                                                              bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             if (isUpdateTimingEnabled()) {
@@ -444,6 +449,7 @@ public class BundleVisualizationLink extends ManagementLink {
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
+                BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");

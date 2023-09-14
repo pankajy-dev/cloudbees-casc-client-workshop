@@ -106,6 +106,8 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
                     return HttpResponses.redirectViaContextPath("/manage");
                 }
             }
+            BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.API,
+                                                              bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             if (isUpdateTimingEnabled()) {
