@@ -733,16 +733,23 @@ public final class ConfigurationUpdaterHelper {
             BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
             BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
             if (fromUpdateLog == null) {
+                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
                 LOGGER.log(Level.WARNING, "Attempt to skip a candidate that doesn't exist. Ignoring");
                 return false;
             }
             BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
             boolean skipped = candidateBundle.isSkipped();
+            if (skipped) {
+                BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
+            } else {
+                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
+            }
             ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
             ConfigurationBundleManager.refreshUpdateLog();
             return skipped;
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error skipping the candidate bundle", e);
+            BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, e.getMessage());
             return false;
         }
     }

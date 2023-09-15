@@ -1,8 +1,9 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
@@ -122,6 +123,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
             return HttpResponses.redirectViaContextPath("/manage");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
+                BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath("/manage");
