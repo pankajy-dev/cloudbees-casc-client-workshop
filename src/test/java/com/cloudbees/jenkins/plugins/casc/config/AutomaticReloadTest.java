@@ -37,9 +37,9 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
+import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import com.cloudbees.opscenter.client.casc.UpdateType;
 import com.cloudbees.opscenter.client.casc.cli.BundleReloadCommand;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
@@ -270,8 +270,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
 
         // Let's reload as if the user had clicked the button
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
-        ConfigurationUpdaterHelper.promoteCandidate();
-        ExtensionList.lookupSingleton(BundleReloadAction.class).executeReload(false);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -353,7 +352,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
 
         // Let's reload as if the user had clicked the button
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getConfigurationBundle().isHotReloadable());
-        ExtensionList.lookupSingleton(BundleReloadAction.class).executeReload(false);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));

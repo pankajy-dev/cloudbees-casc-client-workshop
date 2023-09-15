@@ -1,6 +1,9 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
+import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
@@ -39,7 +42,7 @@ public class HotReloadAction implements RootAction {
     }
 
     public boolean isHotReloadable() {
-        return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable();
+        return BundleVisualizationLink.get().isHotReloadable();
     }
 
     // Used by jelly
@@ -48,6 +51,15 @@ public class HotReloadAction implements RootAction {
     @RequirePOST
     public HttpResponse doReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
+        if (BundleUpdateTimingConfiguration.get().isEnabled()) {
+            if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                LOGGER.warning(() -> "Something failed promoting the new bundle version");
+                PromotionErrorMonitor.get().show();
+                // Redirecting to Manage as this way the administrative monitor shows up and the user is aware something went wrong
+                return HttpResponses.redirectViaContextPath("/manage");
+            }
+        }
+
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
         if (!realAction.tryReload(true)){
             LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
