@@ -13,7 +13,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -55,7 +57,7 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
     @Test
     @WithBundleUpdateTiming("true")
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/initial-bundle-version")
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/bundle-version-1")
     public void skipMultipleVersions() throws Exception {
         // Check initial configuration
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
@@ -66,16 +68,12 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
         configuration.setAutomaticRestart(false);
         configuration.save();
 
-        assertTrue("Skip All New Versions is configured", configuration.isSkipNewVersions());
-        assertFalse("There is no automatic reload/restart", configuration.isAutomaticReload());
-        assertFalse("There is no automatic reload/restart", configuration.isAutomaticRestart());
-
         ConfigurationBundleManager bundleManager = ConfigurationBundleManager.get();
         assertThat("Initial version is 1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
 
         // Update version to 2
         System.setProperty("core.casc.config.bundle", Paths
-                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/second-bundle-version").toFile().getAbsolutePath());
+                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/bundle-version-2").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
         verifyCurrentUpdateStatus(
@@ -89,7 +87,7 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
 
         // Update version to 3
         System.setProperty("core.casc.config.bundle", Paths
-                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/third-bundle-version").toFile().getAbsolutePath());
+                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/bundle-version-3").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
         verifyCurrentUpdateStatus(
@@ -99,6 +97,46 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
                 "1",
                 "3",
                 true
+        );
+
+        configuration.setSkipNewVersions(false);
+        configuration.setAutomaticReload(false);
+        configuration.setAutomaticRestart(false);
+        configuration.save();
+
+        // Update version to 4
+        System.setProperty("core.casc.config.bundle", Paths
+                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/bundle-version-4").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        verifyCurrentUpdateStatus(
+                "Skipped from 1 to 4",
+                BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                "1",
+                "4",
+                false
+        );
+
+        configuration.setSkipNewVersions(false);
+        configuration.setAutomaticReload(true);
+        configuration.setAutomaticRestart(false);
+        configuration.save();
+
+        // Update version to 5
+        System.setProperty("core.casc.config.bundle", Paths
+                .get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/BundleUpdateStatusTest/bundle-version-5").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+
+        // Just in case the async reload hasn't finished
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        verifyCurrentUpdateStatus(
+                "Auto reload from 1 to 5",
+                BundleUpdateLog.BundleUpdateLogAction.RELOAD,
+                BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
+                "1",
+                "5",
+                false
         );
     }
 
