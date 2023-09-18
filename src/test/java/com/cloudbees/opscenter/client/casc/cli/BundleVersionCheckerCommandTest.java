@@ -44,7 +44,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-2.zip", true);
         assertVersions(jsonResult, "version-2.zip", "1", empty(), "2", empty(), true);
-        assertUpdateType(jsonResult, "version-2.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-2.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -74,7 +74,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-5.zip", true);
         assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
-        assertUpdateType(jsonResult, "version-5.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-5.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -94,8 +94,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-7.zip", true);
-        assertVersions(jsonResult, "version-7.zip", "5", empty(), "7", empty(), true);
-        assertUpdateType(jsonResult, "version-7.zip", "RELOAD");
+        assertVersions(jsonResult, "version-7.zip", "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), "7", empty(), true);
+        assertUpdateType(jsonResult, "version-7.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -107,7 +107,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-8.zip", true);
         assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), true);
-        assertUpdateType(jsonResult, "version-8.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-8.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -118,8 +118,8 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-9.zip", true);
-        assertVersions(jsonResult, "version-9.zip", "8", empty(), "9", empty(), true);
-        assertUpdateType(jsonResult, "version-9.zip", "RELOAD");
+        assertVersions(jsonResult, "version-9.zip", "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), "9", empty(), true);
+        assertUpdateType(jsonResult, "version-9.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
@@ -143,7 +143,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-11.zip", true);
         assertVersions(jsonResult, "version-11.zip", "9", empty(), "11", empty(), true);
-        assertUpdateType(jsonResult, "version-11.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-11.zip", "RELOAD/RESTART/SKIP");
         assertThat("We should get a list with 2 items", jsonResult.getJSONObject("items").getJSONArray("deletions"), hasSize(2));
         assertThat("Created items should be in deletions list", jsonResult.getJSONObject("items").getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too"));
     }

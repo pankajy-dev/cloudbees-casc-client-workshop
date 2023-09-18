@@ -89,6 +89,10 @@ public class BundleReloadAction implements RootAction {
                 if (configuration.isAutomaticReload()) {
                     return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Automatic reload configured. It's not possible to manually reload the bundle. If there is any issue, proceed with a restart"));
                 } else {
+                    if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
+                        LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", Jenkins.getAuthentication2().getName());
+                        return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete"));
+                    }
                     if (!ConfigurationUpdaterHelper.promoteCandidate()) {
                         return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Bundle could not be promoted. Proceed with a restart"));
                     }

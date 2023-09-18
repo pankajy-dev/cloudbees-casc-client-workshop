@@ -306,14 +306,19 @@ public final class ConfigurationUpdaterHelper {
         currentBundle.accumulate("validations", currentValidations);
 
         versionSummary.accumulate("current-bundle", currentBundle);
+        boolean updateTimingEnabled = BundleUpdateTimingManager.isEnabled();
         if (update || bundleInfo.isCandidateAvailable()) {
             JSONObject newAvailable = new JSONObject();
-            final boolean valid = !bundleInfo.isCandidateAvailable();
-            newAvailable.accumulate("version", valid
-                    ? StringUtils.defaultString(bundleInfo.getDownloadedBundleVersion(), "N/A")
-                    : StringUtils.defaultString(bundleInfo.getCandidate().getVersion(), "N/A"));
+            final boolean valid = bundleInfo.isUpdateAvailable();
+            String newVersion = updateTimingEnabled ? bundleInfo.getUpdateVersion() : bundleInfo.getDownloadedBundleVersion();
+            newAvailable.accumulate("version", valid ? StringUtils.defaultString(newVersion, "N/A") : StringUtils.defaultString(bundleInfo.getCandidate().getVersion(), "N/A"));
             newAvailable.accumulate("valid", valid);
-            BundleVisualizationLink.ValidationSection validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
+            BundleVisualizationLink.ValidationSection validations = null;
+            if (updateTimingEnabled) {
+                validations = bundleInfo.getCandidate().getValidations();
+            } else {
+                validations = valid ? bundleInfo.getBundleValidations() : bundleInfo.getCandidate().getValidations();
+            }
             JSONArray newValidations = new JSONArray();
             newValidations.addAll(getValidations(validations, quiet));
             newAvailable.accumulate("validations", newValidations);
@@ -322,7 +327,7 @@ public final class ConfigurationUpdaterHelper {
         json.accumulate("versions", versionSummary);
 
         if (update) {
-            if (BundleUpdateTimingManager.isEnabled()) {
+            if (updateTimingEnabled) {
                 BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                 if (candidateBundle != null && !candidateBundle.isInvalid()) {
                     json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
@@ -334,16 +339,21 @@ public final class ConfigurationUpdaterHelper {
                 json.accumulate("update-type", updateType != null ? updateType.label : UpdateType.UNKNOWN);
             }
         }
-        // Getting items that will be deleted on the update
-        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
-        try {
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            JSONArray deletions = new JSONArray();
-            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
-            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
-            json.accumulate("items", responseContent);
-        } catch (CasCException ex){
-            LOGGER.log(Level.WARNING, "Error while checking deletions, invalid remove strategy provided");
+        if (update || bundleInfo.isCandidateAvailable()) {
+            // Getting items that will be deleted on the update
+            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+            try {
+                ConfigurationBundle bundle = updateTimingEnabled ? ConfigurationBundleManager.get().getCandidateAsConfigurationBundle() : ConfigurationBundleManager.get().getConfigurationBundle();
+                if (bundle == null) {
+                    throw new CasCException("Cannot read the candidate bundle");
+                } JSONArray deletions = new JSONArray();
+                deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
+                JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
+                json.accumulate("items", responseContent);
+            } catch (CasCException ex) {
+                json.accumulate("items", ex.getMessage());
+                LOGGER.log(Level.WARNING, "Error while checking deletions", ex);
+            }
         }
 
         return json;
