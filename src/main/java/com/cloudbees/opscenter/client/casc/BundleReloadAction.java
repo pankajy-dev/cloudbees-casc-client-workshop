@@ -79,7 +79,7 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "reload-bundle")
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
-        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             return new JsonHttpResponse(executeReload(asynchronous));
@@ -106,7 +106,7 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "force-reload-bundle")
     public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
-        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             return new JsonHttpResponse(executeForceReload(asynchronous));

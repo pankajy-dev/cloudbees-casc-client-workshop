@@ -53,7 +53,7 @@ public class HotReloadAction implements RootAction {
     public HttpResponse doReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
-        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         if (!realAction.tryReload(true)){
             LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
         }

@@ -431,9 +431,9 @@ public class BundleVisualizationLink extends ManagementLink {
                     return HttpResponses.redirectViaContextPath("/manage");
                 }
             }
-            BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RESTART,
-                                                              BundleUpdateLogActionSource.API,
-                                                              bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,
+                                                                BundleUpdateLogActionSource.API,
+                                                                bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             if (isUpdateTimingEnabled()) {
@@ -449,7 +449,7 @@ public class BundleVisualizationLink extends ManagementLink {
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
-                BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
+                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");

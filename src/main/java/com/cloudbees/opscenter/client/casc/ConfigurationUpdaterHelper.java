@@ -178,8 +178,8 @@ public final class ConfigurationUpdaterHelper {
                         }
 
                         if (automaticReload && hotReloadable) {
-                            BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD,
-                                                              BundleUpdateLogActionSource.AUTOMATIC);
+                            BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD,
+                                                                BundleUpdateLogActionSource.AUTOMATIC);
                             // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {

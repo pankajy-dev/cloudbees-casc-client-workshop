@@ -53,7 +53,7 @@ public class ForceReloadAction implements RootAction {
     public HttpResponse doForceReload() {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
-        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         if (isHotReloadable()) {
             if (!realAction.tryReload(true)){
                 LOGGER.log(Level.INFO, "Configuration Bundle force reload has been requested but the current bundle can not be reloaded");

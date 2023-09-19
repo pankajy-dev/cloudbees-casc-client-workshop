@@ -44,8 +44,8 @@ public class BundleReloadCommand extends CLICommand {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         BundleReloadAction action = ExtensionList.lookupSingleton(BundleReloadAction.class);
-        BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RELOAD,
-                                                          BundleUpdateLog.BundleUpdateLogActionSource.CLI);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD,
+                                                            BundleUpdateLog.BundleUpdateLogActionSource.CLI);
         JSONObject json = action.executeReload(async);
 
         int retValue = 0;

@@ -107,8 +107,8 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
                     return HttpResponses.redirectViaContextPath("/manage");
                 }
             }
-            BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.API,
-                                                              bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.API,
+                                                                bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             if (isUpdateTimingEnabled()) {
@@ -123,7 +123,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
             return HttpResponses.redirectViaContextPath("/manage");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
-                BundleUpdateLog.BundleUpdateStatus.startNewAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
+                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath("/manage");
