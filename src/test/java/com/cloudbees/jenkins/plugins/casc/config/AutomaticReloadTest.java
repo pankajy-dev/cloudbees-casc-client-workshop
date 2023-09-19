@@ -466,8 +466,8 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("New bundle cannot be hot loaded", Jenkins.get().getSystemMessage(), is("From version 2"));
 
         verifyCurrentUpdateStatus("No automatic reload",
-                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
                                   "2",
                                   "3"
         );
