@@ -346,7 +346,8 @@ public final class ConfigurationUpdaterHelper {
                 ConfigurationBundle bundle = updateTimingEnabled ? ConfigurationBundleManager.get().getCandidateAsConfigurationBundle() : ConfigurationBundleManager.get().getConfigurationBundle();
                 if (bundle == null) {
                     throw new CasCException("Cannot read the candidate bundle");
-                } JSONArray deletions = new JSONArray();
+                } 
+                JSONArray deletions = new JSONArray();
                 deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
                 JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
                 json.accumulate("items", responseContent);
