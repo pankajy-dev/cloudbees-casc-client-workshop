@@ -317,7 +317,6 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
         assertThat("New bundle is now loaded", bundleUpdateTab.getBundleVersion(), is("2"));
 
-        // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.API,

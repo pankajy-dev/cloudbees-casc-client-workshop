@@ -223,7 +223,6 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
         assertThat("Bundle version in the newest record", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
 
-        // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLogActionSource.API,
@@ -341,7 +340,6 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         assertFalse("Marker file for skipped version is NOT there", Files.exists(updateLog.get(0).resolve(BundleUpdateLog.SKIPPED_MARKER_FILE)));
         assertThat("Bundle version in the newest record", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
 
-        // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLogActionSource.API,

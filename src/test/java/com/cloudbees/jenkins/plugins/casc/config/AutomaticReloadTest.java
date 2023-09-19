@@ -336,7 +336,6 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("New bundle is now loaded", bundleUpdateTab.getBundleVersion(), is("2"));
         assertThat("New bundle is now loaded", Jenkins.get().getSystemMessage(), is("From version 2"));
 
-        // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reload using the Java API",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.API,
@@ -448,7 +447,6 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("New bundle is now loaded", bundleUpdateTab.getBundleVersion(), is("2"));
         assertThat("New bundle is now loaded", Jenkins.get().getSystemMessage(), is("From version 2"));
 
-        // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded with Java API",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.API,
