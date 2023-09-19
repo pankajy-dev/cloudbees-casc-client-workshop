@@ -423,16 +423,18 @@ public class BundleVisualizationLink extends ManagementLink {
 
         if (req.hasParameter("restart")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,
-                                                                BundleUpdateLogActionSource.API,
+                                                                BundleUpdateLogActionSource.MANUAL,
                                                                 bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("force")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
-                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.API);
+                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.MANUAL);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");

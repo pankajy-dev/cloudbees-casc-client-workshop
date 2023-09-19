@@ -65,7 +65,13 @@ public class HotReloadAction implements RootAction {
         }
 
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
-        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+        BundleUpdateLog.BundleUpdateStatus.updateCurrent(bundleUpdateStatus -> {
+            if (!bundleUpdateStatus.isOngoingAction()) {
+                // if there is no ongoing action, then the API has been called directly
+                bundleUpdateStatus.setAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
+            }
+            // else it is called from BundleVisualizationLink or ConfigurationUpdaterMonitor
+        });
         if (!realAction.tryReload(true)){
             LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
         }
