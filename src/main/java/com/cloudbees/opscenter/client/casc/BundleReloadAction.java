@@ -121,9 +121,9 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "force-reload-bundle")
     public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
-        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             return new JsonHttpResponse(executeForceReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
