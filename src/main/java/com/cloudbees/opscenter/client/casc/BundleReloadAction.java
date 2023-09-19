@@ -163,7 +163,6 @@ public class BundleReloadAction implements RootAction {
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
             LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
-            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "A reload is already in progress, please wait for it to complete");
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
         }
         if (tryReload(async)) {
