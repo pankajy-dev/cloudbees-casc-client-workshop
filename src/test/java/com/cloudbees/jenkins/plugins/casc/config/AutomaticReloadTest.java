@@ -451,7 +451,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded with Java API",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.UNKNOWN,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.API,
                                   "1",
                                   "2"
         );

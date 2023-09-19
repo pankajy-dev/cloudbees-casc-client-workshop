@@ -111,8 +111,8 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
 
         verifyCurrentUpdateStatus(
                 "Skipped from 1 to 4",
-                BundleUpdateLog.BundleUpdateLogAction.SKIP,
-                BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
+                BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                BundleUpdateLog.BundleUpdateLogActionSource.INIT,
                 "1",
                 "4",
                 false
