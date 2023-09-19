@@ -163,7 +163,7 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.45</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.46-20230919.160527-5</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>
