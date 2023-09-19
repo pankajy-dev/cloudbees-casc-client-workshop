@@ -226,7 +226,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLogAction.RELOAD,
-                                  BundleUpdateLogActionSource.UNKNOWN,
+                                  BundleUpdateLogActionSource.API,
                                   false
         );
     }
@@ -344,7 +344,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLogAction.RELOAD,
-                                  BundleUpdateLogActionSource.UNKNOWN,
+                                  BundleUpdateLogActionSource.API,
                                   false
         );
     }

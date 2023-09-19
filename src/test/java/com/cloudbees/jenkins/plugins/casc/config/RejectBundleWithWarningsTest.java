@@ -381,8 +381,8 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
 
         verifyCurrentUpdateStatus("Accepted but no automatic reload",
-                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
                                   "1",
                                   "2"
         );
@@ -415,8 +415,8 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
 
         verifyCurrentUpdateStatus("Accepted but no automatic reload",
-                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
                                   "1",
                                   "2"
         );

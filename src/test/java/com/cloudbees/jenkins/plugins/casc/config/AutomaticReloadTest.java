@@ -339,7 +339,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reload using the Java API",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.UNKNOWN,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.API,
                                   "1",
                                   "2"
         );
@@ -395,8 +395,8 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("New bundle isn't hot loaded", Jenkins.get().getSystemMessage(), is("From version 1"));
 
         verifyCurrentUpdateStatus("No automatic reload",
-                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
                                   "1",
                                   "2"
         );
@@ -432,8 +432,8 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("New bundle isn't hot loaded", Jenkins.get().getSystemMessage(), is("From version 1"));
 
         verifyCurrentUpdateStatus("No automatic reload",
-                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
                                   "1",
                                   "2"
         );

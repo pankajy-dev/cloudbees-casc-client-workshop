@@ -320,7 +320,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         // Unknown because the Java API was called directly
         verifyCurrentUpdateStatus("Reloaded",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
-                                  BundleUpdateLog.BundleUpdateLogActionSource.UNKNOWN,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.API,
                                   false
         );
     }
