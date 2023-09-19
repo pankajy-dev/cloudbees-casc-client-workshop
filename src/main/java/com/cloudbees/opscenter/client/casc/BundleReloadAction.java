@@ -84,9 +84,9 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "reload-bundle")
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
-        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
             if (configuration.isEnabled()) {
                 if (configuration.isAutomaticReload()) {
