@@ -40,7 +40,6 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
-import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
@@ -423,27 +422,11 @@ public class BundleVisualizationLink extends ManagementLink {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         if (req.hasParameter("restart")) {
-            if (isUpdateTimingEnabled()) {
-                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
-                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
-                    PromotionErrorMonitor.get().show();
-                    // Redirecting to Manage as this way the administrative monitor shows up and the user is aware something went wrong
-                    return HttpResponses.redirectViaContextPath("/manage");
-                }
-            }
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,
                                                                 BundleUpdateLogActionSource.API,
                                                                 bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
-            if (isUpdateTimingEnabled()) {
-                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
-                    LOGGER.warning(() -> "Something failed promoting the new bundle version");
-                    PromotionErrorMonitor.get().show();
-                    // Redirecting to Manage as this way the administrative monitor shows up and the user is aware something went wrong
-                    return HttpResponses.redirectViaContextPath("/manage");
-                }
-            }
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("force")) {
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");

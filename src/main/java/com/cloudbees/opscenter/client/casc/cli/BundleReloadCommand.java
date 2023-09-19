@@ -13,7 +13,9 @@ import jenkins.model.Jenkins;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.opscenter.client.casc.BundleReloadAction;
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 @Extension
 public class BundleReloadCommand extends CLICommand {
@@ -43,6 +45,18 @@ public class BundleReloadCommand extends CLICommand {
     protected int run() throws Exception {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        if (configuration.isEnabled()) {
+            if (configuration.isAutomaticReload()) {
+                stderr.println("Automatic reload configured. It's not possible to manually reload the bundle. If there is any issue, proceed with a restart");
+                return 0;
+            } else {
+                if (!ConfigurationUpdaterHelper.promoteCandidate()) {
+                    stderr.println("Bundle could not be promoted. Proceed with a restart");
+                    return 0;
+                }
+            }
+        }
         BundleReloadAction action = ExtensionList.lookupSingleton(BundleReloadAction.class);
         BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD,
                                                             BundleUpdateLog.BundleUpdateLogActionSource.CLI);
