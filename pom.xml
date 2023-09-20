@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>184</version>
+    <version>189</version>
     <relativePath />
   </parent>
 
@@ -201,7 +201,7 @@
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
       <artifactId>wiremock-jre8-standalone</artifactId>
-      <version>2.35.0</version>
+      <version>2.35.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

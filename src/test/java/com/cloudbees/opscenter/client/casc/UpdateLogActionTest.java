@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import org.htmlunit.TextPage;
@@ -88,6 +89,10 @@ public class UpdateLogActionTest extends AbstractCJPTest {
     @WithEnvelope(TestEnvelope.class)
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-1.zip")
     public void update_bundles() throws Exception {
+        BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
+        configuration.setAutomaticReload(true);
+        configuration.save();
+
         // Instance started up with version 1 - Valid
         ConfigurationBundleManager cbm = ConfigurationBundleManager.get();
         BundleUpdateLog updateLog = cbm.getUpdateLog();

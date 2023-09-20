@@ -202,7 +202,7 @@ public class ConfigurationBundleService {
      * @throws CasCException If the remove strategy indicated is not supported
      */
     public List<String> getDeletionsOnReload(ConfigurationBundle bundle) throws CasCException {
-        List<String> itemsYaml = ConfigurationBundleManager.get().getConfigurationBundle().getItems();
+        List<String> itemsYaml = bundle.getItems();
         ItemsProcessor itemsProcessor = ItemsProcessor.from(itemsYaml, bundle.getItemRemoveStrategy());
         RemoveStrategyProcessor removeStrategyProcessor = itemsProcessor.getRemoveStrategy();
         return removeStrategyProcessor.getItemsToRemove();

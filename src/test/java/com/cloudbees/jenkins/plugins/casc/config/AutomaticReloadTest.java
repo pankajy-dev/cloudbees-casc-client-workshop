@@ -81,7 +81,8 @@ import static org.junit.Assert.assertTrue;
  *   i. New bundle version is hot reloadable, so it doesn't force the reload
  *   ii. New bundle version is hot reloadable, so it doesn't force the reload
  */
-@Ignore // see https://cloudbees.slack.com/archives/C0427CCHN5C/p1695145598395809
+@Ignore("Temporary ignored to unblock https://github.com/cloudbees/cloudbees-casc-client-plugin/pull/188/")
+// TODO Remove ignore in a follow up PR
 public class AutomaticReloadTest extends AbstractCJPTest {
 
     @ClassRule
