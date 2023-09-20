@@ -101,7 +101,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
 
         if (req.hasParameter("restart")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.MANUAL,
-                                                                bundleUpdateStatus -> bundleUpdateStatus.setSuccess(true));
+                                                                BundleUpdateLog.BundleUpdateStatus::success);
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);

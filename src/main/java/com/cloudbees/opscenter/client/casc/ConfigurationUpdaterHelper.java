@@ -206,7 +206,7 @@ public final class ConfigurationUpdaterHelper {
                             }
                             if (automaticRestart) {
                                 SafeRestartMonitor.get().show();
-                                BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.AUTOMATIC);
+                                BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.AUTOMATIC, BundleUpdateLog.BundleUpdateStatus::success);
                                 try {
                                     Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
                                     ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
