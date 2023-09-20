@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
@@ -183,6 +185,7 @@ public class ConfigurationBundleService {
                 } else {
                     BundleReload.reload(bundle);
                 }
+                BundleUpdateLog.BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.RELOAD);
             } finally {
                 // Differences are not valid anymore if:
                 //   1. bundle is reloaded

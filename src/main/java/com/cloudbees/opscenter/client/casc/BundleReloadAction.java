@@ -3,6 +3,9 @@ package com.cloudbees.opscenter.client.casc;
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
@@ -12,7 +15,6 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
-import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
@@ -84,6 +86,7 @@ public class BundleReloadAction implements RootAction {
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
             if (configuration.isEnabled()) {
                 if (configuration.isAutomaticReload()) {
@@ -101,6 +104,7 @@ public class BundleReloadAction implements RootAction {
             return new JsonHttpResponse(executeReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
+            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -123,6 +127,7 @@ public class BundleReloadAction implements RootAction {
     public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             return new JsonHttpResponse(executeForceReload(asynchronous));
         } catch (CasCException | IOException ex) {
             LOGGER.log(Level.WARNING, "Error while reloading the bundle", ex);
@@ -231,6 +236,12 @@ public class BundleReloadAction implements RootAction {
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
             return true;
+        } else {
+            if (!ConfigurationBundleManager.isSet()) {
+                BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "Bundle is not configured");
+            } else {
+                BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, "Bundle is not hot reloadable");
+            }
         }
         return false;
     }
@@ -291,6 +302,7 @@ public class BundleReloadAction implements RootAction {
         } catch (IOException | CasCException ex) {
             LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
             ConfigurationStatus.INSTANCE.setErrorInReload(true);
+            BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
         } finally {
             ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
         }

@@ -1,0 +1,6 @@
+id: "bundle"
+version: "5"
+apiVersion: "1"
+description: "Testing bundle"
+jcasc:
+  - "jenkins.yaml"

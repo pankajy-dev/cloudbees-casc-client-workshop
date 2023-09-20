@@ -5,6 +5,9 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateStatus;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ContentBundleValidator;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.DescriptorValidator;
@@ -178,6 +181,8 @@ public final class ConfigurationUpdaterHelper {
                         }
 
                         if (automaticReload && hotReloadable) {
+                            BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD,
+                                                                BundleUpdateLogActionSource.AUTOMATIC);
                             // try to apply the hot reload
                             BundleReloadAction bundleReloadAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
                             if (bundleReloadAction.executeReload(true).getBoolean("reloaded")) {
@@ -201,6 +206,7 @@ public final class ConfigurationUpdaterHelper {
                             }
                             if (automaticRestart) {
                                 SafeRestartMonitor.get().show();
+                                BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.AUTOMATIC, BundleUpdateLog.BundleUpdateStatus::success);
                                 try {
                                     Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
                                     ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
@@ -729,10 +735,16 @@ public final class ConfigurationUpdaterHelper {
             BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
             BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
             if (fromUpdateLog == null) {
+                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
                 throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
             }
             BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
             boolean skipped = candidateBundle.isSkipped();
+            if (skipped) {
+                BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
+            } else {
+                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
+            }
             ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
             ConfigurationBundleManager.refreshUpdateLog();
             return skipped;

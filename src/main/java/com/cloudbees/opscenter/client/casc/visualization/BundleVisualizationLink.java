@@ -35,6 +35,8 @@ import jenkins.model.Jenkins;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
@@ -420,13 +422,19 @@ public class BundleVisualizationLink extends ManagementLink {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
 
         if (req.hasParameter("restart")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,
+                                                                BundleUpdateLogActionSource.MANUAL,
+                                                                BundleUpdateLog.BundleUpdateStatus::success);
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("force")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCForceReload");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
+                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.MANUAL);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath(this.getUrlName() + "/bundleUpdate");

@@ -1,7 +1,9 @@
 package com.cloudbees.jenkins.plugins.casc.config;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,9 +16,13 @@ import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -39,6 +45,25 @@ import static org.junit.Assert.assertTrue;
  *  d. New bundle version with errors but without warnings, so it's rejected
  */
 public class RejectBundleWithWarningsTest extends AbstractCJPTest {
+
+    private static void verifyCurrentUpdateStatus(
+            String message,
+            BundleUpdateLog.BundleUpdateLogAction action,
+            BundleUpdateLog.BundleUpdateLogActionSource source,
+            String fromBundle,
+            String toBundle
+    ) {
+        BundleUpdateLog.BundleUpdateStatus current = BundleUpdateLog.BundleUpdateStatus.getCurrent();
+        assertThat("BundleUpdateStatus should exists", current, notNullValue());
+        assertThat(message, current.getAction(), is(action));
+        assertThat(message, current.getSource(), is(source));
+        assertThat("From bundle " + fromBundle, current.getFromBundleVersion(), is(fromBundle));
+        assertThat("To bundle " + toBundle, current.getToBundleVersion(), is(toBundle));
+        assertTrue("Action should be a success", current.isSuccess());
+        assertNull("Action should be a success", current.getError());
+        assertFalse("Skipped should be false", current.isSkipped());
+        assertFalse("Action is finished", current.isOngoingAction());
+    }
 
     @Before
     public void setUp() {
@@ -73,7 +98,18 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/RejectBundleWithWarningsTest/new-valid").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
 
+        // Just in case the async reload hasn't finished
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        verifyCurrentUpdateStatus(
+                "Automatic reload",
+                BundleUpdateLog.BundleUpdateLogAction.RELOAD,
+                BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
+                "1",
+                "2"
+        );
     }
 
     // I.a.ii
@@ -101,6 +137,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.a.iii
@@ -128,6 +171,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.a.iv
@@ -155,6 +205,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.b.i
@@ -182,6 +239,15 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        // Just in case the async reload hasn't finished
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        verifyCurrentUpdateStatus("Automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.RELOAD,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.b.ii
@@ -209,6 +275,15 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        // Just in case the async reload hasn't finished
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        verifyCurrentUpdateStatus("Automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.RELOAD,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.b.iii
@@ -236,6 +311,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // I.b.iv
@@ -263,6 +345,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // II.a
@@ -290,6 +379,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        verifyCurrentUpdateStatus("Accepted but no automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
+                                  "1",
+                                  "2"
+        );
     }
 
     // II.b
@@ -317,6 +413,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
+
+        verifyCurrentUpdateStatus("Accepted but no automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.RESTART,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.MANUAL,
+                                  "1",
+                                  "2"
+        );
     }
 
     // II.c
@@ -344,6 +447,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
     // II.d
@@ -371,6 +481,13 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));
+
+        verifyCurrentUpdateStatus("No automatic reload",
+                                  BundleUpdateLog.BundleUpdateLogAction.CREATE,
+                                  BundleUpdateLog.BundleUpdateLogActionSource.INIT,
+                                  "1",
+                                  "2"
+        );
     }
 
 }

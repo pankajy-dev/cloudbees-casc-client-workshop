@@ -11,6 +11,8 @@ import hudson.cli.CLICommand;
 
 import jenkins.model.Jenkins;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
@@ -56,6 +58,8 @@ public class BundleReloadCommand extends CLICommand {
             }
         }
         BundleReloadAction action = ExtensionList.lookupSingleton(BundleReloadAction.class);
+        BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD,
+                                                            BundleUpdateLog.BundleUpdateLogActionSource.CLI);
         JSONObject json = action.executeReload(async);
 
         int retValue = 0;

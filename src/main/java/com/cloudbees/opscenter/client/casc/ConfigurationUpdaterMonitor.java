@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
@@ -98,14 +100,18 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         if (req.hasParameter("restart")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.MANUAL,
+                                                                BundleUpdateLog.BundleUpdateStatus::success);
             return HttpResponses.redirectViaContextPath("/safeRestart");
         } else if (req.hasParameter("reload")) {
+            BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             return HttpResponses.redirectViaContextPath("/manage");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {
+                BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.SKIP, BundleUpdateLogActionSource.MANUAL);
                 ConfigurationUpdaterHelper.skipCandidate();
             }
             return HttpResponses.redirectViaContextPath("/manage");
