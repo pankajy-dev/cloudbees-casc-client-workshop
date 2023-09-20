@@ -20,6 +20,7 @@ import org.htmlunit.WebResponse;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
@@ -80,6 +81,7 @@ import static org.junit.Assert.assertTrue;
  *   i. New bundle version is hot reloadable, so it doesn't force the reload
  *   ii. New bundle version is hot reloadable, so it doesn't force the reload
  */
+@Ignore // see https://cloudbees.slack.com/archives/C0427CCHN5C/p1695145598395809
 public class AutomaticReloadTest extends AbstractCJPTest {
 
     @ClassRule
