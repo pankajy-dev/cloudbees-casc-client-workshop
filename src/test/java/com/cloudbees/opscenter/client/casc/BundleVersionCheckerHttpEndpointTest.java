@@ -40,7 +40,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-2.zip", true);
         assertVersions(jsonResult, "version-2.zip", "1", empty(), "2", empty(), true);
-        assertUpdateType(jsonResult, "version-2.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-2.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
         // Updated to version 3 - Without version - Ignored
@@ -65,7 +65,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-5.zip", true);
         assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
-        assertUpdateType(jsonResult, "version-5.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-5.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
         // Updated to version 6 - Invalid
@@ -81,8 +81,8 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-7.zip", true);
-        assertVersions(jsonResult, "version-7.zip", "5", empty(), "7", empty(), true);
-        assertUpdateType(jsonResult, "version-7.zip", "RELOAD");
+        assertVersions(jsonResult, "version-7.zip", "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), "7", empty(), true);
+        assertUpdateType(jsonResult, "version-7.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
         // Updated to version 8 - Valid structure / Invalid jenkins.yaml only warnings
@@ -91,7 +91,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-8.zip", true);
         assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), true);
-        assertUpdateType(jsonResult, "version-8.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-8.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
         // Updated to version 9 - Valid
@@ -99,8 +99,8 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-9.zip", true);
-        assertVersions(jsonResult, "version-9.zip", "8", empty(), "9", empty(), true);
-        assertUpdateType(jsonResult, "version-9.zip", "RELOAD");
+        assertVersions(jsonResult, "version-9.zip", "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), "9", empty(), true);
+        assertUpdateType(jsonResult, "version-9.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
         // Updated to version 10 - Valid structure / Invalid jenkins.yaml
@@ -117,7 +117,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-11.zip", true);
         assertVersions(jsonResult, "version-11.zip", "9", empty(), "11", empty(), true);
-        assertUpdateType(jsonResult, "version-11.zip", "RELOAD");
+        assertUpdateType(jsonResult, "version-11.zip", "RELOAD/RESTART/SKIP");
     }
 
     public static WebResponse requestWithToken(HttpMethod method, URL fullURL, User asUser, CJPRule.WebClient wc)

@@ -130,8 +130,8 @@ public class HotReloadTest extends AbstractIMTest {
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-2").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
-        boolean reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
-        assertTrue(reloaded);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName())));
@@ -140,8 +140,8 @@ public class HotReloadTest extends AbstractIMTest {
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-3").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
-        reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
-        assertTrue(reloaded);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Only JCasC has changed, thus partial reload. Expected JCasCReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName())));
         assertThat("Only JCasC has changed, thus partial reload. Not expected ItemsReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName()))));
         assertThat("Only JCasC has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));
@@ -150,8 +150,8 @@ public class HotReloadTest extends AbstractIMTest {
         loggerRule.capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-4").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
-        reloaded = ExtensionList.lookupSingleton(BundleReloadAction.class).tryReload(); // Reload the bundle
-        assertTrue(reloaded);
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         assertThat("Only items has changed, thus partial reload. Not expected JCasCReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + JCasCReload.class.getName()))));
         assertThat("Only items has changed, thus partial reload. Expected ItemsAndRbacReload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.ItemsReload.class.getName())));
         assertThat("Only items has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));

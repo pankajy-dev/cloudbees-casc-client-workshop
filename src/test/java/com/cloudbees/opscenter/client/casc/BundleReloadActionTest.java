@@ -112,7 +112,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("There's a new version available", response.getBoolean("update-available"));
-        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD", response.get("update-type")));
+        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD/RESTART/SKIP", response.get("update-type")));
 
         CLICommandInvoker.Result result =
                 new CLICommandInvoker(rule, BundleVersionCheckerCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
@@ -124,7 +124,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
         assertThat("There's a new version available", response.getBoolean("update-available"));
-        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD", response.get("update-type")));
+        assertThat("", response.get("update-type") != null && Objects.equals("RELOAD/RESTART/SKIP", response.get("update-type")));
 
         // WHEN the bundle is hot reloadable
         // THEN Admin should get a 200 with reloaded: true
