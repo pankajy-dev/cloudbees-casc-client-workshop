@@ -778,8 +778,8 @@ public final class ConfigurationUpdaterHelper {
         boolean hotReloadable = isHotReloadable(promoted);
         ConfigurationBundleManager.get().getConfigurationBundle().setHotReloadable(hotReloadable);
 
-        String currentVersion = StringUtils.defaultString(currentBundle.getVersion());
-        String promotedVersion = StringUtils.defaultString(promoted.getVersion());
+        String currentVersion = StringUtils.defaultString(currentBundle.getBundleInfo());
+        String promotedVersion = StringUtils.defaultString(promoted.getBundleInfo());
         return !promotedVersion.equals(currentVersion);
     }
 
