@@ -1,6 +1,5 @@
 JAVA8=false
 DEFAULT_JDK=jdk11
-# TODO Commented as casc-it and ATHs are impacted by Bundle Update Timing and we need to unblock https://github.com/cloudbees/cloudbees-casc-client-plugin/pull/188
-#CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
-#INTEGRATION_TESTS_SCRIPT=operations-center-casc-it.sh
-#INTEGRATION_TESTS_ARGUMENTS=-Dtest.categories={com.cloudbees.casc.categories.CascE2ECategory}
+CJOC_ATH_TESTS=groups={com.cloudbees.opscenter.categories.CloudBeesCascCategory}
+INTEGRATION_TESTS_SCRIPT=operations-center-casc-it.sh
+INTEGRATION_TESTS_ARGUMENTS=-Dtest.categories={com.cloudbees.casc.categories.CascE2ECategory}
