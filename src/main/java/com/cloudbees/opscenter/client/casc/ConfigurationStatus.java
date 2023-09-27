@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -161,22 +162,44 @@ public enum ConfigurationStatus {
      * @param checksum bundle checksum
      */
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
-    public void setOutdatedBundleInformation(@CheckForNull String bundleId, @CheckForNull String version, @CheckForNull String checksum) {
-        StringBuilder sb = new StringBuilder();
-        if (StringUtils.isNotBlank(bundleId)) {
-            sb.append(bundleId);
-        }
-        if (StringUtils.isNotBlank(version)) {
-            if (StringUtils.isNotBlank(bundleId)) {
-                sb.append(":");
-            }
-            sb.append(version);
-        }
-        if (StringUtils.isNotBlank(checksum)) {
-            sb.append(" (checksum " + checksum + ")");
+    public void setOutdatedBundleInformation(String bundleId, String version, String checksum) {
+        this.outdatedBundleInformation = bundleInfo(bundleId, version, checksum);
+    }
+
+    @CheckForNull
+    public String bundleInfo(ConfigurationBundle bundle) {
+        if (bundle == null) {
+            return null;
         }
 
-        this.outdatedBundleInformation = StringUtils.isNotBlank(sb.toString()) ? sb.toString() : null;
+        return bundleInfo(bundle.getId(), bundle.getVersion(), bundle.getChecksum());
+    }
+
+    @CheckForNull
+    public String bundleInfo(String id, String version, String checksum) {
+        final String id_ = StringUtils.defaultString(id);
+        final String version_ = StringUtils.defaultString(version);
+        final String checksum_ = StringUtils.defaultString(checksum);
+
+        if (StringUtils.isBlank(id_) && StringUtils.isBlank(version_)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.isNotBlank(id_)) {
+            sb.append(id_);
+        }
+        if (StringUtils.isNotBlank(version_)) {
+            if (StringUtils.isNotBlank(id_)) {
+                sb.append(":");
+            }
+            sb.append(version_);
+        }
+        if (StringUtils.isNotBlank(checksum_) && !version_.equals(checksum_)) {
+            sb.append(" (checksum " + checksum_ + ")");
+        }
+
+        return sb.toString();
+
     }
 
     /**

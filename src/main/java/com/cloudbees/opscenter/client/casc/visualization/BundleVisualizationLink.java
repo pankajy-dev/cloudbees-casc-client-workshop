@@ -259,9 +259,9 @@ public class BundleVisualizationLink extends ManagementLink {
         if(isUpdateAvailable()) {
             if (isUpdateTimingEnabled()) {
                 ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
-                return candidate != null ? candidate.getBundleInfo() : null;
+                return candidate != null ? ConfigurationStatus.INSTANCE.bundleInfo(candidate) : null;
             }
-            return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
+            return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
         }
         return null;
     }
@@ -287,7 +287,7 @@ public class BundleVisualizationLink extends ManagementLink {
         if(ConfigurationStatus.INSTANCE.getOutdatedVersion() != null) {
             return ConfigurationStatus.INSTANCE.getOutdatedBundleInformation();
         }
-        return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
+        return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
     }
 
     /**
@@ -309,7 +309,7 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     @CheckForNull
     public String getDownloadedBundleInfo(){
-        return ConfigurationBundleManager.get().getConfigurationBundle().getBundleInfo();
+        return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
     }
 
     /**
@@ -632,8 +632,9 @@ public class BundleVisualizationLink extends ManagementLink {
             List<String> warnings = new ArrayList<>();
             List<String> errors = new ArrayList<>();
             List<String> infos = new ArrayList<>();
+            String id = null;
             String version = null;
-            StringBuilder info = null;
+            String checksum = null;
             boolean skipped = false;
             boolean invalid = false;
             if (candidate != null) {
@@ -641,27 +642,15 @@ public class BundleVisualizationLink extends ManagementLink {
                 errors = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.ERROR).map(v -> v.getMessage()).collect(Collectors.toList());
                 infos = candidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).filter(v -> v.getLevel() == Validation.Level.INFO).map(v -> v.getMessage()).collect(Collectors.toList());
                 version = candidate.getVersion();
-                info = new StringBuilder();
-                if (StringUtils.isNotBlank(candidate.getId())) {
-                    info.append(candidate.getId());
-                }
-                if (StringUtils.isNotBlank(version)) {
-                    if (StringUtils.isNotBlank(candidate.getId())) {
-                        info.append(":");
-                    }
-                    info.append(version);
-                }
-                if (StringUtils.isNotBlank(candidate.getChecksum())) {
-                    info.append(" (checksum " + candidate.getChecksum() + ")");
-                }
-
+                id = candidate.getId();
+                checksum = candidate.getChecksum();
                 skipped = candidate.isSkipped();
                 invalid = candidate.isInvalid();
             }
             boolean quiet = ConfigurationBundleManager.get().isQuiet();
             this.validations = new ValidationSection(warnings, errors, infos, quiet);
             this.version = version;
-            this.info = info == null ? null : info.toString();
+            this.info = ConfigurationStatus.INSTANCE.bundleInfo(id, version, checksum);
             this.skipped = skipped;
             this.invalid = invalid;
         }
