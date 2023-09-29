@@ -89,7 +89,7 @@ public class InternalEndpointAuthentication {
     private void readToken() {
         if (wrappedToken != null && wrappedToken.exists()) { // We're updating the in memory token only if the file exists
             try {
-                byte[] wrappedTokenBytes = FileUtils.readFileToString(wrappedToken, Charset.defaultCharset()).getBytes(StandardCharsets.UTF_8);
+                byte[] wrappedTokenBytes = FileUtils.readFileToByteArray(wrappedToken);
                 token = tokenUnwrap(wrappedTokenBytes);
                 LOGGER.log(Level.INFO, "Retriever communication token updated");
                 FileUtils.delete(wrappedToken); // We won't calculate the token until a new file appears

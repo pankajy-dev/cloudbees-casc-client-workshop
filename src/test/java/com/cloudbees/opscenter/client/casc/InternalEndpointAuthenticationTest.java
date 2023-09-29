@@ -56,7 +56,7 @@ public class InternalEndpointAuthenticationTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
 
         // Let's wrap a token with the pub key
-        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "aSharedToken");
+        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "token");
         File wrappedTokenFile = temporaryFolder.getRoot().toPath().resolve(".wrappedToken").toFile();
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
@@ -82,7 +82,7 @@ public class InternalEndpointAuthenticationTest {
         assertThat("Validation doesn't pass", validationPasses, is(false));
 
         // Generating a valid token
-        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "aSharedToken"));
+        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "token"));
         validationPasses = internalEndpointAuthentication.validate(request);
         assertThat("Validation passes", validationPasses, is(true));
 
@@ -107,7 +107,6 @@ public class InternalEndpointAuthenticationTest {
 
     private byte[] wrapInPublicKey(Key publicKey, String token) throws Exception{
         Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
         c.init(Cipher.WRAP_MODE, publicKey);
         Key sessionKey = new SecretKeySpec(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), "RSA");
         return c.wrap(sessionKey);
