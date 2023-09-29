@@ -56,7 +56,7 @@ public class InternalEndpointAuthenticationTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
 
         // Let's wrap a token with the pub key
-        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "token");
+        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "aSharedToken");
         File wrappedTokenFile = temporaryFolder.getRoot().toPath().resolve(".wrappedToken").toFile();
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
@@ -64,10 +64,11 @@ public class InternalEndpointAuthenticationTest {
 
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         Mockito.when(request.getHeader("X-cbci-token")).thenReturn("invalidHeader");
+        Mockito.when(request.getHeader("X-cbci-token-message")).thenReturn("body");
         logger.record(InternalEndpointAuthentication.class, Level.INFO);
         logger.capture(2);
         assertThat("Wrapped token file exists", wrappedTokenFile.exists(), is(true));
-        boolean validationPasses = internalEndpointAuthentication.validate(request, "body");
+        boolean validationPasses = internalEndpointAuthentication.validate(request);
         boolean tokenProcessedLog = logger.getRecords().stream().filter(log -> log.getLevel().equals(Level.INFO)).anyMatch(record -> record.getMessage().contains("token updated"));
         assertThat("token file has been processed", tokenProcessedLog, is(true));
         assertThat("Validation doesn't pass", validationPasses, is(false));
@@ -75,22 +76,22 @@ public class InternalEndpointAuthenticationTest {
 
         Mockito.when(request.getHeader("X-cbci-token")).thenReturn(null);
         logger.capture(2);
-        validationPasses = internalEndpointAuthentication.validate(request, "body");
+        validationPasses = internalEndpointAuthentication.validate(request);
         tokenProcessedLog = logger.getRecords().stream().filter(log -> log.getLevel().equals(Level.INFO)).anyMatch(record -> record.getMessage().contains("token updated"));
         assertThat("Token was not updated", tokenProcessedLog, is(false));
         assertThat("Validation doesn't pass", validationPasses, is(false));
 
         // Generating a valid token
-        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "token"));
-        validationPasses = internalEndpointAuthentication.validate(request, "body");
+        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "aSharedToken"));
+        validationPasses = internalEndpointAuthentication.validate(request);
         assertThat("Validation passes", validationPasses, is(true));
 
         // Regenerate the token to simulate requester token expiration
-        wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "anothertoken");
+        wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "anotherToken");
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
         logger.capture(2);
-        validationPasses = internalEndpointAuthentication.validate(request, "body");
+        validationPasses = internalEndpointAuthentication.validate(request);
         tokenProcessedLog = logger.getRecords().stream().filter(log -> log.getLevel().equals(Level.INFO)).anyMatch(record -> record.getMessage().contains("token updated"));
         assertThat("token file has been processed", tokenProcessedLog, is(true));
         assertThat("Validation fails, as token has been refreshed", validationPasses, is(false));
@@ -108,7 +109,7 @@ public class InternalEndpointAuthenticationTest {
         Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
         c.init(Cipher.WRAP_MODE, publicKey);
-        Key sessionKey = new SecretKeySpec(token.getBytes(StandardCharsets.UTF_8), "RSA");
+        Key sessionKey = new SecretKeySpec(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), "RSA");
         return c.wrap(sessionKey);
     }
 }

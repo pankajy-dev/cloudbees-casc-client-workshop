@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -88,10 +89,8 @@ public class InternalEndpointAuthentication {
     private void readToken() {
         if (wrappedToken != null && wrappedToken.exists()) { // We're updating the in memory token only if the file exists
             try {
-                byte[] wrappedTokenBytes = FileUtils.readFileToByteArray(wrappedToken);
-                System.out.println("************** Wrapped token bytes\n" + Base64.getEncoder().encodeToString(wrappedTokenBytes));
+                byte[] wrappedTokenBytes = FileUtils.readFileToString(wrappedToken, Charset.defaultCharset()).getBytes(StandardCharsets.UTF_8);
                 token = tokenUnwrap(wrappedTokenBytes);
-                System.out.println("************** token bytes\n" + new String(token));
                 LOGGER.log(Level.INFO, "Retriever communication token updated");
                 FileUtils.delete(wrappedToken); // We won't calculate the token until a new file appears
             }catch (IOException ex) {
