@@ -63,8 +63,8 @@ public class InternalEndpointAuthenticationTest {
         InternalEndpointAuthentication internalEndpointAuthentication = InternalEndpointAuthentication.get();
 
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(request.getHeader("X-cbci-token")).thenReturn("invalidHeader");
-        Mockito.when(request.getHeader("X-cbci-token-message")).thenReturn("body");
+        Mockito.when(request.getHeader(InternalEndpointAuthentication.HMAC_HEADER)).thenReturn("invalidHeader");
+        Mockito.when(request.getHeader(InternalEndpointAuthentication.HMAC_MESSAGE_HEADER)).thenReturn("body");
         logger.record(InternalEndpointAuthentication.class, Level.INFO);
         logger.capture(2);
         assertThat("Wrapped token file exists", wrappedTokenFile.exists(), is(true));

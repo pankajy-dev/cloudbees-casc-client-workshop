@@ -30,8 +30,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public class InternalEndpointAuthentication {
     private static final Logger LOGGER = Logger.getLogger(InternalEndpointAuthentication.class.getName());
 
-    private static final String HMAC_HEADER = "X-cbci-token";
-    private static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
+    public static final String HMAC_HEADER = "X-cbci-token";
+    public static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
 
     private static final String WRAPPED_TOKEN_LOCATION = System.getProperty("core.casc.config.bundle");
 
