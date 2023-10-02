@@ -113,6 +113,10 @@
       <version>1.32</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.jenkins-ci.modules</groupId>
+      <artifactId>instance-identity</artifactId>
+    </dependency>
     <!-- Optional dependencies -->
     <dependency>
       <groupId>io.jenkins</groupId>
