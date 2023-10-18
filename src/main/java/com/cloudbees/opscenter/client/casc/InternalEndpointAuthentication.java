@@ -61,6 +61,10 @@ public class InternalEndpointAuthentication {
             return false;
         }
         String message = req.getHeader(HMAC_MESSAGE_HEADER);
+        if (StringUtils.isBlank(message)) {
+            LOGGER.log(Level.WARNING, "Received signed request with no message, rejecting request");
+            return false;
+        }
         readToken();
         if (token == null) {
             LOGGER.log(Level.WARNING, "Could not find token, rejecting request");
@@ -71,6 +75,8 @@ public class InternalEndpointAuthentication {
             boolean accepted = MessageDigest.isEqual(calculateSha(message), hmacSignature.getBytes(StandardCharsets.UTF_8));
             if (!accepted) {
                 LOGGER.log(Level.WARNING, "Received request with invalid token, rejecting request");
+            } else {
+                LOGGER.log(Level.INFO, "Validated token for incoming request");
             }
             return accepted;
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
@@ -93,6 +99,7 @@ public class InternalEndpointAuthentication {
                 token = tokenUnwrap(wrappedTokenBytes);
                 LOGGER.log(Level.INFO, "Retriever communication token updated");
                 FileUtils.delete(wrappedToken); // We won't calculate the token until a new file appears
+                LOGGER.log(Level.FINE, "Deleted shared token file");
             }catch (IOException ex) {
                 LOGGER.log(Level.WARNING, "Could not manipulate wrapped token file (maybe permissions?)", ex);
             }

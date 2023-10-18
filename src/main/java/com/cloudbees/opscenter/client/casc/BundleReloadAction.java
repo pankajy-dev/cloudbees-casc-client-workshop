@@ -15,8 +15,6 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.RootAction;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
@@ -349,19 +347,6 @@ public class BundleReloadAction implements RootAction {
         return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(update, reload, quiet));
     }
 
-    @GET
-    @WebMethod(name = "check-bundle-update-auth-token")
-    public HttpResponse doGetBundleNewerVersionWithAuthToken(StaplerRequest request, @QueryParameter("quiet") String quietParam) {
-        boolean accepted = InternalEndpointAuthentication.get().validate(request);
-        if (accepted) {
-            try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
-                return doGetBundleNewerVersion(quietParam);
-            }
-        } else { // Same operation but without permissions, to keep original failure
-            return doGetBundleNewerVersion(quietParam);
-        }
-    }
-
     /**
      * Check if there's a reload operation running
      * <p>
@@ -492,21 +477,6 @@ public class BundleReloadAction implements RootAction {
                     return new JsonHttpResponse(e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 }
             }
-        }
-    }
-
-    @POST
-    @WebMethod(name = "casc-bundle-validate-auth-token")
-    public HttpResponse doBundleValidateWithAuthToken(StaplerRequest req,
-                                                      @QueryParameter String commit,
-                                                      @QueryParameter("quiet") String quietParam) {
-        boolean accepted = InternalEndpointAuthentication.get().validate(req);
-        if (accepted) {
-            try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
-                return doBundleValidate(req, commit, quietParam);
-            }
-        } else { // Same operation but without permissions, to keep original failure
-            return doBundleValidate(req, commit, quietParam);
         }
     }
 
