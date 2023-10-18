@@ -53,7 +53,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
      * This endpoint is analog to casc-bundle-mgmt one but will look for authentication token in request
      * headers.
      * Request params are the same as the original method but setting <code>quiet</code> to system default.
-     * @{link BundleReloadAction#doGetBundleNewerVersion}
+     * {@link BundleReloadAction#doGetBundleNewerVersion}
      * @param request the request
      * @return 200 if everything went ok
      *         403 on unauthorized
