@@ -22,6 +22,7 @@ import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
 import org.jenkinsci.main.modules.instance_identity.InstanceIdentity;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -68,6 +69,11 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
 
     private static final String BUNDLE_YAML = "apiVersion: \"1\"\n" + "id: \"bundle\"\n" + "description: \"This is a config bundle\"\n" + "version: \"1\"";
 
+    @Before
+    public void setup() {
+        initializeRealm(rule);
+    }
+
     @Test
     @WithEnvelope(TwoPluginsV2dot289.class)
     public void checkResponseIsAcceptedWithTokenAndSecurityInBundleUpdate() throws Exception {
@@ -75,9 +81,6 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         File bundlePath = temporaryFolder.newFolder();
         FileUtils.writeStringToFile(bundlePath.toPath().resolve("bundle.yaml").toFile(), BUNDLE_YAML, Charset.defaultCharset());
         System.setProperty("core.casc.config.bundle", bundlePath.getAbsolutePath());
-
-        // Realm is set using authorization strategy
-        initializeRealm(rule);
 
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
@@ -134,9 +137,6 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         // We don't need a bundle to check these endpoints, just the path
         File bundlePath = temporaryFolder.newFolder();
         System.setProperty("core.casc.config.bundle", bundlePath.getAbsolutePath());
-
-        // Realm is set using authorization strategy
-        initializeRealm(rule);
 
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(true);
