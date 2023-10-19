@@ -76,7 +76,7 @@ public class InternalEndpointAuthentication {
             if (!accepted) {
                 LOGGER.log(Level.WARNING, "Received request with invalid token, rejecting request");
             } else {
-                LOGGER.log(Level.INFO, "Validated token for incoming request");
+                LOGGER.log(Level.FINE, "Validated token for incoming request");
             }
             return accepted;
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
