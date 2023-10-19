@@ -24,7 +24,7 @@ import hudson.security.csrf.CrumbExclusion;
 import jenkins.model.Jenkins;
 
 /**
- * This extension handles all requests that need to access unauthorized endpoints.
+ * This extension handles all requests that need to access unprotected endpoints.
  * This doesn't mean there's no security check, this is intended to be used with authentication tokens for authentication
  * but for secured environments endpoints without authentication are not reachable.
  * Initially this class will hold web methods used by the casc-retriever
