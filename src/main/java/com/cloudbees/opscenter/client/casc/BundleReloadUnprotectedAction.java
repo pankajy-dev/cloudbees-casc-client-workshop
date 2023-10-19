@@ -67,7 +67,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
             try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
                 return action.doGetBundleNewerVersion(null);
             }
-        } else { // Same operation but without permissions, to keep original failure
+        } else { // Without impersonation, so original endpoint will verify the user permissions
             return action.doGetBundleNewerVersion(null);
         }
     }
@@ -92,7 +92,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
             try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
                 return action.doBundleValidate(req, commit, null);
             }
-        } else { // Same operation but without permissions, to keep original failure
+        } else { // Without impersonation, so original endpoint will verify the user permissions
             return action.doBundleValidate(req, commit, null);
         }
     }
