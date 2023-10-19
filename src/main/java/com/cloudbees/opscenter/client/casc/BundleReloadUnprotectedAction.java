@@ -19,7 +19,9 @@ import hudson.ExtensionList;
 import hudson.model.UnprotectedRootAction;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.security.AccessDeniedException3;
 import hudson.security.csrf.CrumbExclusion;
+import jenkins.model.Jenkins;
 
 /**
  * This extension handles all requests that need to access unauthorized endpoints.
@@ -68,7 +70,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
                 return action.doGetBundleNewerVersion(null);
             }
         } else { // Without impersonation, so original endpoint will verify the user permissions
-            return action.doGetBundleNewerVersion(null);
+            throw new AccessDeniedException3(Jenkins.getAuthentication2(), Jenkins.MANAGE);
         }
     }
 
@@ -93,7 +95,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
                 return action.doBundleValidate(req, commit, null);
             }
         } else { // Without impersonation, so original endpoint will verify the user permissions
-            return action.doBundleValidate(req, commit, null);
+            throw new AccessDeniedException3(Jenkins.getAuthentication2(), Jenkins.MANAGE);
         }
     }
 
