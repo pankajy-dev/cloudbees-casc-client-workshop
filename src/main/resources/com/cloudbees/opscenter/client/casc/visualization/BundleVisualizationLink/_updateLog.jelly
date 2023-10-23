@@ -2,8 +2,7 @@
 <!--
     Table with the list of validated bundle versions.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:i="jelly:fmt"
-         xmlns:cbcipm="/lib/cbci/pluginManagement"
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement"
          xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
     <d:taglib uri="local">
         <d:tag name="row">
@@ -11,7 +10,7 @@
                 <td class="table__column table__column--id">${id}</td>
                 <td class="table__column table__column--version"><pre>${version}</pre></td>
                 <td class="table__column table__column--description">${description}</td>
-                <td class="table__column table__column--date"><i:formatDate value="${date}" type="date" dateStyle="long"/></td>
+                <td class="table__column table__column--date">${date}</td>
                 <td class="table__column table__column--errors">${errors}</td>
                 <td class="table__column table__column--warnings">${warnings}</td>
                 <td class="table__column table__column--infoMessages">${infoMessages}</td>

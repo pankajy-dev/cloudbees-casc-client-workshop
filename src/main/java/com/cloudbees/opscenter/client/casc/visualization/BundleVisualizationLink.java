@@ -5,6 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -685,7 +688,7 @@ public class BundleVisualizationLink extends ManagementLink {
         private final String version;
         private final String checksum;
         private final String description;
-        private final Date date;
+        private final String date;
         private final long errors;
         private final long warnings;
         private final long infoMessages;
@@ -702,22 +705,17 @@ public class BundleVisualizationLink extends ManagementLink {
             this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
             this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
             this.infoMessages = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.INFO).count();
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
-            Date d = null;
-            boolean skipped = false;
-            boolean invalid = false;
-            if (candidate != null) {
-                try {
-                    d = formatter.parse(candidate.getFolder().substring(0, candidate.getFolder().indexOf("_")));
-                } catch (ParseException e) {
-                    d = null;
-                }
-                skipped = candidate.isSkipped();
-                invalid = candidate.isInvalid();
+            this.date = candidate == null ? null : parse(candidate.getBundleDate());
+            this.skipped = candidate != null && candidate.isSkipped();
+            this.invalid = candidate != null && candidate.isInvalid();
+        }
+
+        private String parse(LocalDateTime ldt) {
+            if (ldt == null) {
+                return null;
             }
-            this.date = d;
-            this.skipped = skipped;
-            this.invalid = invalid;
+
+            return ldt.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).localizedBy(Locale.ENGLISH)) + " UTC";
         }
 
         public boolean isEmpty() {
@@ -743,8 +741,7 @@ public class BundleVisualizationLink extends ManagementLink {
             return checksum;
         }
 
-        @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "False positive")
-        public Date getDate() {
+        public String getDate() {
             return date;
         }
 
