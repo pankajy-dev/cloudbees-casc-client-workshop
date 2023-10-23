@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>189</version>
+    <version>192</version>
     <relativePath />
   </parent>
 
@@ -26,7 +26,6 @@
     <frontend-version>1.10.0</frontend-version>
     <useBeta>true</useBeta> <!-- Jenkins.MANAGE is still Beta.class -->
     <no-test-jar>false</no-test-jar> <!-- to allow other plugins to extend abstract test classes like ProjectItem.java -->
-    <jenkins.version>2.414.2-cb-1</jenkins.version> <!-- TODO Remove once in parent pom -->
   </properties>
 
   <scm>
@@ -74,14 +73,13 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-api</artifactId>
-      <version>2.35</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
       <groupId>com.cloudbees.jenkins.modules</groupId>
       <artifactId>cloudbees-installation-manager</artifactId>
       <scope>provided</scope>
-      <version>2.332.0.48</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.49-20231023.104152-1</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -110,7 +108,7 @@
     <dependency>
       <groupId>org.kohsuke</groupId>
       <artifactId>access-modifier-suppressions</artifactId>
-      <version>1.32</version>
+      <version>1.33</version>
     </dependency>
 
     <dependency>
@@ -167,7 +165,7 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.48</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.49-20231023.104152-1</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>
