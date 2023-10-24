@@ -458,7 +458,7 @@ public final class ConfigurationUpdaterHelper {
             bundleInfo.getUpdateLog().forEach(updateLogRow -> {
                 JSONObject row = new JSONObject();
                 row.accumulate("version", updateLogRow.getVersion());
-                row.accumulate("date", new SimpleDateFormat("dd MMMM yyyy").format(updateLogRow.getDate()));
+                row.accumulate("date", updateLogRow.getDate());
                 row.accumulate("errors", updateLogRow.getErrors());
                 row.accumulate("warnings", updateLogRow.getWarnings());
                 row.accumulate("info-messages", updateLogRow.getInfoMessages());
