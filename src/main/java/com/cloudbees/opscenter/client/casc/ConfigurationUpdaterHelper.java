@@ -52,8 +52,10 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -852,6 +854,7 @@ public final class ConfigurationUpdaterHelper {
      * Output format: "{@link FormatStyle#LONG} {@link FormatStyle#SHORT} UTC" in {@link Locale#ENGLISH}. Ex, October 24, 2023, 11:50 AM UTC
      * @param ldt LocalDateTime to parse
      * @return String representing the LocalDateTime object
+     * @throws DateTimeException if the date or time cannot be parsed
      */
     @CheckForNull
     public static String parse(LocalDateTime ldt) {
@@ -863,10 +866,14 @@ public final class ConfigurationUpdaterHelper {
     }
 
     /**
-     * Parse a String in {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME} format.
+     * Parse a String to convert it into the output format.
+     * Accepted input formats:
+     * - {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME} format.
+     * - {@link BundleUpdateLog#HISTORIC_FORMATTER} format.
      * Output format: "{@link FormatStyle#LONG} {@link FormatStyle#SHORT} UTC" in {@link Locale#ENGLISH}. Ex, October 24, 2023, 11:50 AM UTC
      * @param isoLDT String to parse
      * @return String in the new format
+     * @throws DateTimeException if the date or time cannot be parsed
      */
     @CheckForNull
     public static String parse(String isoLDT) {
@@ -874,6 +881,13 @@ public final class ConfigurationUpdaterHelper {
             return null;
         }
 
-        return parse(LocalDateTime.parse(isoLDT));
+        LocalDateTime ldt = null;
+        try {
+            ldt = LocalDateTime.parse(isoLDT);
+        } catch (DateTimeParseException e) {
+            ldt = LocalDateTime.parse(isoLDT + " 00:00", DateTimeFormatter.ofPattern(BundleUpdateLog.FORMAT + " HH:mm"));
+        }
+
+        return parse(ldt);
     }
 }
