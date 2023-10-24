@@ -52,11 +52,15 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
@@ -66,6 +70,8 @@ import javax.servlet.ServletException;
 
 public final class ConfigurationUpdaterHelper {
     private static final Logger LOGGER = Logger.getLogger(ConfigurationUpdaterHelper.class.getName());
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).localizedBy(Locale.ENGLISH);
 
     /**
      * Check for new updates in configuration bundle are available.
@@ -839,5 +845,35 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return ConfigurationBundleManager.get().getConfigurationBundle().isHotReloadable() ? UpdateType.RELOAD : UpdateType.RESTART;
+    }
+
+    /**
+     * Parse a {@link LocalDateTime} object in UTC.
+     * Output format: "{@link FormatStyle#LONG} {@link FormatStyle#SHORT} UTC" in {@link Locale#ENGLISH}. Ex, October 24, 2023, 11:50 AM UTC
+     * @param ldt LocalDateTime to parse
+     * @return String representing the LocalDateTime object
+     */
+    @CheckForNull
+    public static String parse(LocalDateTime ldt) {
+        if (ldt == null) {
+            return null;
+        }
+
+        return ldt.format(FORMATTER) + " UTC";
+    }
+
+    /**
+     * Parse a String in {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME} format.
+     * Output format: "{@link FormatStyle#LONG} {@link FormatStyle#SHORT} UTC" in {@link Locale#ENGLISH}. Ex, October 24, 2023, 11:50 AM UTC
+     * @param isoLDT String to parse
+     * @return String in the new format
+     */
+    @CheckForNull
+    public static String parse(String isoLDT) {
+        if (isoLDT == null) {
+            return null;
+        }
+
+        return parse(LocalDateTime.parse(isoLDT));
     }
 }

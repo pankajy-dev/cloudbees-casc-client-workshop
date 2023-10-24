@@ -3,16 +3,10 @@ package com.cloudbees.opscenter.client.casc.visualization;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -286,11 +280,25 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     @CheckForNull
-    public String getBundleInformation(){
+    public String getBundleInformation() {
         if(ConfigurationStatus.INSTANCE.getOutdatedVersion() != null) {
             return ConfigurationStatus.INSTANCE.getOutdatedBundleInformation();
         }
         return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
+    }
+
+    /**
+     * @return the version of the currently installed bundle and the date it was applied, or null if there is no bundle
+     */
+    //used in jelly
+    @CheckForNull
+    public String getFullBundleInformation() {
+        String bundleInformation = getBundleInformation();
+        if (bundleInformation == null) {
+            return null;
+        }
+        String instant = ConfigurationBundleManager.get().getUpdateLog().getCurrentInstant();
+        return instant == null ? bundleInformation : bundleInformation + " " + ConfigurationUpdaterHelper.parse(instant);
     }
 
     /**
@@ -705,17 +713,9 @@ public class BundleVisualizationLink extends ManagementLink {
             this.errors = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.ERROR).count();
             this.warnings = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.WARNING).count();
             this.infoMessages = candidate == null ? 0L : candidate.getValidations().getValidations().stream().filter(s -> s.getLevel() == Validation.Level.INFO).count();
-            this.date = candidate == null ? null : parse(candidate.getBundleDate());
+            this.date = candidate == null ? null : ConfigurationUpdaterHelper.parse(candidate.getBundleDate());
             this.skipped = candidate != null && candidate.isSkipped();
             this.invalid = candidate != null && candidate.isInvalid();
-        }
-
-        private String parse(LocalDateTime ldt) {
-            if (ldt == null) {
-                return null;
-            }
-
-            return ldt.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).localizedBy(Locale.ENGLISH)) + " UTC";
         }
 
         public boolean isEmpty() {

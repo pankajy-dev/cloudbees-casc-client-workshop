@@ -34,7 +34,7 @@
                         </cbcipm:tabcontent>
                         </j:if>
                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
-                            <strong>You are using bundle ${it.bundleInformation}.</strong>
+                            <strong>You are using bundle ${it.fullBundleInformation}.</strong>
                             <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleInfo}"/>
                         </cbcipm:tabcontent>
                         <j:choose>
