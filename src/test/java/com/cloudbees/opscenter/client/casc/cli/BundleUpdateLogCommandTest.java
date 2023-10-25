@@ -104,7 +104,7 @@ public class BundleUpdateLogCommandTest {
                     "[\n" +
                             "    {\n" +
                             "        \"version\": \"6\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
@@ -112,7 +112,7 @@ public class BundleUpdateLogCommandTest {
                             "    },\n" +
                             "    {\n" +
                             "        \"version\": \"5\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 1,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
@@ -120,7 +120,7 @@ public class BundleUpdateLogCommandTest {
                             "    },\n" +
                             "    {\n" +
                             "        \"version\": \"4\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
@@ -128,7 +128,7 @@ public class BundleUpdateLogCommandTest {
                             "    },\n" +
                             "    {\n" +
                             "        \"version\": \"3\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 1,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
@@ -136,7 +136,7 @@ public class BundleUpdateLogCommandTest {
                             "    },\n" +
                             "    {\n" +
                             "        \"version\": \"2\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
@@ -144,7 +144,7 @@ public class BundleUpdateLogCommandTest {
                             "    },\n" +
                             "    {\n" +
                             "        \"version\": \"1\",\n" +
-                            "        \"date\": \"09 May 2022\",\n" +
+                            "        \"date\": \"May 9, 2022, 12:00 AM UTC\",\n" +
                             "        \"errors\": 0,\n" +
                             "        \"warnings\": 0,\n" +
                             "        \"info-messages\": 0,\n" +
