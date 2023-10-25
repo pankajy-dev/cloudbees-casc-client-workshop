@@ -95,7 +95,8 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         // Setting up token
         InstanceIdentity instanceIdentity = new InstanceIdentity();
         String validToken = "token";
-        FileUtils.writeByteArrayToFile(bundlePath.toPath().resolve(".wrappedToken").toFile(), wrapInPublicKey(instanceIdentity.getPublic(), validToken));
+        FileUtils.writeByteArrayToFile(bundlePath.toPath().getParent().resolve(".retriever-cache").resolve(".wrappedToken").toFile(),
+                                       wrapInPublicKey(instanceIdentity.getPublic(), validToken));
         String validSha = calculateSha("legitMessage", validToken);
 
         loggerRule.record(InternalEndpointAuthentication.class, Level.INFO);
@@ -151,7 +152,8 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         // Setting up token
         InstanceIdentity instanceIdentity = new InstanceIdentity();
         String validToken = "token";
-        FileUtils.writeByteArrayToFile(bundlePath.toPath().resolve(".wrappedToken").toFile(), wrapInPublicKey(instanceIdentity.getPublic(), validToken));
+        FileUtils.writeByteArrayToFile(bundlePath.toPath().getParent().resolve(".retriever-cache").resolve(".wrappedToken").toFile(),
+                                       wrapInPublicKey(instanceIdentity.getPublic(), validToken));
         String validSha = calculateSha("legitMessage", validToken);
 
         loggerRule.record(InternalEndpointAuthentication.class, Level.INFO);
