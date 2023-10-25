@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -47,7 +49,10 @@ public class InternalEndpointAuthentication {
         if (INSTANCE == null) {
             InternalEndpointAuthentication newInstance = new InternalEndpointAuthentication();
             if (WRAPPED_TOKEN_LOCATION != null) {
-                newInstance.wrappedToken = new File(WRAPPED_TOKEN_LOCATION, ".wrappedToken");
+                Path parent = Paths.get(WRAPPED_TOKEN_LOCATION).getParent();
+                if (parent != null) {
+                    newInstance.wrappedToken = parent.resolve(".wrappedToken").toFile();
+                }
             }
             INSTANCE = newInstance;
         }
@@ -98,8 +103,6 @@ public class InternalEndpointAuthentication {
                 byte[] wrappedTokenBytes = FileUtils.readFileToByteArray(wrappedToken);
                 token = tokenUnwrap(wrappedTokenBytes);
                 LOGGER.log(Level.INFO, "Retriever communication token updated");
-                FileUtils.delete(wrappedToken); // We won't calculate the token until a new file appears
-                LOGGER.log(Level.FINE, "Deleted shared token file");
             }catch (IOException ex) {
                 LOGGER.log(Level.WARNING, "Could not manipulate wrapped token file (maybe permissions?)", ex);
             }
