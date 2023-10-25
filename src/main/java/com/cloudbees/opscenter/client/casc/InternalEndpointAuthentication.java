@@ -46,7 +46,6 @@ public class InternalEndpointAuthentication {
     private InternalEndpointAuthentication() { }
 
     public static InternalEndpointAuthentication get() {
-        LOGGER.log(Level.INFO, "Start checking token");
         if (INSTANCE == null) {
             InternalEndpointAuthentication newInstance = new InternalEndpointAuthentication();
             // We're expecting wrappedToken to be in ${core.casc.config.bundle}/../.retriever-cache/.wrappedToken
