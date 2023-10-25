@@ -2,7 +2,6 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +34,8 @@ public class InternalEndpointAuthentication {
     public static final String HMAC_HEADER = "X-cbci-token";
     public static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
 
-    private static final String WRAPPED_TOKEN_LOCATION = System.getProperty("core.casc.config.bundle");
+    private static final String BUNDLE_LOCATION = System.getProperty("core.casc.config.bundle");
+    private static final String WRAPPED_TOKEN_PATH = ".retriever-cache/.wrappedToken";
 
     private static InternalEndpointAuthentication INSTANCE;
 
@@ -46,12 +46,15 @@ public class InternalEndpointAuthentication {
     private InternalEndpointAuthentication() { }
 
     public static InternalEndpointAuthentication get() {
+        LOGGER.log(Level.INFO, "Start checking token");
         if (INSTANCE == null) {
             InternalEndpointAuthentication newInstance = new InternalEndpointAuthentication();
-            if (WRAPPED_TOKEN_LOCATION != null) {
-                Path parent = Paths.get(WRAPPED_TOKEN_LOCATION).getParent();
+            // We're expecting wrappedToken to be in ${core.casc.config.bundle}/../.retriever-cache/.wrappedToken
+            if (BUNDLE_LOCATION != null) {
+                Path parent = Paths.get(BUNDLE_LOCATION).getParent();
                 if (parent != null) {
-                    newInstance.wrappedToken = parent.resolve(".wrappedToken").toFile();
+                    newInstance.wrappedToken = parent.resolve(WRAPPED_TOKEN_PATH).toFile();
+                    LOGGER.log(Level.FINE, String.format("Token expected path: %s", newInstance.wrappedToken.getAbsolutePath()));
                 }
             }
             INSTANCE = newInstance;
@@ -106,6 +109,8 @@ public class InternalEndpointAuthentication {
             }catch (IOException ex) {
                 LOGGER.log(Level.WARNING, "Could not manipulate wrapped token file (maybe permissions?)", ex);
             }
+        } else {
+            LOGGER.log(Level.WARNING, String.format("Could not find token in expected path: %s", wrappedToken == null ? "null" : wrappedToken.getAbsolutePath()));
         }
     }
 
