@@ -2,14 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.logging.Level;
 
@@ -29,8 +22,6 @@ import org.jvnet.hudson.test.LoggerRule;
 import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 public class InternalEndpointAuthenticationTest {
@@ -50,14 +41,15 @@ public class InternalEndpointAuthenticationTest {
 
     @Test
     public void internalEndpointValidatesTokenTest() throws Exception {
+        File bundleHome = temporaryFolder.newFolder();
         // we can not use WithSystemProperty in a temporary folder
-        System.setProperty("core.casc.config.bundle", temporaryFolder.getRoot().getAbsolutePath());
+        System.setProperty("core.casc.config.bundle", bundleHome.getAbsolutePath());
 
         InstanceIdentity instanceIdentity = new InstanceIdentity();
 
         // Let's wrap a token with the pub key
         byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "token");
-        File wrappedTokenFile = temporaryFolder.getRoot().toPath().resolve(".wrappedToken").toFile();
+        File wrappedTokenFile = bundleHome.toPath().getParent().resolve(".retriever-cache/.wrappedToken").toFile();
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
         InternalEndpointAuthentication internalEndpointAuthentication = InternalEndpointAuthentication.get();
@@ -72,7 +64,6 @@ public class InternalEndpointAuthenticationTest {
         boolean tokenProcessedLog = logger.getRecords().stream().filter(log -> log.getLevel().equals(Level.INFO)).anyMatch(record -> record.getMessage().contains("token updated"));
         assertThat("token file has been processed", tokenProcessedLog, is(true));
         assertThat("Validation doesn't pass", validationPasses, is(false));
-        assertThat("Wrapped token no longer exists", wrappedTokenFile.exists(), is(false));
 
         Mockito.when(request.getHeader("X-cbci-token")).thenReturn(null);
         logger.capture(2);

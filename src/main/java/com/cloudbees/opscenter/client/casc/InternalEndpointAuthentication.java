@@ -2,8 +2,9 @@ package com.cloudbees.opscenter.client.casc;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -33,7 +34,11 @@ public class InternalEndpointAuthentication {
     public static final String HMAC_HEADER = "X-cbci-token";
     public static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
 
-    private static final String WRAPPED_TOKEN_LOCATION = System.getProperty("core.casc.config.bundle");
+    private static final String BUNDLE_LOCATION = System.getProperty("core.casc.config.bundle");
+
+    private static final String WRAPPED_TOKEN_FILE_NAME = ".wrappedToken";
+    private static final String WRAPPED_TOKEN_PATH = ".retriever-cache/" + WRAPPED_TOKEN_FILE_NAME;
+    private static final String WRAPPED_TOKEN_CONFIGURABLE_PATH = System.getProperty("core.casc.retriever.cache.location");
 
     private static InternalEndpointAuthentication INSTANCE;
 
@@ -46,9 +51,8 @@ public class InternalEndpointAuthentication {
     public static InternalEndpointAuthentication get() {
         if (INSTANCE == null) {
             InternalEndpointAuthentication newInstance = new InternalEndpointAuthentication();
-            if (WRAPPED_TOKEN_LOCATION != null) {
-                newInstance.wrappedToken = new File(WRAPPED_TOKEN_LOCATION, ".wrappedToken");
-            }
+            newInstance.wrappedToken = getTokenFile();
+            LOGGER.log(Level.FINE, String.format("Expected token path: %s", newInstance.wrappedToken.getAbsolutePath()));
             INSTANCE = newInstance;
         }
         return INSTANCE;
@@ -67,7 +71,7 @@ public class InternalEndpointAuthentication {
         }
         readToken();
         if (token == null) {
-            LOGGER.log(Level.WARNING, "Could not find token, rejecting request");
+            LOGGER.log(Level.WARNING, String.format("Could not find token in %s, rejecting request", wrappedToken.getAbsolutePath()));
             return false;
         }
         hmacSignature = hmacSignature.replaceFirst("sha256=", "");
@@ -85,6 +89,20 @@ public class InternalEndpointAuthentication {
         }
     }
 
+    private static File getTokenFile() {
+        if (StringUtils.isBlank(WRAPPED_TOKEN_CONFIGURABLE_PATH)) {
+            // We're expecting wrappedToken to be in ${core.casc.config.bundle}/../.retriever-cache/.wrappedToken unless specified by property
+            if (BUNDLE_LOCATION != null) { // Failsafe, should not be null
+                Path parent = Paths.get(BUNDLE_LOCATION).getParent();
+                if (parent != null) {
+                    return parent.resolve(WRAPPED_TOKEN_PATH).toFile();
+                }
+            }
+        }
+        // Absolute path is configured, so using it
+        return  Paths.get(WRAPPED_TOKEN_CONFIGURABLE_PATH).resolve(WRAPPED_TOKEN_FILE_NAME).toFile();
+    }
+
     private byte[] calculateSha(String message) throws NoSuchAlgorithmException, InvalidKeyException{
         Mac mac = Mac.getInstance("HmacSHA256");
         Key tokenKey = new SecretKeySpec(token, "HmacSHA256");
@@ -98,12 +116,10 @@ public class InternalEndpointAuthentication {
                 byte[] wrappedTokenBytes = FileUtils.readFileToByteArray(wrappedToken);
                 token = tokenUnwrap(wrappedTokenBytes);
                 LOGGER.log(Level.INFO, "Retriever communication token updated");
-                FileUtils.delete(wrappedToken); // We won't calculate the token until a new file appears
-                LOGGER.log(Level.FINE, "Deleted shared token file");
             }catch (IOException ex) {
                 LOGGER.log(Level.WARNING, "Could not manipulate wrapped token file (maybe permissions?)", ex);
             }
-        }
+        } 
     }
 
     private byte[] tokenUnwrap(byte[] wrappedToken) {
