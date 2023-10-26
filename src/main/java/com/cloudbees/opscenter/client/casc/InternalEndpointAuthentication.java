@@ -35,7 +35,10 @@ public class InternalEndpointAuthentication {
     public static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
 
     private static final String BUNDLE_LOCATION = System.getProperty("core.casc.config.bundle");
-    private static final String WRAPPED_TOKEN_PATH = ".retriever-cache/.wrappedToken";
+
+    private static final String WRAPPED_TOKEN_FILE_NAME = ".wrappedToken";
+    private static final String WRAPPED_TOKEN_PATH = ".retriever-cache/" + WRAPPED_TOKEN_FILE_NAME;
+    private static final String WRAPPED_TOKEN_CONFIGURABLE_PATH = System.getProperty("core.casc.retriever.cache.location");
 
     private static InternalEndpointAuthentication INSTANCE;
 
@@ -48,14 +51,8 @@ public class InternalEndpointAuthentication {
     public static InternalEndpointAuthentication get() {
         if (INSTANCE == null) {
             InternalEndpointAuthentication newInstance = new InternalEndpointAuthentication();
-            // We're expecting wrappedToken to be in ${core.casc.config.bundle}/../.retriever-cache/.wrappedToken
-            if (BUNDLE_LOCATION != null) {
-                Path parent = Paths.get(BUNDLE_LOCATION).getParent();
-                if (parent != null) {
-                    newInstance.wrappedToken = parent.resolve(WRAPPED_TOKEN_PATH).toFile();
-                    LOGGER.log(Level.FINE, String.format("Token expected path: %s", newInstance.wrappedToken.getAbsolutePath()));
-                }
-            }
+            newInstance.wrappedToken = getTokenFile();
+            LOGGER.log(Level.FINE, String.format("Expected token path: %s", newInstance.wrappedToken.getAbsolutePath()));
             INSTANCE = newInstance;
         }
         return INSTANCE;
@@ -90,6 +87,20 @@ public class InternalEndpointAuthentication {
             LOGGER.log(Level.WARNING, "Could not unwrap token, rejecting request", ex);
             return false;
         }
+    }
+
+    private static File getTokenFile() {
+        if (StringUtils.isBlank(WRAPPED_TOKEN_CONFIGURABLE_PATH)) {
+            // We're expecting wrappedToken to be in ${core.casc.config.bundle}/../.retriever-cache/.wrappedToken unless specified by property
+            if (BUNDLE_LOCATION != null) { // Failsafe, should not be null
+                Path parent = Paths.get(BUNDLE_LOCATION).getParent();
+                if (parent != null) {
+                    return parent.resolve(WRAPPED_TOKEN_PATH).toFile();
+                }
+            }
+        }
+        // Absolute path is configured, so using it
+        return  Paths.get(WRAPPED_TOKEN_CONFIGURABLE_PATH).resolve(WRAPPED_TOKEN_FILE_NAME).toFile();
     }
 
     private byte[] calculateSha(String message) throws NoSuchAlgorithmException, InvalidKeyException{
