@@ -71,7 +71,7 @@ public class InternalEndpointAuthentication {
         }
         readToken();
         if (token == null) {
-            LOGGER.log(Level.WARNING, "Could not find token, rejecting request");
+            LOGGER.log(Level.WARNING, String.format("Could not find token in %s, rejecting request", wrappedToken.getAbsolutePath()));
             return false;
         }
         hmacSignature = hmacSignature.replaceFirst("sha256=", "");
@@ -119,9 +119,7 @@ public class InternalEndpointAuthentication {
             }catch (IOException ex) {
                 LOGGER.log(Level.WARNING, "Could not manipulate wrapped token file (maybe permissions?)", ex);
             }
-        } else {
-            LOGGER.log(Level.WARNING, String.format("Could not find token in expected path: %s", wrappedToken == null ? "null" : wrappedToken.getAbsolutePath()));
-        }
+        } 
     }
 
     private byte[] tokenUnwrap(byte[] wrappedToken) {
