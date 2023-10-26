@@ -12,6 +12,8 @@ import net.sf.json.JSONObject;
 
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.XmlFile;
+import hudson.model.listeners.SaveableListener;
 import jenkins.model.GlobalConfiguration;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
@@ -170,11 +172,22 @@ public class BundleUpdateTimingConfiguration extends GlobalConfiguration {
             bundleUpdateTimingManager.setSkipNewVersions(skipNewVersions);
             bundleUpdateTimingManager.setReloadAlwaysOnRestart(reloadAlwaysOnRestart);
             bundleUpdateTimingManager.save(); // If outdated, it won't save and will log
+            notifyListeners();
             LOGGER.fine("Bundle Update Timing enabled. Saving");
         } else {
             LOGGER.fine("Saving when Bundle Update Timing is disabled. Ignoring request");
         }
         load(); // Make sure we keep the latest stored values
+    }
+
+    /**
+     * Fix to make sure changes are captured by HA.
+     * Regardless using a properties file instead of an XML one, HA reads the file location and triggers load(), so we
+     * don't even need to create a real XML, this could be done with a simple File if SaveableListener implemented  that method.
+     * Therefore, regardless XMLFile will really be a properties file the change will be propagated equally
+     */
+    private void notifyListeners() {
+        SaveableListener.fireOnChange(this, new XmlFile(BundleUpdateTimingManager.getConfigurationFile().toFile()));
     }
 
     @Override
