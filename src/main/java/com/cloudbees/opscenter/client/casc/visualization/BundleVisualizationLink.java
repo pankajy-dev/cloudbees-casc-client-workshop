@@ -297,8 +297,8 @@ public class BundleVisualizationLink extends ManagementLink {
         if (bundleInformation == null) {
             return null;
         }
-        String instant = ConfigurationBundleManager.get().getUpdateLog().getCurrentInstant();
-        return instant == null ? bundleInformation : bundleInformation + " " + ConfigurationUpdaterHelper.parse(instant);
+        String instant = ConfigurationBundleManager.get().getUpdateLog().getCurrentInstant().toString();
+        return instant == null ? bundleInformation : bundleInformation + " " + instant;
     }
 
     /**

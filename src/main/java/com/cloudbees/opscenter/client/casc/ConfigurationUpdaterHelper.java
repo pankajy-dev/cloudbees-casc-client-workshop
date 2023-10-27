@@ -865,29 +865,4 @@ public final class ConfigurationUpdaterHelper {
         return ldt.format(FORMATTER) + " UTC";
     }
 
-    /**
-     * Parse a String to convert it into the output format.
-     * Accepted input formats:
-     * - {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME} format.
-     * - {@link BundleUpdateLog#HISTORIC_FORMATTER} format.
-     * Output format: "{@link FormatStyle#LONG} {@link FormatStyle#SHORT} UTC" in {@link Locale#ENGLISH}. Ex, October 24, 2023, 11:50 AM UTC
-     * @param isoLDT String to parse
-     * @return String in the new format
-     * @throws DateTimeException if the date or time cannot be parsed
-     */
-    @CheckForNull
-    public static String parse(String isoLDT) {
-        if (isoLDT == null) {
-            return null;
-        }
-
-        LocalDateTime ldt = null;
-        try {
-            ldt = LocalDateTime.parse(isoLDT);
-        } catch (DateTimeParseException e) {
-            ldt = LocalDateTime.parse(isoLDT + " 00:00", DateTimeFormatter.ofPattern(BundleUpdateLog.FORMAT + " HH:mm"));
-        }
-
-        return parse(ldt);
-    }
 }
