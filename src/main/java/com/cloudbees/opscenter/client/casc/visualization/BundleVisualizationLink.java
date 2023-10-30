@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLogInstant;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -297,7 +298,7 @@ public class BundleVisualizationLink extends ManagementLink {
         if (bundleInformation == null) {
             return null;
         }
-        String instant = ConfigurationBundleManager.get().getUpdateLog().getCurrentInstant().toString();
+        BundleLogInstant instant = ConfigurationBundleManager.get().getUpdateLog().getCurrentInstant();
         return instant == null ? bundleInformation : bundleInformation + " " + instant;
     }
 
