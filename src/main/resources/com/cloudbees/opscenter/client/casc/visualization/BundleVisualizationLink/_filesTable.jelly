@@ -2,7 +2,7 @@
 <!--
     Table with the list of files in a bundle.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:d="jelly:define">
 
     <d:taglib uri="local">
         <d:tag name="row">
@@ -11,7 +11,7 @@
                 <td class="table__column table__column--description">${description}</td>
                 <td class="table__column table__column--actions">
                     <a id="view-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" target="_blank">
-                        <i class="fa fa-eye" title="Visualize"/>
+                        <l:icon src="symbol-eye-outline plugin-ionicons-api" title="Visualize" />
                     </a>
                     <a id="copy-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" target="_blank"
                        data-action="copy-in-clipboard"
@@ -19,10 +19,10 @@
                        data-error-message="${%CopyError(filename)}"
                        data-empty-file-message="${%Empty(filename)}"
                     >
-                        <i class="fa fa-copy" title="Copy content"/>
+                        <l:icon src="symbol-copy-outline plugin-ionicons-api" title="Copy content" />
                     </a>
                     <a id="download-${filename}" class="yui-button icon-button" href="${rootURL}/core-casc-export/${filename}" download="" target="_.blank">
-                        <i class="fa fa-download" title="Download"/>
+                        <l:icon src="symbol-download-outline plugin-ionicons-api" title="Download" />
                     </a>
                 </td>
             </tr>
@@ -41,6 +41,6 @@
     </table>
     <p>Download all exported files in zip format.</p>
     <a id="download-zip" class="yui-button icon-button" href="${rootURL}/core-casc-export/full-export" download="" target="_blank">
-        <i class="fa fa-download" title="Download"/>
+        <l:icon src="symbol-download-outline plugin-ionicons-api" title="Download" />
     </a>
 </j:jelly>

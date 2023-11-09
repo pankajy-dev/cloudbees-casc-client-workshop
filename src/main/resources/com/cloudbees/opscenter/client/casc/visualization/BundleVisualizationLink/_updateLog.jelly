@@ -23,7 +23,7 @@
                 </td>
                 <td class="table__column table__column--actions">
                     <a id="view-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank">
-                        <i class="fa fa-eye" title="Visualize"/>
+                        <l:icon src="symbol-eye-outline plugin-ionicons-api" title="Visualize" />
                     </a>
                     <a id="copy-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/validation/${folder}" target="_blank"
                        data-action="copy-in-clipboard"
@@ -31,10 +31,10 @@
                        data-error-message="${%CopyError(version)}"
                        data-empty-file-message="${%Empty(version)}"
                     >
-                        <i class="fa fa-copy" title="Copy content"/>
+                        <l:icon src="symbol-copy-outline plugin-ionicons-api" title="Copy content" />
                     </a>
                     <a id="download-${folder}" class="yui-button icon-button" href="${rootURL}/core-casc-update-log/download/${folder}" download="${folder}.zip" target="_.blank">
-                        <i class="fa fa-download" title="Download version"/>
+                        <l:icon src="symbol-download-outline plugin-ionicons-api" title="Download version" />
                     </a>
                 </td>
             </tr>
