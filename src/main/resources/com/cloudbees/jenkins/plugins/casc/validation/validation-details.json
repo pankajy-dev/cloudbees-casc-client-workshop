@@ -1,0 +1,163 @@
+{"validations": [
+  {
+    "category": "Bundle descriptor",
+    "code": "DESCRIPTOR",
+    "description": "Performs the following checks on the bundle availability pattern:\n\tChecks if an availability pattern is defined in the bundle but overriden in the UI, raising a warning.\tChecks that no controller not matching the availability pattern is using the bundle, raising an error if so.",
+    "level": "ERROR",
+    "validator": "AvailabilityPatternValidator"
+  },
+  {
+    "category": "Bundle descriptor",
+    "code": "BUNDLE_STRUCTURE",
+    "description": "Checks that defined parent bundle exists and has a valid descriptor, raising an error if not.\nAdditionally checks for bundle descriptor existence for current bundle.",
+    "level": "ERROR",
+    "validator": "ParentValidator"
+  },
+  {
+    "validator": "ItemsValidator",
+    "level": "ERROR",
+    "description": "Validates items configuration. This validator will run only on an up an running instance.\nPerforms validations on:\n \tRBAC configuration, generating warnings in case of not applicable roles, they might be provided by an external source.\tInvalid removeStrategy or itemRemoveStrategy, generating an error.\tUnknown item attributes or missing kind, generating an error.\tEmpty (no items) yaml file, generating a warning.\tUnparseable item or unknown kind, generating a warning as it normally is caused by a missing plugin\tDefined root can not be found, generating an error.",
+    "code": "ITEMS_DEFINITION",
+    "category": "Items"
+  },
+  {
+    "validator": "RbacValidator",
+    "level": "ERROR",
+    "description": "Performs several validations regarding RBAC, including:\n\tAuthorization strategy is set to RoleMatrixAuthorizationStrategy, generating an error if not.\n\tAuthorization strategy is set to RoleMatrixAuthorizationStrategy in the bundle, generating a warning if not, as it may change and the bundle could become invalid.\n\tBundle defines permissions that are not recognized, generating an error.\n\tUnparseable (malformed) RBAC file, generating an error.\n\tRBAC file is present but doesn't define any configuration, generating a warning",
+    "code": "RBAC_CONFIGURATION",
+    "category": "RBAC"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "RBAC",
+    "validator": "RbacSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the RBAC files against RBAC schema to verify it has the expected structure"
+  },
+  {
+    "code": "PLUGIN_AVAILABLE",
+    "category": "Plugins",
+    "validator": "PluginsToInstallValidator",
+    "level": "WARNING",
+    "description": "Checks that plugins defined in plugins section (including those defined in the catalog) can be installed."
+  },
+  {
+    "code": "SCHEMA",
+    "category": "Plugin catalog",
+    "validator": "PluginCatalogSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the plugin catalog files against plugin catalog schema to verify it has the expected structure"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "Variables",
+    "validator": "VariablesSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the variables files against variables schema to verify it has the expected structure"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "Items",
+    "validator": "ItemsSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the items yaml files against items schema to verify it has the expected structure"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "Plugins",
+    "validator": "PluginsSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the plugins files against plugins schema to verify it has the expected structure"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "YAML files structure",
+    "validator": "YamlSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks YAML files are well-formed and matching defined schemas. Applies to all yaml files in the bundle."
+  },
+  {
+    "code": "DESCRIPTOR",
+    "category": "Bundle descriptor",
+    "validator": "DescriptorValidator",
+    "level": "ERROR",
+    "description": "Verifies bundle descriptor has an id and all sections reference only folders or yaml files."
+  },
+  {
+    "code": "BUNDLE_API",
+    "category": "Bundle descriptor",
+    "validator": "ApiValidator",
+    "level": "ERROR",
+    "description": "Checks apiVersion defined in the bundle descriptor is a positive integer"
+  },
+  {
+    "code": "BUNDLE_CONTENT",
+    "category": "Bundle physical structure",
+    "validator": "ContentBundleValidator",
+    "level": "ERROR",
+    "description": "Checks all files and folders specified in the descriptor exist."
+  },
+  {
+    "code": "BUNDLE_ITEM_STRATEGY",
+    "category": "Bundle descriptor",
+    "validator": "ItemRemoveStrategyValidator",
+    "level": "ERROR",
+    "description": "Checks that itemRemoveStrategy has the valid structure if defined at descriptor level"
+  },
+  {
+    "code": "BUNDLE_VERSION",
+    "category": "Bundle descriptor",
+    "validator": "VersionValidator",
+    "level": "ERROR",
+    "description": "Bundle descriptor should always have a version"
+  },
+  {
+    "code": "BUNDLE_STRUCTURE",
+    "category": "Bundle physical structure",
+    "validator": "FileSystemBundleValidator",
+    "level": "ERROR",
+    "description": "Checks bundle file restrictions: it is a non empty folder, with a descriptor and only YAML files or folders are present"
+  },
+  {
+    "code": "SCHEMA",
+    "category": "Bundle descriptor",
+    "validator": "BundleSchemaValidator",
+    "level": "ERROR",
+    "description": "Checks the bundle descriptor against descriptor schema to verify it has the expected structure"
+  },
+  {
+    "code": "PLUGIN_CATALOG",
+    "category": "Plugin catalog",
+    "validator": "MultipleCatalogFilesValidator",
+    "level": "WARNING",
+    "description": "Checks if more than one plugin catalog is being used. Only one catalog can be used, so a warning will inform if multiple."
+  },
+  {
+    "code": "BUNDLE_VERSION",
+    "category": "Bundle descriptor",
+    "validator": "JcascMergeStrategyValidator",
+    "level": "ERROR",
+    "description": "Checks that defined jCasC merge strategy is valid."
+  },
+  {
+    "code": "PLUGIN_CATALOG",
+    "category": "Plugin catalog",
+    "validator": "PluginCatalogInOCValidator",
+    "level": "WARNING",
+    "description": "Checks if using a plugin catalog in Operations Center, which is not supported."
+  },
+  {
+    "description": "Checks the plugin catalog validity. It can raise warnings if:\n\tExceptions are indicated but not allowed.\n\tPlugin indicated in the catalog is already in CAP.\n\tAll plugins in CAP are added as exceptions.\n\tIndicated plugin is not part of CAP or is a downgrade.\n\tProduct version is not high enough to use a plugin\n\tTransitive dependencies of a plugin are not present in CAP or catalog.",
+    "level": "WARNING",
+    "validator": "PluginCatalogValidator",
+    "category": "Plugin catalog",
+    "code": "PLUGIN_CATALOG"
+  },
+  {
+    "description": "Performs several validations in the jCasC section.\nThis checks are performed by the open source plugin and include generating when using deprecated or restricted attributes.",
+    "level": "WARNING",
+    "validator": "JCasCValidatorExtension",
+    "category": "jCasC",
+    "code": "JCASC_CONFIGURATION"
+  }
+]}
