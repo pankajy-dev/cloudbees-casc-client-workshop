@@ -68,7 +68,7 @@
                                                     <j:if test="${it.withDiff()}">
                                                         <p class="mb-0">See the differences with the current version.</p>
                                                         <a id="diff" class="yui-button icon-button" href="${rootURL}/bundle-diff-visualization/descriptor">
-                                                            <i class="fa fa-columns" title="See differences"/>
+                                                            <l:icon src="symbol-swap-horizontal-outline plugin-ionicons-api" class="icon-sm" title="See differences" />
                                                         </a>
                                                     </j:if>
                                                 </div>

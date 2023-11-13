@@ -127,6 +127,12 @@
       <artifactId>cloudbees-assurance</artifactId>
     </dependency>
 
+    <!-- dependency for the icons -->
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>ionicons-api</artifactId>
+    </dependency>
+
     <!-- Test -->
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>

@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:cbcipm="/lib/cbci/pluginManagement">
 
     <div id="cbci-casc-bundle-visualization">
         <cbcipm:layout
@@ -16,7 +16,7 @@
                 <cbcipm:tab title="${%BundleUpdate}" href="${rootURL}/casc-bundle-export-ui/bundleUpdate">
                     ${%BundleUpdate}
                     <j:if test="${it.isUpdateAvailable()}">
-                        <i class="fa fa-bell primary-text" aria-hidden="true"></i>
+                        <l:icon src="symbol-notifications-outline plugin-ionicons-api" class="icon-sm" title="Notification" />
                     </j:if>
                 </cbcipm:tab>
                 <cbcipm:tab title="${%UpdateLog}" href="${rootURL}/casc-bundle-export-ui/updateLog">${%UpdateLog}</cbcipm:tab>
