@@ -1,8 +1,9 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
@@ -29,8 +30,11 @@ public class AvailableValidationsCommand extends CLICommand {
     protected int run() throws Exception {
         // Notice this command doesn't do any explicit permission check, as it's returning a simple report of existing validations
         // so it gives no info about installed plugins or sensible information.
-        String validations = Files.readAllLines(Paths.get(Thread.currentThread().getContextClassLoader().getResource("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json").toURI()), Charset.defaultCharset())
-                                     .stream().collect(Collectors.joining("\n"));
+        String validations = "";
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.defaultCharset()));) {
+            validations = reader.lines().collect(Collectors.joining("\n"));
+        }
         JSONObject json = new JSONObject(validations);
         stdout.println(json.toString(2));
         return 0;
