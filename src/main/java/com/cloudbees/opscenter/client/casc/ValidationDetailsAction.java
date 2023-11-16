@@ -1,10 +1,11 @@
 package com.cloudbees.opscenter.client.casc;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 import org.kohsuke.stapler.HttpResponse;
@@ -39,8 +40,11 @@ public class ValidationDetailsAction implements RootAction {
     public HttpResponse doGetValidationsDetails() throws URISyntaxException, IOException {
         // Notice this command doesn't do any explicit permission check others than jenkins security settings, as it's returning a simple report of existing validations
         // so it gives no info about installed plugins or sensible information.
-        String validations = Files.readAllLines(Paths.get(Thread.currentThread().getContextClassLoader().getResource("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json").toURI()), Charset.defaultCharset())
-                                  .stream().collect(Collectors.joining("\n"));
+        String validations = "";
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.defaultCharset()));) {
+            validations = reader.lines().collect(Collectors.joining("\n"));
+        }
         JSONObject json = JSONObject.fromObject(validations);
         return new JsonHttpResponse(json);
     }
