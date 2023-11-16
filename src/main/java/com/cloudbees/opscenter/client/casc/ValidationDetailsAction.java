@@ -41,7 +41,7 @@ public class ValidationDetailsAction implements RootAction {
         // Notice this command doesn't do any explicit permission check others than jenkins security settings, as it's returning a simple report of existing validations
         // so it gives no info about installed plugins or sensible information.
         String validations = "";
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json");
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("com/cloudbees/jenkins/plugins/casc/validation/validation-details.json");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.defaultCharset()));) {
             validations = reader.lines().collect(Collectors.joining("\n"));
         }
