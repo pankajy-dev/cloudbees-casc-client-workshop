@@ -121,7 +121,6 @@
       <artifactId>configuration-as-code</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-assurance</artifactId>
@@ -143,6 +142,11 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-casc-items-commons</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.tiger.plugins</groupId>
+      <artifactId>master-provisioning-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
