@@ -13,7 +13,7 @@ items:
         gitTool: git
         userRemoteConfigs:
           - userRemoteConfig:
-              url: "https://github.com/joostvdg/jenkins-examples.git"
+              url: "https://github.com/cloudbeers/pulsar-casc-bundles.git"
     builders:
       - shell:
           command: "cp -R casc/* ${JENKINS_HOME}/jcasc-bundles-store"
