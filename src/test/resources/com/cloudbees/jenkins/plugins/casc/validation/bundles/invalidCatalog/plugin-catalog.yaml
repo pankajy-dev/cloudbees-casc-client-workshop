@@ -6,6 +6,6 @@ configurations:
 - description: Bundle catalog
   includePlugins:
     icon-shim:
-      version: 1.0.1
+      url: %%URL%%/icon-shim-1.0.1.hpi
     beer:
-      version: 1.2
+      url: %%URL%%/beer-1.2.hpi

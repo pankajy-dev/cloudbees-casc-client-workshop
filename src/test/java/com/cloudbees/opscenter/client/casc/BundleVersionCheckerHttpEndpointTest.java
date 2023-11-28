@@ -64,7 +64,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-5.zip", true);
-        assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), true);
+        assertVersions(jsonResult, "version-5.zip", "2", empty(), "5", contains("WARNING - [CONTVAL] - Unreferenced files/folders empty.yaml found in bundle folder."), true);
         assertUpdateType(jsonResult, "version-5.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
@@ -73,7 +73,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-6.zip", true);
-        assertVersions(jsonResult, "version-6.zip", "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), "6", contains("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer."), false);
+        assertVersions(jsonResult, "version-6.zip", "5", contains("WARNING - [CONTVAL] - Unreferenced files/folders empty.yaml found in bundle folder."), "6", contains("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer."), false);
         assertUpdateType(jsonResult, "version-6.zip", null);
 
         // Updated to version 7 - Valid
@@ -81,7 +81,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-7.zip", true);
-        assertVersions(jsonResult, "version-7.zip", "5", contains(containsString("[CATALOGVAL] - More than one plugin catalog file used")), "7", empty(), true);
+        assertVersions(jsonResult, "version-7.zip", "5", contains("WARNING - [CONTVAL] - Unreferenced files/folders empty.yaml found in bundle folder."), "7", empty(), true);
         assertUpdateType(jsonResult, "version-7.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 

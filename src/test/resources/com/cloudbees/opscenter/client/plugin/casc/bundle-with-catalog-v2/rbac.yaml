@@ -6,7 +6,6 @@ roles:
       - hudson.model.Hudson.Administer
     name: administer
   - permissions:
-      - hudson.model.Hudson.Manage
       - hudson.model.Item.Configure
       - hudson.model.Item.Create
       - hudson.model.Item.Read
