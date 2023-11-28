@@ -8,6 +8,11 @@ import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleReloadCommand;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
+import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import hudson.ExtensionList;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
@@ -20,15 +25,26 @@ import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 import static org.awaitility.Awaitility.await;
@@ -44,13 +60,49 @@ import static org.hamcrest.Matchers.is;
  * This test mix CLI and API calls to make sure there is no side effect.
  */
 public class BundleVersionUpdatesDetectionTest extends AbstractBundleVersionCheckerTest {
+    @ClassRule
+    public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
+    @ClassRule
+    public static TemporaryFolder bundlesSrc = new TemporaryFolder();
+
+    @BeforeClass
+    public static void processBundles() throws Exception {
+        wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
+        wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
+
+        FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc").toFile(), bundlesSrc.getRoot());
+
+        // Sanitise plugin-catalog.yaml
+        Path pcFile1 = bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog").resolve("plugin-catalog.yaml");
+        String content;
+        try (InputStream in = FileUtils.openInputStream(pcFile1.toFile())) {
+            content = IOUtils.toString(in, StandardCharsets.UTF_8);
+        }
+        try (OutputStream out = FileUtils.openOutputStream(pcFile1.toFile(), false)) {
+            IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
+        }
+
+    }
 
     @Test
     @Issue({"BEE-34438"})
     @WithEnvelope(TwoPluginsV2dot289.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/initial-bundle")
     public void testBundleVersionUpdatesDetection()
-            throws IOException {
+            throws Exception {
+        // This is a dirty hack to be able to manipulate the plugin catalog as in the BeforeClass method:
+        // - WithConfigBundle needs a static resource, so we cannot use the "hacked" bundle that is in the TemporaryFolder rule
+        // - So we initialize the CJPRule using a dummy bundle
+        // - First thing we do is to apply the real bundle we need for this test (We need plugin catalog to force the bundle as no hot-reloadable)
+        //      - Change the System property to point to the real bundle
+        //      - Force the check of the new version
+        //      - Force the reload of the bundle
+        //      - As the reload is done in a background thread, we wait until it's finished
+        System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
+        await("Version is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
         rule.jenkins.setSecurityRealm(new HudsonPrivateSecurityRealm(false, false, null));
         rule.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
 
@@ -230,12 +282,13 @@ public class BundleVersionUpdatesDetectionTest extends AbstractBundleVersionChec
         await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
     }
 
-    private void newBundleAvailable(String number) {
+    private void newBundleAvailable(String number) throws Exception {
         String path = String.format(
                 "src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-%s.zip",
                 number
         );
         System.setProperty("core.casc.config.bundle", Paths.get(path).toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
     }
 
     private void assertThatIsSuccessful(WebResponse resp) {

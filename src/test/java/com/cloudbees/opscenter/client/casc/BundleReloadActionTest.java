@@ -8,6 +8,10 @@ import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
+import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
@@ -25,20 +29,28 @@ import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
 import org.awaitility.Awaitility;
-import org.junit.AfterClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 
@@ -52,6 +64,35 @@ import static org.hamcrest.Matchers.nullValue;
 
 public class BundleReloadActionTest extends AbstractIMTest {
 
+    @ClassRule
+    public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
+    @ClassRule
+    public static TemporaryFolder bundlesSrc = new TemporaryFolder();
+
+    @BeforeClass
+    public static void processBundles() throws Exception {
+        wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
+        wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
+
+        FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc").toFile(), bundlesSrc.getRoot());
+        // Sanitise plugin-catalog.yaml
+        Path pcFile1 = bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog").resolve("plugin-catalog.yaml");
+        String content;
+        try (InputStream in = FileUtils.openInputStream(pcFile1.toFile())) {
+            content = IOUtils.toString(in, StandardCharsets.UTF_8);
+        }
+        try (OutputStream out = FileUtils.openOutputStream(pcFile1.toFile(), false)) {
+            IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
+        }
+        Path pcFile2 = bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog-v2").resolve("plugin-catalog.yaml");
+        try (InputStream in = FileUtils.openInputStream(pcFile2.toFile())) {
+            content = IOUtils.toString(in, StandardCharsets.UTF_8);
+        }
+        try (OutputStream out = FileUtils.openOutputStream(pcFile2.toFile(), false)) {
+            IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
+        }
+    }
+
     @Rule
     public final CJPRule rule;
 
@@ -59,8 +100,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
      * Rule to restore system props after modifying them in a test
      */
     @Rule
-    public final FlagRule<String> props = FlagRule.systemProperty("core.casc.config.bundle", "src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle"
-                                                                                             + "-with-catalog");
+    public final FlagRule<String> props = FlagRule.systemProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
 
     public BundleReloadActionTest() {
         this.rule = new CJPRule(this.tmp);
@@ -73,8 +113,20 @@ public class BundleReloadActionTest extends AbstractIMTest {
 
     @Test
     @WithEnvelope(TwoPluginsV2dot289.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/initial-bundle")
     public void checkHigherVersionAndHotReloadTest() throws Exception {
+        // This is a dirty hack to be able to manipulate the plugin catalog as in the BeforeClass method:
+        // - WithConfigBundle needs a static resource, so we cannot use the "hacked" bundle that is in the TemporaryFolder rule
+        // - So we initialize the CJPRule using a dummy bundle
+        // - First thing we do is to apply the real bundle we need for this test (We need plugin catalog to force the bundle as no hot-reloadable)
+        //      - Change the System property to point to the real bundle
+        //      - Force the check of the new version
+        //      - Force the reload of the bundle
+        //      - As the reload is done in a background thread, we wait until it's finished
+        System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
+        await("Version 1 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         initializeRealm(rule);
         // GIVEN The bundle is version 1 and there are 2 users: admin (with ADMINISTER role) and user (with READ role)
         User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
@@ -105,7 +157,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("We should get a 403", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
 
         // WHEN there's a new version of the bundle
-        System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/bundle-with-catalog-v2").toFile().getAbsolutePath());
+        System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog-v2").toFile().getAbsolutePath());
         // THEN any user should get a 200 with update-available: true
 
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc, false);
