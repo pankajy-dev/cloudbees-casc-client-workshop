@@ -29,7 +29,12 @@ import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
 import org.awaitility.Awaitility;
-import org.junit.*;
+
+import org.junit.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
