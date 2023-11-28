@@ -28,7 +28,7 @@ public class ConfigurationUpdaterHelperTest {
     public CJPRule j = new CJPRule(tmp);
 
     @WithEnvelope(V2dot319.class) //We need a fairly recent version
-    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog")
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bundleWithNoCatalog")
     @Test
     public void getUpdateCheckJsonResponseQuiet() {
         boolean hasInfo = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, UpdateType.RESTART, false)
@@ -41,7 +41,7 @@ public class ConfigurationUpdaterHelperTest {
     }
 
     @WithEnvelope(V2dot319.class) //We need a fairly recent version
-    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog")
+    @WithConfigBundle("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bundleWithNoCatalog")
     @Test
     public void getUpdateCheckJsonResponse() {
         JSONObject updateCheckJsonResponse = ConfigurationUpdaterHelper.getUpdateCheckJsonResponse(false, UpdateType.RESTART, true);
@@ -57,7 +57,7 @@ public class ConfigurationUpdaterHelperTest {
     @Test
     public void fullValidation() {
         List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(
-                Path.of("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog"),
+                Path.of("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bundleWithNoCatalog"),
                 false);
         boolean hasInfo = validations.stream()
                                      .anyMatch((message) -> message.toString().contains("INFO"));
@@ -68,7 +68,7 @@ public class ConfigurationUpdaterHelperTest {
     @Test
     public void fullValidationQuiet() {
         List<Validation> validations = ConfigurationUpdaterHelper.fullValidation(
-                Path.of("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/validCatalog"),
+                Path.of("src/test/resources/com/cloudbees/jenkins/plugins/casc/validation/bundles/bundleWithNoCatalog"),
                 true);
         boolean hasInfo = validations.stream()
                                      .anyMatch((message) -> message.toString().contains("INFO"));
