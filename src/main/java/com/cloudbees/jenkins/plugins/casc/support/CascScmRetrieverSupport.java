@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  * It will include the logs for both the init-container and the sidecar
  */
 
-@OptionalExtension(requirePlugins = {"master-provisioning-core", "support-core"})
+@OptionalExtension(requirePlugins = {"master-provisioning-kubernetes", "support-core"})
 public class CascScmRetrieverSupport extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(CascScmRetrieverSupport.class.getName());
