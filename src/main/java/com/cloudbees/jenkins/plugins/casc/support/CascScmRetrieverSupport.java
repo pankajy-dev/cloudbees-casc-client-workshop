@@ -40,7 +40,7 @@ public class CascScmRetrieverSupport extends Component {
     public String getLogDirectory() {
         //NOTE: this default value needs to be in sync with what is in the helm charts,
         // currently it is not user-modifiable here or in the charts.
-        return System.getProperty(CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, "/var/jenkins_config/casc-retriever");
+        return System.getProperty(CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, "/var/jenkins_home/logs/casc-retriever");
     }
     @NonNull
     @Override
