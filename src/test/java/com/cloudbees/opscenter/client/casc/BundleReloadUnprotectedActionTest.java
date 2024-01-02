@@ -96,8 +96,8 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
         String validToken = "token";
         FileUtils.writeByteArrayToFile(bundlePath.toPath().getParent().resolve(".retriever-cache").resolve(".wrappedToken").toFile(),
-                                       wrapInPublicKey(instanceIdentity.getPublic(), validToken));
-        String validSha = calculateSha("legitMessage", validToken);
+                InternalEndpointAuthTestHelper.wrapInPublicKey(instanceIdentity.getPublic(), validToken));
+        String validSha = InternalEndpointAuthTestHelper.calculateSha("legitMessage", validToken);
 
         loggerRule.record(InternalEndpointAuthentication.class, Level.INFO);
         loggerRule.capture(1);
@@ -153,8 +153,8 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
         String validToken = "token";
         FileUtils.writeByteArrayToFile(bundlePath.toPath().getParent().resolve(".retriever-cache").resolve(".wrappedToken").toFile(),
-                                       wrapInPublicKey(instanceIdentity.getPublic(), validToken));
-        String validSha = calculateSha("legitMessage", validToken);
+                                       InternalEndpointAuthTestHelper.wrapInPublicKey(instanceIdentity.getPublic(), validToken));
+        String validSha = InternalEndpointAuthTestHelper.calculateSha("legitMessage", validToken);
 
         loggerRule.record(InternalEndpointAuthentication.class, Level.INFO);
         loggerRule.capture(1);
@@ -205,21 +205,6 @@ public class BundleReloadUnprotectedActionTest extends AbstractIMTest {
     private static void initializeRealm(CJPRule j){
         j.jenkins.setSecurityRealm(new HudsonPrivateSecurityRealm(false, false, null));
         j.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
-    }
-
-    private String calculateSha(String message, String token) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        Key tokenKey = new SecretKeySpec(token.getBytes(), "HmacSHA256");
-        mac.init(tokenKey);
-        byte[] bytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(bytes);
-    }
-
-    private byte[] wrapInPublicKey(Key publicKey, String token) throws Exception{
-        Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        c.init(Cipher.WRAP_MODE, publicKey);
-        Key sessionKey = new SecretKeySpec(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), "RSA");
-        return c.wrap(sessionKey);
     }
 
     @After

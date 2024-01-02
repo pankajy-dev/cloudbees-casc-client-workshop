@@ -52,30 +52,15 @@ public class InternalEndpointAuthenticationWithConfigTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
 
         // Let's wrap a token with the pub key
-        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "token");
+        byte[] wrappedTokenBytes = InternalEndpointAuthTestHelper.wrapInPublicKey(instanceIdentity.getPublic(), "token");
         File wrappedTokenFile = Paths.get(configurablePath).resolve(".wrappedToken").toFile();
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
         // Validation should pass
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "token"));
+        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(InternalEndpointAuthTestHelper.calculateSha("body", "token"));
         Mockito.when(request.getHeader(InternalEndpointAuthentication.HMAC_MESSAGE_HEADER)).thenReturn("body");
         boolean validationPasses = InternalEndpointAuthentication.get().validate(request);
         assertThat("Validation passes", validationPasses, is(true));
-    }
-
-    private String calculateSha(String message, String token) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        Key tokenKey = new SecretKeySpec(token.getBytes(), "HmacSHA256");
-        mac.init(tokenKey);
-        byte[] bytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(bytes);
-    }
-
-    private byte[] wrapInPublicKey(Key publicKey, String token) throws Exception{
-        Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        c.init(Cipher.WRAP_MODE, publicKey);
-        Key sessionKey = new SecretKeySpec(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), "RSA");
-        return c.wrap(sessionKey);
     }
 }
