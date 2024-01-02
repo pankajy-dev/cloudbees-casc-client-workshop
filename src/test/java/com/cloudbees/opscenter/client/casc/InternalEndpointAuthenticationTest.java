@@ -48,7 +48,7 @@ public class InternalEndpointAuthenticationTest {
         InstanceIdentity instanceIdentity = new InstanceIdentity();
 
         // Let's wrap a token with the pub key
-        byte[] wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "token");
+        byte[] wrappedTokenBytes = InternalEndpointAuthTestHelper.wrapInPublicKey(instanceIdentity.getPublic(), "token");
         File wrappedTokenFile = bundleHome.toPath().getParent().resolve(".retriever-cache/.wrappedToken").toFile();
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
@@ -73,12 +73,12 @@ public class InternalEndpointAuthenticationTest {
         assertThat("Validation doesn't pass", validationPasses, is(false));
 
         // Generating a valid token
-        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(calculateSha("body", "token"));
+        Mockito.when(request.getHeader("X-cbci-token")).thenReturn(InternalEndpointAuthTestHelper.calculateSha("body", "token"));
         validationPasses = internalEndpointAuthentication.validate(request);
         assertThat("Validation passes", validationPasses, is(true));
 
         // Regenerate the token to simulate requester token expiration
-        wrappedTokenBytes = wrapInPublicKey(instanceIdentity.getPublic(), "anotherToken");
+        wrappedTokenBytes = InternalEndpointAuthTestHelper.wrapInPublicKey(instanceIdentity.getPublic(), "anotherToken");
         FileUtils.writeByteArrayToFile(wrappedTokenFile, wrappedTokenBytes);
 
         logger.capture(2);
@@ -86,20 +86,5 @@ public class InternalEndpointAuthenticationTest {
         tokenProcessedLog = logger.getRecords().stream().filter(log -> log.getLevel().equals(Level.INFO)).anyMatch(record -> record.getMessage().contains("token updated"));
         assertThat("token file has been processed", tokenProcessedLog, is(true));
         assertThat("Validation fails, as token has been refreshed", validationPasses, is(false));
-    }
-
-    private String calculateSha(String message, String token) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        Key tokenKey = new SecretKeySpec(token.getBytes(), "HmacSHA256");
-        mac.init(tokenKey);
-        byte[] bytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(bytes);
-    }
-
-    private byte[] wrapInPublicKey(Key publicKey, String token) throws Exception{
-        Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        c.init(Cipher.WRAP_MODE, publicKey);
-        Key sessionKey = new SecretKeySpec(Base64.getEncoder().encode(token.getBytes(StandardCharsets.UTF_8)), "RSA");
-        return c.wrap(sessionKey);
     }
 }

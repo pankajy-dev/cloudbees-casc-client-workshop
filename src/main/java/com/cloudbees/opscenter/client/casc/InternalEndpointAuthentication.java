@@ -31,6 +31,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public class InternalEndpointAuthentication {
     private static final Logger LOGGER = Logger.getLogger(InternalEndpointAuthentication.class.getName());
 
+    public static final String CIPHER_TRANSFORMATION = "RSA/ECB/PKCS1Padding";
+    public static final String WRAPPED_KEY_ALGORITHM = "HmacSHA512";
+    public static final String SINGATURE_ALGORITHM = "HmacSHA256";
+
     public static final String HMAC_HEADER = "X-cbci-token";
     public static final String HMAC_MESSAGE_HEADER = "X-cbci-token-message";
 
@@ -104,8 +108,8 @@ public class InternalEndpointAuthentication {
     }
 
     private byte[] calculateSha(String message) throws NoSuchAlgorithmException, InvalidKeyException{
-        Mac mac = Mac.getInstance("HmacSHA256");
-        Key tokenKey = new SecretKeySpec(token, "HmacSHA256");
+        Mac mac = Mac.getInstance(SINGATURE_ALGORITHM);
+        Key tokenKey = new SecretKeySpec(token, SINGATURE_ALGORITHM);
         mac.init(tokenKey);
         return Base64.getEncoder().encode(mac.doFinal(message.getBytes(StandardCharsets.UTF_8)));
     }
@@ -125,10 +129,10 @@ public class InternalEndpointAuthentication {
     private byte[] tokenUnwrap(byte[] wrappedToken) {
         try {
             InstanceIdentity identity = new InstanceIdentity();
-            Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher c = Cipher.getInstance(CIPHER_TRANSFORMATION);
             c.init(Cipher.UNWRAP_MODE, identity.getPrivate());
-            SecretKey unwrappedToken = (SecretKey) c.unwrap(wrappedToken, "RSA", Cipher.SECRET_KEY);
-            return Base64.getDecoder().decode(unwrappedToken.getEncoded());
+            SecretKey unwrappedToken = (SecretKey) c.unwrap(wrappedToken, WRAPPED_KEY_ALGORITHM, Cipher.SECRET_KEY);
+            return unwrappedToken.getEncoded();
         } catch (IOException ex) {
             LOGGER.log(Level.WARNING, "Could not get instance identity, token-authenticated endpoints will not be available", ex);
             return null;
