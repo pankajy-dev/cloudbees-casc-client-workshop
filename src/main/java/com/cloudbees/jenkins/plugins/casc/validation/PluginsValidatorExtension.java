@@ -63,9 +63,7 @@ public class PluginsValidatorExtension extends AbstractValidator{
 
         PluginsToInstallValidator validator = new PluginsToInstallValidator();
         Collection<Validation> validations = validator.validate(new PathPlainBundle(bundlePath));
-        if (!validations.isEmpty()) {
-            LOGGER.log(Level.WARNING, String.format("Some plugins can not be installed: %s", validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
-        }
+        logValidation(LOGGER, "Some plugins can not be installed: %s", validations);
         return validations.stream().collect(Collectors.toList());
     }
 

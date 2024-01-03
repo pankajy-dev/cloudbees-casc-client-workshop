@@ -21,8 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -171,6 +174,33 @@ public abstract class AbstractValidator implements ExtensionPoint {
         }
         if (!validations.isEmpty()) {
             throw new InvalidBundleException(validations);
+        }
+    }
+
+    /**
+     * Log the validation as follows:
+     * <ul>
+     *     <li>Validations with {@link com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation.Level#INFO} are logged individually</li>
+     *     <li>All others validations are joined into a single {@link String} using {@link String#format(String, Object...)}</li>
+     * </ul>
+     * @param logger The logger to use
+     * @param warningAndErrorMessage Log the warnings and errors using this message. It must include one "%s" which will be used to display joined messages.
+     * @param validations The validations to display.
+     */
+    public static void logValidation(Logger logger, String warningAndErrorMessage, Collection<Validation> validations) {
+        if (!validations.isEmpty()) {
+            List<Validation> infos =
+                    validations.stream().filter(validation -> validation.getLevel() == Validation.Level.INFO).collect(Collectors.toList());
+            infos.forEach(validation -> logger.log(Level.INFO, validation.getMessage()));
+
+            List<String> other = validations
+                    .stream()
+                    .filter(validation -> validation.getLevel() != Validation.Level.INFO)
+                    .map(Validation::getMessage)
+                    .collect(Collectors.toList());
+            if (!other.isEmpty()) {
+                logger.log(Level.WARNING, String.format(warningAndErrorMessage, String.join(",", other)));
+            }
         }
     }
 

@@ -63,9 +63,7 @@ public class ItemsValidatorExtension extends AbstractValidator{
 
         ItemsValidator validator = new ItemsValidator();
         Collection<Validation> validations = validator.validate(new PathPlainBundle(bundlePath));
-        if (!validations.isEmpty()) {
-            LOGGER.log(Level.WARNING, String.format("Some items could not be created: %s", validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
-        }
+        logValidation(LOGGER, "Some items could not be created: %s", validations);
         return validations.stream().collect(Collectors.toList());
     }
 }
