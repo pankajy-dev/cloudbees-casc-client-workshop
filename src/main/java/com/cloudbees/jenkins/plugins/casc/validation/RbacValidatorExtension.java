@@ -67,9 +67,7 @@ public class RbacValidatorExtension extends AbstractValidator{
 
         RbacValidator validator = new RbacValidator();
         Collection<Validation> validations = validator.validate(new PathPlainBundle(bundlePath));
-        if (!validations.isEmpty()) {
-            LOGGER.log(Level.WARNING, String.format("Problems when processing RBAC detected: %s", validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
-        }
+        logValidation(LOGGER, "Problems when processing RBAC detected: %s", validations);
         return validations.stream().collect(Collectors.toList());
     }
 }

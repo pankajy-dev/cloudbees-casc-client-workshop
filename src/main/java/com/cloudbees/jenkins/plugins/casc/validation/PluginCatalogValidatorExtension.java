@@ -62,12 +62,10 @@ public class PluginCatalogValidatorExtension extends AbstractValidator{
 
         PluginCatalogValidator validator = new PluginCatalogValidator();
         Collection<Validation> validations = validator.validate(new PathPlainBundle(bundlePath));
-        if (!validations.isEmpty()) {
-            LOGGER.log(Level.WARNING, String.format("Some plugins in the catalog were not added to the envelope: %s",
-                                                    validations.stream().map(x -> x.getMessage()).collect(Collectors.joining(","))));
-        } else {
+        if (validations.isEmpty()) {
             validations.add(Validation.info(ValidationCode.PLUGIN_CATALOG, "[PluginCatalogValidator] All plugins in catalog were added to the envelope"));
         }
+        logValidation(LOGGER, "Some plugins in the catalog were not added to the envelope: %s", validations);
         return validations.stream().collect(Collectors.toList());
     }
 }
