@@ -405,17 +405,16 @@ public class BundleVisualizationLink extends ManagementLink {
     public List<String> getItemsToDelete() {
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         try {
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            if (bundle.getItems() == null) { // Not needed after cloudbees-casc-items-api:2.25
-                return Collections.EMPTY_LIST;
-            } else {
-                return service.getDeletionsOnReload(bundle);
-            }
-
+            ConfigurationBundleManager configurationBundleManager = ConfigurationBundleManager.get();
+            ConfigurationBundle bundle = Objects.requireNonNullElse(
+                    configurationBundleManager.getCandidateAsConfigurationBundle(),
+                    configurationBundleManager.getConfigurationBundle()
+            );
+            return service.getDeletionsOnReload(bundle);
         } catch (CasCException ex){
-            LOGGER.log(Level.WARNING, String.format("Bundle has an invalid items removeStrategy, not calculating items to delete"));
+            LOGGER.log(Level.WARNING, "Bundle has an invalid items removeStrategy, not calculating items to delete");
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     /**
