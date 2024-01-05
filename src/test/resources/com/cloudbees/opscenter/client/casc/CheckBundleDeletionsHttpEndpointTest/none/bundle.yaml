@@ -1,0 +1,9 @@
+apiVersion: "1"
+id: "bundle"
+description: "This is a config bundle"
+version: "1"
+items:
+  - "items.yaml"
+itemRemoveStrategy:
+  items: "none"
+  rbac: "sync"
