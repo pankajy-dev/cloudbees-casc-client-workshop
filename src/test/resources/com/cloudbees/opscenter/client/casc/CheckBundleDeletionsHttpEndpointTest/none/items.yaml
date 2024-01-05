@@ -1,0 +1,14 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "first-folder"
+    displayName: "This is folder 1"
+  - kind: "folder"
+    name: "second-folder"
+    displayName: "This is folder 2"
+  - kind: "folder"
+    name: "folder-to-be-deleted"
+    displayName: "This folder will be deleted"

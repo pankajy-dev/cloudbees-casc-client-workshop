@@ -1,6 +1,5 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.BundleUpdateTimingManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
@@ -18,7 +17,6 @@ import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import jenkins.util.Timer;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +34,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -150,13 +147,8 @@ public class BundleReloadAction implements RootAction {
     @WebMethod(name = "check-reload-items")
     public HttpResponse doCheckReloadDeletions() {
         Jenkins.get().checkPermission(Jenkins.MANAGE); // Not performing any real deletion, so should be safe
-        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         try {
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            JSONArray deletions = new JSONArray();
-            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
-            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
-            return new JsonHttpResponse(new JSONObject().accumulate("items", responseContent));
+            return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckReloadItemsDeletionJsonResponse());
         } catch (CasCException ex) {
             LOGGER.log(Level.WARNING, "Could not process remoteStrategy for items (maybe invalid strategy?)", ex);
             return new JsonHttpResponse(ex, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

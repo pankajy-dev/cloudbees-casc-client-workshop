@@ -1,20 +1,13 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
-import java.util.Collections;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.cli.CLICommand;
 
 import jenkins.model.Jenkins;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
-import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
 
 @Extension
 public class CheckReloadItemsCommand extends CLICommand {
@@ -36,13 +29,8 @@ public class CheckReloadItemsCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         Jenkins.get().checkPermission(Jenkins.MANAGE);
-        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         try {
-            ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-            JSONArray deletions = new JSONArray();
-            deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
-            JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
-            stdout.println(new JSONObject().accumulate("items", responseContent));
+            stdout.println(ConfigurationUpdaterHelper.getUpdateCheckReloadItemsDeletionJsonResponse());
             return 0;
         } catch (CasCException ex){
             stderr.println("Error while checking deletions, invalid remove strategy provided");
