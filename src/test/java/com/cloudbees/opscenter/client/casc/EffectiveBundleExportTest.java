@@ -77,7 +77,7 @@ public class EffectiveBundleExportTest {
 
     @Test
     public void downloadFile() throws Exception {
-        loggerRule.record(EffectiveBundleExport.class, Level.ALL).capture(10);
+        loggerRule.record(EffectiveBundleExport.class, Level.ALL).capture(1);
 
         doReturn("").when(request).getRestOfPath();
         export.doDownloadFile(request);
