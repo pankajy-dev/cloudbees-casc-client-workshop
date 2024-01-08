@@ -390,6 +390,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
         CJPRule.WebClient wc = rule.createWebClient();
         WebResponse resp = requestWithToken(HttpMethod.GET, "casc-bundle-mgnt/check-bundle-update", wc);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> resp.getStatusCode() , equalTo(HttpServletResponse.SC_OK));
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("There should be an automatic reload", response.get("update-type"));
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.SKIPPED.label));
