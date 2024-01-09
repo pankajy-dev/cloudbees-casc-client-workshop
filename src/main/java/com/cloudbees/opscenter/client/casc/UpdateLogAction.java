@@ -86,24 +86,18 @@ public class UpdateLogAction implements RootAction {
             return HttpResponses.error(500, "Bundle version missing");
         }
 
-        final Path updateLogFolder = getLogsFolder();
+        final Path updateLogFolder = getLogsFolder().normalize();
         if (!Files.exists(updateLogFolder)) {
             LOG.warning("Attempted to download a log entry, but the update log directory " + updateLogFolder + " cannot be found.");
             return HttpResponses.notFound();
         }
 
-        File secCheck = new File(updateLogFolder.toFile(), registry);
-        try {
-            if (!secCheck.getCanonicalPath().startsWith(updateLogFolder.toFile().getAbsolutePath())) {
-                LOG.warning("Attempted to access files outside the update log directory.");
-                return HttpResponses.forbidden();
-            }
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error getting the canonical path for file " + registry, e);
-            return HttpResponses.error(e);
+        final Path logPath = updateLogFolder.resolve(registry).normalize();
+        if (!logPath.startsWith(updateLogFolder)) {
+            LOG.warning("Attempted to access files outside the update log directory.");
+            return HttpResponses.forbidden();
         }
 
-        final Path logPath = updateLogFolder.resolve(registry);
         if (!logPath.toFile().exists()) {
             LOG.warning("Attempted to download a non-existent registry: " + logPath);
             return HttpResponses.notFound();
@@ -152,24 +146,18 @@ public class UpdateLogAction implements RootAction {
             return HttpResponses.error(500, "Bundle version missing");
         }
 
-        final Path updateLogFolder = getLogsFolder();
+        final Path updateLogFolder = getLogsFolder().normalize();
         if (!Files.exists(updateLogFolder)) {
             LOG.warning("Attempted to download a log entry, but the update log directory " + updateLogFolder + " cannot be found.");
             return HttpResponses.notFound();
         }
 
-        File secCheck = new File(updateLogFolder.toFile(), registry);
-        try {
-            if (!secCheck.getCanonicalPath().startsWith(updateLogFolder.toFile().getAbsolutePath())) {
-                LOG.warning("Attempted to access files outside the update log directory.");
-                return HttpResponses.forbidden();
-            }
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error getting the canonical path for file " + registry, e);
-            return HttpResponses.error(e);
+        final Path logPath = updateLogFolder.resolve(registry).normalize();
+        if (!logPath.startsWith(updateLogFolder)) {
+            LOG.warning("Attempted to access files outside the update log directory.");
+            return HttpResponses.forbidden();
         }
 
-        final Path logPath = updateLogFolder.resolve(registry);
         if (!logPath.toFile().exists()) {
             LOG.warning("Attempted to download a non-existent registry.");
             return HttpResponses.notFound();

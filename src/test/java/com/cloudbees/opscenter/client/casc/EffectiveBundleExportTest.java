@@ -77,7 +77,7 @@ public class EffectiveBundleExportTest {
 
     @Test
     public void downloadFile() throws Exception {
-        loggerRule.record(EffectiveBundleExport.class, Level.ALL).capture(10);
+        loggerRule.record(EffectiveBundleExport.class, Level.ALL).capture(1);
 
         doReturn("").when(request).getRestOfPath();
         export.doDownloadFile(request);
@@ -94,6 +94,12 @@ public class EffectiveBundleExportTest {
         doReturn("/../whatever").when(request).getRestOfPath();
         export.doDownloadFile(request);
         assertThat(loggerRule, LoggerRule.recorded(Level.WARNING, Matchers.containsString("Attempted to access files outside the bundle directory.")));
+
+        // BEE-40710
+        doReturn("/../core-casc-bundle-private").when(request).getRestOfPath();
+        export.doDownloadFile(request);
+        assertThat(loggerRule, LoggerRule.recorded(Level.WARNING, Matchers.containsString("Attempted to access files outside the bundle directory.")));
+        // End of BEE-40710
 
         doReturn("/fake.yml").when(request).getRestOfPath();
         export.doDownloadFile(request);
