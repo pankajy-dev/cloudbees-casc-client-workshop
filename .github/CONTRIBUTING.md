@@ -1,1 +1,0 @@
-If you are thinking of contributing any changes to this repository please read our [How to contribute](https://cloudbees.atlassian.net/wiki/spaces/CORE/pages/2280423501/How+to+contribute) guide first!
