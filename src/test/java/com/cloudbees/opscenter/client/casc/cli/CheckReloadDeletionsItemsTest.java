@@ -1,7 +1,12 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
 import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
 
+import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebResponse;
 import org.junit.Test;
 
 import net.sf.json.JSONObject;
@@ -13,6 +18,9 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
+import org.jvnet.hudson.test.Issue;
+
+import javax.servlet.http.HttpServletResponse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -48,5 +56,35 @@ public class CheckReloadDeletionsItemsTest extends AbstractBundleVersionCheckerT
         result = new CLICommandInvoker(rule, CheckReloadItemsCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("Command should end with IllegalArgumentException error code", result.returnCode(), is(3));
         assertThat("Error response should contain the reason", result.stderr(), containsString("Unknown items removeStrategy"));
+    }
+
+    @Test
+    @Issue("BEE-44300")
+    @WithEnvelope(TestEnvelope.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/CheckBundleDeletionsHttpEndpointTest/none")
+    public void doCheckReloadDeletionsShouldUseCandidateBundleTest() throws IOException {
+        // No changes in the instance, we expect no deletions
+        // Bundle "none" contains 3 folders and the sync strategy for the items is "none".
+        assertThat("Bundle 'none' contains 3 folders", rule.jenkins.getAllItems(), hasSize(3));
+
+        // Creating 2 items, as strategy is NONE they should be no deletions
+        rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted");
+        rule.jenkins.createProject(FreeStyleProject.class, "to-be-deleted-too");
+        CLICommandInvoker.Result result = new CLICommandInvoker(rule, CheckReloadItemsCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
+        JSONObject jsonResult = JSONObject.fromObject(result.stdout());
+        assertThat("Response code should be a 200", result.returnCode(), is(0));
+        assertThat("deletions should be an empty list", jsonResult.getJSONObject("items").getJSONArray("deletions"), empty());
+
+        // Bundle "sync" contains only 2 folders, and the sync strategy for the items is "sync".
+        System.setProperty("core.casc.config.bundle",
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/CheckBundleDeletionsHttpEndpointTest/sync").toFile().getAbsolutePath());
+        new CLICommandInvoker(rule, BundleVersionCheckerCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
+
+        result = new CLICommandInvoker(rule, CheckReloadItemsCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
+        jsonResult = JSONObject.fromObject(result.stdout());
+        assertThat("Response code should be a 200", result.returnCode(), is(0));
+        assertThat("deletions should contain 3 element", jsonResult.getJSONObject("items").getJSONArray("deletions"), hasSize(3));
+        assertThat("to-be-deleted should be in the response", jsonResult.getJSONObject("items").getJSONArray("deletions"), containsInAnyOrder("to-be-deleted", "to-be-deleted-too", "folder-to-be-deleted"));
+        assertThat("The instance still has 5 items", rule.jenkins.getAllItems(), hasSize(5));
     }
 }

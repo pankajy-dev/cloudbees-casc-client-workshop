@@ -107,7 +107,7 @@ public class EffectiveBundleExport implements RootAction {
             LOG.warning("Attempted to download a bundle (" + file + ") when the controller is not using a CasC Bundle yet.");
             return HttpResponses.error(404, "This instance is not using a CasC bundle.");
         }
-        final Path bundleFolder = getBundleFolder();
+        final Path bundleFolder = getBundleFolder().normalize();
         if (!bundleFolder.toFile().exists()) {
             // Shouldn't happen, but the check does not hurt
             LOG.warning("Attempted to download the bundle, but the bundle directory " + bundleFolder + " cannot be found.");
@@ -119,18 +119,12 @@ public class EffectiveBundleExport implements RootAction {
             return HttpResponses.notFound();
         }
 
-        File secCheck = new File(bundleFolder.toFile(), file);
-        try {
-            if (!secCheck.getCanonicalPath().startsWith(bundleFolder.toFile().getAbsolutePath())) {
-                LOG.warning("Attempted to access files outside the bundle directory.");
-                return HttpResponses.forbidden();
-            }
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error getting the canonical path for file " + file, e);
-            return HttpResponses.error(e);
+        final Path filePath = bundleFolder.resolve(file).normalize();
+        if (!filePath.startsWith(bundleFolder)) {
+            LOG.warning("Attempted to access files outside the bundle directory.");
+            return HttpResponses.forbidden();
         }
 
-        final Path filePath = bundleFolder.resolve(file);
         if (!filePath.toFile().exists()) {
             LOG.warning("Attempted to download a non-existent file.");
             return HttpResponses.notFound();

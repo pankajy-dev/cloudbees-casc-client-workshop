@@ -51,14 +51,11 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
-import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -355,16 +352,8 @@ public final class ConfigurationUpdaterHelper {
         }
         if (update || bundleInfo.isCandidateAvailable()) {
             // Getting items that will be deleted on the update
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
             try {
-                ConfigurationBundle bundle = updateTimingEnabled ? ConfigurationBundleManager.get().getCandidateAsConfigurationBundle() : ConfigurationBundleManager.get().getConfigurationBundle();
-                if (bundle == null) {
-                    throw new CasCException("Cannot read the candidate bundle");
-                } 
-                JSONArray deletions = new JSONArray();
-                deletions.addAll(bundle.getItems() == null ? Collections.EMPTY_LIST : service.getDeletionsOnReload(bundle)); // Not needed after cloudbees-casc-items-api:2.25
-                JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
-                json.accumulate("items", responseContent);
+                json.accumulateAll(getUpdateCheckReloadItemsDeletionJsonResponse());
             } catch (CasCException ex) {
                 json.accumulate("items", ex.getMessage());
                 LOGGER.log(Level.WARNING, "Error while checking deletions", ex);
@@ -372,6 +361,33 @@ public final class ConfigurationUpdaterHelper {
         }
 
         return json;
+    }
+
+    /**
+     * Build the JSON response for CLI and HTTP Endpoint to check what items would be deleted if the bundle is applied. Example of response
+     * <pre>
+     * {
+     *   "items": {
+     *     "deletions": [
+     *       "X",
+     *       "Y",
+     *       "Z"
+     *     ]
+     *   }
+     * }
+     * </pre>
+     */
+    public static JSONObject getUpdateCheckReloadItemsDeletionJsonResponse() throws CasCException {
+        ConfigurationBundleManager configurationBundleManager = ConfigurationBundleManager.get();
+        ConfigurationBundle bundle = Objects.requireNonNullElse(
+                configurationBundleManager.getCandidateAsConfigurationBundle(),
+                configurationBundleManager.getConfigurationBundle()
+        );
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        JSONArray deletions = new JSONArray();
+        deletions.addAll(service.getDeletionsOnReload(bundle));
+        JSONObject responseContent = new JSONObject().accumulate("deletions", deletions);
+        return new JSONObject().accumulate("items", responseContent);
     }
 
     private static List<String> getValidations(BundleVisualizationLink.ValidationSection vs, Boolean quietParam) {

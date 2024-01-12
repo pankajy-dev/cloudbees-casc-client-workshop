@@ -41,11 +41,14 @@ import com.cloudbees.opscenter.client.casc.cli.BundleReloadCommand;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
+import javax.servlet.http.HttpServletResponse;
+
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -387,6 +390,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
         CJPRule.WebClient wc = rule.createWebClient();
         WebResponse resp = requestWithToken(HttpMethod.GET, "casc-bundle-mgnt/check-bundle-update", wc);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> resp.getStatusCode() , equalTo(HttpServletResponse.SC_OK));
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("There should be an automatic reload", response.get("update-type"));
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.SKIPPED.label));
@@ -463,6 +467,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipNewVersionsTest/new-bundle-version").toFile().getAbsolutePath());
         CJPRule.WebClient wc = rule.createWebClient();
         WebResponse resp = requestWithToken(HttpMethod.GET, "casc-bundle-mgnt/check-bundle-update", wc);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> resp.getStatusCode() , equalTo(HttpServletResponse.SC_OK));
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("There should be an automatic reload", response.get("update-type"));
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));

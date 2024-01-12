@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.cjp.installmanager.org.apache.commons.lang3.Functions;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
@@ -15,15 +16,44 @@ import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ServiceLoader;
+import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.beer12;
 import static com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes.e;
@@ -34,6 +64,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class UpdateLogActionTest extends AbstractCJPTest {
 
@@ -194,6 +231,151 @@ public class UpdateLogActionTest extends AbstractCJPTest {
         assertThat("ConfigurationBundleManager has version 11 as current validated", updateLog.getCurrentVersionValidations().getValidations().stream().filter(val -> val.getLevel() != Validation.Level.INFO).collect(Collectors.toList()), empty());
         assertNull("ConfigurationBundleManager has no version marked as rejected candidate", updateLog.getCandidateBundle());
         // End of BEE-17161
+    }
+
+    @Test
+    @Issue("BEE-40710")
+    @WithEnvelope(TestEnvelope.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-1.zip")
+    public void validate_bundles() throws Exception {
+        Path newest = ConfigurationBundleManager.get().getUpdateLog().getHistoricalRecords().get(0);
+        String content = Files.readString(newest.resolve(BundleUpdateLog.VALIDATIONS_FILE));
+
+        // Valid request
+        ResponseData responseData = doTestValidation("/" + newest.getFileName().toString());
+        // Note: HttpResponses.text(content) (which is the method used in doValidation) does not explicitly set the status to 200
+        assertThat("Should give the validation file", responseData.content, is(content));
+
+        responseData = doTestValidation("");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(500));
+        assertThat("Error message should explain that the 'Bundle version missing'", responseData.content, containsString("Bundle version missing"));
+
+        responseData = doTestValidation("/./whatever");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(404));
+
+        responseData = doTestValidation("/../whatever");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(403));
+
+        // BEE-40710
+        responseData = doTestValidation("/../core-casc-bundle-log-private");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(403));
+        // end of BEE-40710
+    }
+
+    @Test
+    @Issue("BEE-40710")
+    @WithEnvelope(TestEnvelope.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/UpdateLogActionTest/bundles/update_bundles/version-1.zip")
+    public void download_bundles() throws Exception {
+        Path newest = ConfigurationBundleManager.get().getUpdateLog().getHistoricalRecords().get(0);
+
+        // Valid request
+        ResponseData responseData = doTestDownload("/" + newest.getFileName().toString());
+        assertThat("Should return a zip", responseData.contentType, is("application/zip"));
+        try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseData.stream.toByteArray()))) {
+            ZipEntry zipEntry;
+            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                String name = zipEntry.getName();
+                Path path = newest.resolve(name);
+                if (!Files.isDirectory(path)) {
+                    String zipContent = IOUtils.toString(zipInputStream, Charset.defaultCharset());
+                    String fileContent = Files.readString(path);
+                    assertThat("Check content of " + name, zipContent, is(fileContent));
+                }
+                zipInputStream.closeEntry();
+            }
+        }
+
+        responseData = doTestDownload("");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(500));
+        assertThat("Error message should explain that the 'Bundle version missing'", responseData.content, containsString("Bundle version missing"));
+
+        responseData = doTestDownload("/./whatever");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(404));
+
+        responseData = doTestDownload("/../whatever");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(403));
+
+        // BEE-40710
+        responseData = doTestDownload("/../core-casc-bundle-log-private");
+        assertThat("Should be an error if the path is invalid", responseData.statusCode, is(403));
+        // end of BEE-40710
+    }
+
+    private static class ResponseData {
+        public Integer statusCode;
+
+        public String contentType;
+
+        public String content;
+
+        public ByteArrayOutputStream stream;
+    }
+
+    private static ResponseData doTestValidation(String restOfPath) throws IOException, ServletException {
+        return doTestAction(restOfPath, UpdateLogAction::doValidation);
+    }
+
+    private static ResponseData doTestDownload(String restOfPath) throws IOException, ServletException {
+        return doTestAction(restOfPath, UpdateLogAction::download);
+    }
+
+    @NotNull
+    private static ResponseData doTestAction(String restOfPath, BiFunction<UpdateLogAction, StaplerRequest, HttpResponse> tested)
+            throws IOException, ServletException {
+        ResponseData responseData = new ResponseData();
+        try (MockedStatic<ServiceLoader> loader = mockStatic(ServiceLoader.class)) {
+            // Disable the ErrorCustomizer because it requires a Stapler instance to generate the response
+            ServiceLoader<HttpResponses.ErrorCustomizer> serviceLoaderMock = mock(ServiceLoader.class);
+            Iterator<HttpResponses.ErrorCustomizer> iteratorMock = mock(Iterator.class);
+            when(serviceLoaderMock.iterator()).thenReturn(iteratorMock);
+            when(iteratorMock.hasNext()).thenReturn(false);
+
+            loader.when(() -> ServiceLoader.load(HttpResponses.ErrorCustomizer.class)).thenReturn(serviceLoaderMock);
+            StaplerRequest request = mock(StaplerRequest.class);
+            StaplerResponse response = mock(StaplerResponse.class);
+            StringWriter body = new StringWriter();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+            doReturn(new PrintWriter(body)).when(response).getWriter();
+            doReturn(new ServletOutputStream() {
+                @Override
+                public void write(int b) {
+                    stream.write(b);
+                }
+
+                @Override
+                public boolean isReady() {
+                    return true;
+                }
+
+                @Override
+                public void setWriteListener(WriteListener writeListener) {
+                }
+            }).when(response).getOutputStream();
+            doReturn(restOfPath).when(request).getRestOfPath();
+
+            UpdateLogAction updateLogAction = new UpdateLogAction();
+            HttpResponse httpResponse = tested.apply(updateLogAction, request);
+            httpResponse.generateResponse(request, response, updateLogAction);
+
+            ArgumentCaptor<Integer> status = ArgumentCaptor.forClass(Integer.class);
+            verify(response, atLeast(0)).setStatus(status.capture());
+            if (!status.getAllValues().isEmpty()) {
+                responseData.statusCode = status.getValue();
+            }
+
+            ArgumentCaptor<String> contentType = ArgumentCaptor.forClass(String.class);
+            verify(response, atLeast(0)).setContentType(contentType.capture());
+            if (!contentType.getAllValues().isEmpty()) {
+                responseData.contentType = contentType.getValue();
+            }
+
+            responseData.content = body.toString();
+            responseData.stream = stream;
+        }
+
+        return responseData;
     }
 
     public static final class TestEnvelope implements TestEnvelopeProvider {
