@@ -59,8 +59,37 @@
                 </j:if>
             </j:when>
             <j:when test="${validationObject.quiet}">
+                <script>
+                    function toggleValidations(target) {
+                        var p = document.getElementById('__validations');
+                        if (p.style.display == 'none') {
+                            p.style.display = "inline"
+                            target.innerText = "Hide"
+                        } else {
+                            p.style.display = "none"
+                            target.innerText = "Show"
+                        }
+                    }
+                </script>
                 <p class="mb-0">This version has no errors or warnings. <br/>
-                    Some validations were performed (${validationObject.infoMessages.size()}) but are not displayed in quiet mode.
+                    ${validationObject.infoMessages.size()} validations were performed.
+                    <!-- -->
+                    <div>
+                        <div>
+                            <span>
+                                <a class="collapse" onClick="toggleValidations(this)">Show</a>
+                            </span>
+                        </div>
+                        <div class="pane-content" id="__validations" style="display:none">
+                            <ul>
+                                <j:forEach items="${validationObject.infoMessages}" var="v">
+                                    <li>${v}</li>
+                                </j:forEach>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- -->
                 </p>
             </j:when>
             <j:otherwise>
