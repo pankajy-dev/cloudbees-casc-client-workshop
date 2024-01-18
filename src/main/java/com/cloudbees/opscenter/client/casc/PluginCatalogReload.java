@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
+import jenkins.util.SystemProperties;
 import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
@@ -24,8 +25,13 @@ public final class PluginCatalogReload extends BundleReload {
 
     private static final Logger LOGGER = Logger.getLogger(PluginCatalogReload.class.getName());
 
+    private static final boolean FIPS_COMPLIANCE_MODE_ENABLED = SystemProperties.getBoolean("jenkins.security.FIPS140.COMPLIANCE");
     @Override
     public void doReload(ConfigurationBundle bundle) throws CasCException {
+        if(FIPS_COMPLIANCE_MODE_ENABLED) {
+            LOGGER.warning("plugin catalog reload is not available in FIPS mode");
+            return;
+        }
         EnvelopeExtension extension = bundle.getEnvelopeExtension();
         if (extension != null) {
 
@@ -50,6 +56,10 @@ public final class PluginCatalogReload extends BundleReload {
 
     @Override
     public boolean isReloadable() {
+        if(FIPS_COMPLIANCE_MODE_ENABLED) {
+            LOGGER.warning("plugin catalog reload is not available in FIPS mode");
+            return false;
+        }
         BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         return comparisonResult != null && comparisonResult.getCatalog().withChanges();
     }
