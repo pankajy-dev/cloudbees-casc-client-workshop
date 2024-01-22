@@ -94,6 +94,7 @@
     <dependency>
       <groupId>com.cloudbees.nectar.plugins</groupId>
       <artifactId>nectar-license</artifactId>
+      <version>8.42</version><!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -103,6 +104,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-analytics</artifactId>
+      <version>1.56</version><!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -136,6 +138,7 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-analytics</artifactId>
+      <version>1.56</version><!-- TODO Remove once in URR -->
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
