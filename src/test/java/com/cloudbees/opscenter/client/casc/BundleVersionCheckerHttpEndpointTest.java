@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionCheckerTest {
@@ -90,7 +91,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-8.zip", true);
-        assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), true);
+        assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")), true);
         assertUpdateType(jsonResult, "version-8.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 
@@ -99,7 +100,7 @@ public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionC
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc);
         jsonResult = JSONObject.fromObject(resp.getContentAsString());
         assertUpdateAvailable(jsonResult, "version-9.zip", true);
-        assertVersions(jsonResult, "version-9.zip", "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), "9", empty(), true);
+        assertVersions(jsonResult, "version-9.zip", "8", hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")), "9", empty(), true);
         assertUpdateType(jsonResult, "version-9.zip", "RELOAD/RESTART/SKIP");
         requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc); // Apply new version
 

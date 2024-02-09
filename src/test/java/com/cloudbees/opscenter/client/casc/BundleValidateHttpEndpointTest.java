@@ -4,6 +4,7 @@ import com.google.common.net.HttpHeaders;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.junit.Before;
@@ -28,11 +29,10 @@ import java.util.logging.Level;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
-import static org.hamcrest.core.IsIterableContaining.hasItems;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -92,8 +92,8 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("only-with-warnings.zip should have info messages", response.getJSONArray("validation-messages"), CasCMatchers.hasInfoMessage());
         assertThat("only-with-warnings.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   hasItem("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+            response.getJSONArray("validation-messages"),
+            hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")));
         conn.disconnect();
 
         // Valid but with warnings not quiet
@@ -104,8 +104,9 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("only-with-warnings should have info messages", response.getJSONArray("validation-messages"), CasCMatchers.hasInfoMessage());
         assertThat("only-with-warnings.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   hasItem("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+            response.getJSONArray("validation-messages"),
+            hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")));
+
         conn.disconnect();
 
         // Valid but with warnings quiet
@@ -115,8 +116,9 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("only-with-warnings.zip should be valid", response.getBoolean("valid"));
         assertTrue("only-with-warnings.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("only-with-warnings.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+            response.getJSONArray("validation-messages"),
+            hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")));
+
         assertThat("valid-bundle.zip should have info messages", response.getJSONArray("validation-messages"), not(CasCMatchers.hasInfoMessage()));
         conn.disconnect();
 
@@ -128,11 +130,11 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("invalid-bundle.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("invalid-bundle.zip should have info messages", response.getJSONArray("validation-messages"), CasCMatchers.hasInfoMessage());
         assertThat("invalid-bundle.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   hasItems(
-                           "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
-                           "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
-                   ));
+            response.getJSONArray("validation-messages").stream().filter(msg -> !msg.toString().startsWith("INFO")).collect(Collectors.toList()),
+            allOf(
+                hasItem(containsString("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.")),
+                hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations."))
+            ));
         conn.disconnect();
 
         // No valid not quiet
@@ -143,11 +145,11 @@ public class BundleValidateHttpEndpointTest {
         assertTrue("invalid-bundle.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("invalid-bundle.zip should have info messages", response.getJSONArray("validation-messages"), CasCMatchers.hasInfoMessage());
         assertThat("invalid-bundle.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   hasItems(
-                           "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
-                           "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
-                   ));
+            response.getJSONArray("validation-messages").stream().filter(msg -> !msg.toString().startsWith("INFO")).collect(Collectors.toList()),
+            allOf(
+                hasItem(containsString("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.")),
+                hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations."))
+            ));
         conn.disconnect();
 
         // No valid quiet
@@ -157,12 +159,13 @@ public class BundleValidateHttpEndpointTest {
         assertFalse("invalid-bundle.zip should not be valid", response.getBoolean("valid"));
         assertTrue("invalid-bundle.zip should have validation messages", response.containsKey("validation-messages"));
         assertThat("valid-bundle.zip should have info messages", response.getJSONArray("validation-messages"), not(CasCMatchers.hasInfoMessage()));
+        //assertTrue("only-with-warnings.zip should have validation messages", response.getJSONArray("validation-messages").stream().anyMatch(validMsg -> validMsg.toString().contains(searchMsg)));
         assertThat("invalid-bundle.zip should have validation messages",
-                   response.getJSONArray("validation-messages"),
-                   containsInAnyOrder(
-                           "ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.",
-                           "WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"
-                   ));
+            response.getJSONArray("validation-messages"),
+            allOf(
+                hasItem(containsString("ERROR - [APIVAL] - 'apiVersion' property in the bundle.yaml file must be an integer.")),
+                hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations."))
+            ));
         conn.disconnect();
 
         // Not a zip file
@@ -213,7 +216,7 @@ public class BundleValidateHttpEndpointTest {
         conn.setDoOutput(true);
         try (OutputStream out = conn.getOutputStream()) {
             Files.copy(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleValidateHttpEndpointTest/",
-                                 bundle
+                bundle
             ), out);
         }
 

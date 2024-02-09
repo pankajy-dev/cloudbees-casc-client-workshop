@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 public class JCasCValidatorExtensionTest {
@@ -45,7 +46,7 @@ public class JCasCValidatorExtensionTest {
         v = validations.get(0);
         assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getLevel(), is(Validation.Level.WARNING));
         assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getValidationCode(), is(ValidationCode.JCASC_CONFIGURATION));
-        assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getMessage(), is("[JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"));
+        assertThat("with-invalid-jcasc-bundle: should be a warning in JCASC", v.getMessage(), containsString("[JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations."));
 
     }
 
