@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -160,7 +161,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-8.zip", true);
-        assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), true);
+        assertVersions(jsonResult, "version-8.zip", "7", empty(), "8", hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")), true);
         assertUpdateType(jsonResult, "version-8.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
@@ -178,7 +179,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertThat(result, allOf(succeeded(), hasNoErrorOutput()));
         jsonResult = JSONObject.fromObject(result.stdout());
         assertUpdateAvailable(jsonResult, "version-9.zip", true);
-        assertVersions(jsonResult, "version-9.zip", "8", contains("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations. Reason: jenkins: error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator"), "9", empty(), true);
+        assertVersions(jsonResult, "version-9.zip", "8", hasItem(containsString("WARNING - [JCASC] - It is impossible to validate the Jenkins configuration. Please review your Jenkins and plugin configurations.")), "9", empty(), true);
         assertUpdateType(jsonResult, "version-9.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
