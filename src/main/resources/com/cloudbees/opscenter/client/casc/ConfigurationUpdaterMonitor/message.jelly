@@ -13,16 +13,21 @@
                 <j:set var="version" value="(${it.getUpdateVersion()}) "/>
             </j:if>
             <header>A new version of the <b>Configuration Bundle ${version}</b> is available.</header>
-            <p>You can perform a restart now to apply the new Configuration Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
+            <j:if test="${it.canRestart()}">
+                <p>You can perform a restart now to apply the new Configuration Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
+            </j:if>
             <j:if test="${it.isHotReloadable()}"><p>You can also apply the new Configuration Bundle without restarting, using the "Reload Configuration" button.</p></j:if>
             <j:if test="${it.canManualSkip()}"><p>If you do not want to apply this Bundle version, you can click on the "Skip" button.</p></j:if>
         </div>
     </j:when>
-    <j:otherwise>
+    <j:when test="${it.isCandidateAvailable()}">
         <div class="alert alert-danger">
             <header>A new version of the <b>Configuration Bundle (${it.candidateVersion})</b> is available, but it cannot be applied because it has validation errors.</header>
             <p>You can find the details in the <a href="${rootURL}/casc-bundle-export-ui/bundleUpdate">CloudBees Configuration as Code export and update</a> page.</p>
         </div>
+    </j:when>
+    <j:otherwise>
+        <div class="alert alert-info">A reload of the bundle is in progress.</div>
     </j:otherwise>
     </j:choose>
 </j:jelly>

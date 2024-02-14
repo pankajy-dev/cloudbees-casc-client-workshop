@@ -18,6 +18,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Administrative monitor that warns the administrators when a new configuration bundle is available. It can be found at
@@ -25,16 +26,69 @@ import java.io.IOException;
  */
 @Extension
 public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
+
+    private static final Logger LOGGER = Logger.getLogger(ConfigurationUpdaterMonitor.class.getName());
+
+    private boolean updateAvailable;
+    private boolean candidateAvailable;
+    private String updateVersion;
+    private boolean hotReloadable;
+    private boolean canManualSkip;
+    private String candidateVersion = null;
+
     @Override
     public boolean isActivated() {
-        return /* New version, which might or not be skipped */ isUpdateAvailable() || /* New invalid version */ isCandidateAvailable();
+        boolean isReloading = ConfigurationStatus.INSTANCE.isCurrentlyReloading();
+
+        if (isReloading) {
+            LOGGER.fine("Bundle reload in progress. Skipping");
+            this.updateAvailable = false;
+            this.updateVersion = null;
+            this.hotReloadable = false;
+            this.canManualSkip = false;
+            this.candidateAvailable = false;
+            this.candidateVersion = null;
+            return false; // Reloading and we want to show the monitor only if there is a new version or candidate available
+        }
+
+        BundleVisualizationLink visualizationLink = BundleVisualizationLink.get();
+        this.updateAvailable = checkUpdateAvailable();
+        this.updateVersion = visualizationLink.getUpdateVersion();
+        this.hotReloadable = visualizationLink.isHotReloadable();
+        this.canManualSkip = visualizationLink.canManualSkip();
+        this.candidateAvailable = checkCandidateAvailable();
+        this.candidateVersion = candidateVersion();
+
+        LOGGER.fine("Displaying monitor with values:\n" + print());
+        return /* New version, which might or not be skipped */ updateAvailable || /* New invalid version */ candidateAvailable;
+    }
+
+    private String print() {
+        return String.format(
+                "{%n" +
+                "    isUpdateAvailable: %b,%n" +
+                "    updateVersion: %s,%n" +
+                "    isHotReloadable: %b,%n" +
+                "    canManualSkip: %b,%n" +
+                "    isCandidateAvailable: %b,%n" +
+                "    candidateVersion: %s,%n" +
+                "    display: %b,%n" +
+                "}", updateAvailable, updateVersion, hotReloadable, canManualSkip, candidateAvailable, candidateVersion, updateAvailable || candidateAvailable);
     }
 
     public boolean isUpdateAvailable() {
+        return this.updateAvailable;
+    }
+
+    private boolean checkUpdateAvailable() {
         return BundleVisualizationLink.get().isUpdateAvailable();
     }
 
     public boolean isCandidateAvailable() {
+        return candidateAvailable;
+    }
+
+    private boolean checkCandidateAvailable() {
         boolean isCandidateAvailable = ConfigurationStatus.INSTANCE.isCandidateAvailable();
         // The candidate might be:
         // * invalid (and rejected) bundle
@@ -52,6 +106,10 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public String getCandidateVersion() {
+        return candidateVersion;
+    }
+
+    private String candidateVersion() {
         if (!ConfigurationBundleManager.isSet()) {
             return null;
         }
@@ -76,7 +134,11 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
-        return BundleVisualizationLink.get().isHotReloadable();
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+            // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
+            return false;
+        }
+        return hotReloadable;
     }
 
     /**
@@ -84,7 +146,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     @CheckForNull
     public String getUpdateVersion(){
-        return BundleVisualizationLink.get().getUpdateVersion();
+        return updateVersion;
     }
 
     /**
@@ -92,7 +154,19 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canManualSkip() {
-        return BundleVisualizationLink.get().canManualSkip();
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+            // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
+            return false;
+        }
+        return canManualSkip;
+    }
+
+    /**
+     * @return true if the Restart button must appear
+     */
+    // used in jelly
+    public boolean canRestart() {
+        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
     }
 
     @RequirePOST
