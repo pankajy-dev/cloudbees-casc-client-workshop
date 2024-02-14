@@ -134,6 +134,10 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+            // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
+            return false;
+        }
         return hotReloadable;
     }
 
@@ -150,7 +154,19 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canManualSkip() {
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+            // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
+            return false;
+        }
         return canManualSkip;
+    }
+
+    /**
+     * @return true if the Restart button must appear
+     */
+    // used in jelly
+    public boolean canRestart() {
+        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
     }
 
     @RequirePOST
