@@ -1,0 +1,4 @@
+plugins:
+- id: "beer"
+- id: "manage-permission"
+  url: http://another-url

@@ -1,0 +1,4 @@
+plugins:
+- id: "beer"
+- id: "manage-permission"
+- id: "configuration-as-code"

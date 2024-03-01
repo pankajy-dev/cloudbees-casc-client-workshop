@@ -1,0 +1,11 @@
+type: plugin-catalog
+version: '1'
+name: test-catalog
+displayName: Test Catalog
+configurations:
+- description: Bundle catalog
+  includePlugins:
+    manage-permission:
+      url: %%URL%%/manage-permission-1.0.1.hpi
+    beer:
+      url: %%URL%%/beer-1.3.hpi
