@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.cloudbees.jenkins.plugins</groupId>
     <artifactId>jenkins-plugins</artifactId>
-    <version>192</version>
+    <version>199</version>
     <relativePath />
   </parent>
 
@@ -44,24 +44,6 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-
-      <dependency>
-        <groupId>org.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>4.2.0</version>
-      </dependency>
-
-      <dependency> <!-- TODO Remove once in URR -->
-        <groupId>io.jenkins.plugins</groupId>
-        <artifactId>snakeyaml-api</artifactId>
-        <version>2.2-111.vc6598e30cc65</version>
-      </dependency>
-
-      <dependency> <!-- TODO Remove once in URR -->
-        <groupId>io.jenkins.plugins</groupId>
-        <artifactId>commons-text-api</artifactId>
-        <version>1.11.0-95.v22a_d30ee5d36</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -91,7 +73,6 @@
       <groupId>com.cloudbees.jenkins.modules</groupId>
       <artifactId>cloudbees-installation-manager</artifactId>
       <scope>provided</scope>
-      <version>2.332.0.54</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -106,7 +87,6 @@
     <dependency>
       <groupId>com.cloudbees.nectar.plugins</groupId>
       <artifactId>nectar-license</artifactId>
-      <version>8.42</version><!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -116,7 +96,6 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-analytics</artifactId>
-      <version>1.56</version><!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -129,16 +108,36 @@
       <groupId>org.jenkins-ci.modules</groupId>
       <artifactId>instance-identity</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.cloudbees.jenkins.plugins</groupId>
+      <artifactId>cloudbees-assurance</artifactId>
+      <exclusions>
+        <exclusion>
+          <!--
+          Causing
+          [ERROR] Rule 4: org.apache.maven.enforcer.rules.dependency.RequireUpperBoundDeps failed with message:
+          [ERROR] Failed while enforcing RequireUpperBoundDeps. The error(s) are [
+          [ERROR] Require upper bound dependencies error for com.google.errorprone:error_prone_annotations:2.18.0 paths to dependency are:
+          [ERROR] +-com.cloudbees.jenkins.plugins:cloudbees-casc-client:2.43-SNAPSHOT
+          [ERROR]   +-com.cloudbees.jenkins.plugins:cloudbees-assurance:2.276.0.32
+          [ERROR]     +-org.apache.maven:maven-aether-provider:3.3.9
+          [ERROR]       +-org.apache.maven:maven-model-builder:3.3.9
+          [ERROR]         +-com.google.guava:guava:33.0.0-jre (managed) <- com.google.guava:guava:18.0
+          [ERROR]           +-com.google.errorprone:error_prone_annotations:2.18.0 (managed) <- com.google.errorprone:error_prone_annotations:2.23.0
+          and it's not used, so excluding
+          -->
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-aether-provider</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <!-- Optional dependencies -->
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
       <version>1775.v810dc950b_514</version> <!-- TODO Remove once in URR BOM -->
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.cloudbees.jenkins.plugins</groupId>
-      <artifactId>cloudbees-assurance</artifactId>
     </dependency>
 
     <!-- dependency for the icons -->
@@ -151,7 +150,6 @@
     <dependency>
       <groupId>com.cloudbees.jenkins.plugins</groupId>
       <artifactId>cloudbees-analytics</artifactId>
-      <version>1.56</version><!-- TODO Remove once in URR -->
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -161,7 +159,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.cloudbees.tiger.plugins</groupId>
+      <groupId>com.cloudbees.operations-center.common</groupId>
       <artifactId>master-provisioning-kubernetes</artifactId>
       <scope>test</scope>
     </dependency>
@@ -174,6 +172,7 @@
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
       <scope>test</scope>
+      <version>4.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -191,7 +190,6 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.54</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>
