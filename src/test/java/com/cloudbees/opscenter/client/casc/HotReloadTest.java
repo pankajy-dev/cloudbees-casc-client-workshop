@@ -78,7 +78,7 @@ public class HotReloadTest extends AbstractCJPTest {
     public LoggerRule loggerRule = new LoggerRule().record(BundleReload.class, Level.FINE);
 
     @BeforeClass
-    public static void processBundles() throws Exception {
+    public static void processBundles() {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
         wiremock.stubFor(get(urlEqualTo("/beer-1.3.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.3.hpi")));
         wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
@@ -86,7 +86,7 @@ public class HotReloadTest extends AbstractCJPTest {
 
     @Issue("BEE-3618")
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    @WithConfigBundleAndWiremock("bundle")
+    @WithConfigBundleAndWiremock("bundle-for-manage")
     @Test
     public void reloadTest() throws IOException, CasCException {
         assertTrue(ConfigurationBundleManager.isSet());
