@@ -1,4 +1,4 @@
 plugins:
 - id: "beer"
 - id: "manage-permission"
-  url: %%URL%%/manage-permission-1.0.1.hpi
+  url: %%URL%%/manage-permission-1.0.hpi

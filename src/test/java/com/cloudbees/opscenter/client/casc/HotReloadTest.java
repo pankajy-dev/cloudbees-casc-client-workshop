@@ -75,12 +75,13 @@ public class HotReloadTest extends AbstractCJPTest {
     public static TemporaryFolder bundlesSrc = new TemporaryFolder(); // As for bundles we need a static rule and this.tmp is not static
 
     @Rule
-    public LoggerRule loggerRule = new LoggerRule().record(BundleReload.class, Level.FINE);
+    public LoggerRule loggerRule = new LoggerRule();
 
     @BeforeClass
     public static void processBundles() {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
         wiremock.stubFor(get(urlEqualTo("/beer-1.3.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.3.hpi")));
+        wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.hpi")));
         wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
     }
 
@@ -144,7 +145,7 @@ public class HotReloadTest extends AbstractCJPTest {
         assertTrue(ConfigurationBundleManager.isSet());
 
         // Variables, so full reload
-        loggerRule.capture(10); // Initialize capture
+        loggerRule.record(BundleReload.class, Level.FINE).capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-2").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
@@ -154,7 +155,7 @@ public class HotReloadTest extends AbstractCJPTest {
         assertThat("Variables has changed, thus full reload", loggerRule, recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName())));
 
         // Only jcasc, so partial reload
-        loggerRule.capture(10); // Initialize capture
+        loggerRule.record(BundleReload.class, Level.FINE).capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-3").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
@@ -164,7 +165,7 @@ public class HotReloadTest extends AbstractCJPTest {
         assertThat("Only JCasC has changed, thus partial reload. Not expected RbacReload", loggerRule, not(recorded(Level.FINE, containsString("Reloading bundle section " + BundleReload.RbacReload.class.getName()))));
 
         // Only items, so partial reload
-        loggerRule.capture(10); // Initialize capture
+        loggerRule.record(BundleReload.class, Level.FINE).capture(10); // Initialize capture
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/version-4").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
@@ -211,20 +212,29 @@ public class HotReloadTest extends AbstractCJPTest {
         assertNotNull("We need beer and manage-permission so the hot reload condition applies", Jenkins.get().getPlugin("manage-permission"));
 
         // Without changes in plugin catalog or plugins
+        loggerRule.record(ConfigurationBundleService.class, Level.INFO).capture(10);
         ConfigurationBundle cb = ConfigurationBundleManager.getConfigurationBundleFromPath(bundlesSrc.getRoot().toPath().resolve("bundle-apiversion-2"));
         assertTrue("With apiVersion 2, no changes in plugin catalog or plugins means the bundle is hot-reloadable", service.isHotReloadable(cb));
+        assertThat("No message about hot reload", loggerRule, not(recorded(Level.INFO, containsString("Configuration Bundle cannot be reloaded"))));
 
         // Plugin catalog changes but plugins don't
+        loggerRule.record(ConfigurationBundleService.class, Level.INFO).capture(10);
         cb = ConfigurationBundleManager.getConfigurationBundleFromPath(bundlesSrc.getRoot().toPath().resolve("bundle-apiversion-2_changes-in-catalog"));
         assertFalse("With apiVersion 2, changes in plugin catalog means the bundle is not hot-reloadable", service.isHotReloadable(cb));
+        assertThat("Logged the plugins with changes", loggerRule, recorded(Level.INFO, containsString("Configuration Bundle cannot be reloaded because of Plugin Catalog versions update: [{plugin: beer, catalog: 1.3, installed: 1.2}]")));
 
         // Plugin catalog does not change but plugins do
+        loggerRule.record(ConfigurationBundleService.class, Level.INFO).capture(10);
         cb = ConfigurationBundleManager.getConfigurationBundleFromPath(bundlesSrc.getRoot().toPath().resolve("bundle-apiversion-2_changes-in-plugins"));
         assertFalse("With apiVersion 2, changes in plugin configurations but not in plugin catalog means the bundle is not hot-reloadable", service.isHotReloadable(cb));
+        assertThat("Logged the plugins with changes", loggerRule, recorded(Level.INFO, containsString("Configuration Bundle cannot be reloaded because some plugins are to be updated: [{plugin: manage-permission, from bundle: 1.0.1, installed: 1.0}]")));
 
         // Plugin catalog and plugins change
+        loggerRule.record(ConfigurationBundleService.class, Level.INFO).capture(10);
         cb = ConfigurationBundleManager.getConfigurationBundleFromPath(bundlesSrc.getRoot().toPath().resolve("bundle-apiversion-2_changes-in-pc-and-plugins"));
         assertFalse("With apiVersion 2, changes in plugin configurations and in plugin catalog means the bundle is not hot-reloadable", service.isHotReloadable(cb));
+        assertThat("Logged the plugins with changes", loggerRule, recorded(Level.INFO, containsString("Configuration Bundle cannot be reloaded because of Plugin Catalog versions update: [{plugin: beer, catalog: 1.3, installed: 1.2}]")));
+        assertThat("Logged the plugins with changes", loggerRule, recorded(Level.INFO, containsString("Configuration Bundle cannot be reloaded because some plugins are to be updated: [{plugin: manage-permission, from bundle: 1.0.1, installed: 1.0}]")));
     }
 
     private ConfigurationBundle noPluginsUpdate() {
