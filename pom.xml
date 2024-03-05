@@ -137,7 +137,7 @@
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
-      <version>1775.v810dc950b_514</version> <!-- TODO Remove once in URR BOM -->
+      <version>1738.v2d8b_a_b_8a_54b_1</version> <!-- TODO Remove once in URR BOM -->
       <optional>true</optional>
     </dependency>
 
