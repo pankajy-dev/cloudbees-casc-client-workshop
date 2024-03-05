@@ -1,11 +1,14 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.model.PluginItem;
 import com.cloudbees.jenkins.plugins.assurance.model.Plugins;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
+import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConfiguration;
@@ -15,9 +18,11 @@ import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.PluginWrapper;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.variant.OptionalExtension;
@@ -92,8 +97,92 @@ public final class PluginCatalogExporter extends BundleExporter {
         return "plugin-catalog.yaml";
     }
 
+    @Override
+    @SuppressRestrictedWarnings(value = {CloudBeesAssurance.class, ParsedEnvelopeExtension.class, Beekeeper.class,
+            Plugins.class, Plugins.PluginItemList.class, PluginItem.class})
+    @CheckForNull
+    public String getExport() {
+        if (!enabled()) {
+            return null;
+        }
+
+        // check if the CAP is enabled
+        Status status = BeekeeperRemote.get().getStatus();
+        if (!status.isCap()) {
+            String msg = "Cannot export catalog because CAP is not enabled";
+            LOG.log(Level.WARNING, msg);
+            return msg;
+        }
+
+        ConfigurationBundle configurationBundle = ConfigurationBundleManager.get().getConfigurationBundle();
+        String apiVersion = configurationBundle.getApiVersion();
+        if (apiVersion == null) {
+            LOG.log(Level.WARNING, "The apiVersion is missing, the export cannot be performed.");
+            return "The apiVersion is missing, the export cannot be performed.";
+        }
+
+        EnvelopeExtension envelopeExtension = configurationBundle.getEnvelopeExtension();
+        JSONObject bundleCatalog = null;
+        if (envelopeExtension != null) {
+            try {
+                bundleCatalog = JSONObject.fromObject(envelopeExtension.getMetadata());
+            } catch (JSONException e) {
+                // export without the bundle catalog
+            }
+        }
+
+        String content;
+        switch (apiVersion){
+            case "1":
+                content = getApiVersion1Export(bundleCatalog);
+                break;
+            case "2":
+                content = getApiVersion2Export(bundleCatalog);
+                break;
+            default:
+                content = "Unknown API version, the export cannot be performed.";
+                break;
+        }
+        if (content == null) {
+            String msg = "There is nothing to add to the generated catalog";
+            LOG.log(Level.FINE, msg);
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (CloudBeesAssurance.get().getBeekeeper().getPlugins().isThereAnyWarning()) {
+            sb.append("--- There are Beekeeper warnings. This makes the bundle export a \"best effort\".\n");
+            sb.append("--- Exported plugin catalog and plugins list might be incorrect and might need manual fixing before use.\n");
+            sb.append(CloudBeesAssurance.get().getBeekeeper().getPlugins().getWarnings().stream()
+                                        .map(p -> "--- " + p.getName() + ". " + p.getDescription())
+                                        .collect(Collectors.joining("\n")));
+            sb.append("\n");
+            sb.append(CloudBeesAssurance.get().getBeekeeper().getPlugins().getWarningsExtension().stream()
+                                        .map(p -> "--- " + p.getName() + ". " + p.getDescription())
+                                        .collect(Collectors.joining("\n")));
+            sb.append("\n");
+        }
+
+        sb.append(content);
+        return sb.toString();
+    }
+
     /**
-     * Generates a plugin catalog based on the current list of installed and active plugins.
+     * Generate a plugin catalog for apiVersion 2. The exported catalog is exactly the same as the one defined in the bundle.
+     * @param bundleCatalog the bundle catalog, can be null
+     * @return the YAML version of the catalog or null if the catalog is not defined.
+     */
+    @CheckForNull
+    private String getApiVersion2Export(@Nullable JSONObject bundleCatalog) {
+        if (bundleCatalog != null) {
+            return toYaml(bundleCatalog);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Generates a plugin catalog for apiVersion 1 based on the current list of installed and active plugins.
      * <p>
      * If the instance already uses a catalog, it is taken as base. Otherwise it creates an new catalog.
      * Installed and active plugins which are not part of the envelope are added to the generated catalog. Note that
@@ -105,36 +194,10 @@ public final class PluginCatalogExporter extends BundleExporter {
      */
     @SuppressRestrictedWarnings(value = {CloudBeesAssurance.class, ParsedEnvelopeExtension.class, Beekeeper.class,
             Plugins.class, Plugins.PluginItemList.class, PluginItem.class})
-    @Override
     @CheckForNull
-    public String getExport() {
-        if (!enabled()) {
-            return null;
-        }
-
+    private String getApiVersion1Export(JSONObject bundleCatalog) {
         final List<PluginEntry> addToCatalog = addToCatalog();
 
-        // check if the CAP is enabled
-        Status status = BeekeeperRemote.get().getStatus();
-        if (!status.isCap()) {
-            String msg = "Cannot export catalog because CAP is not enabled";
-            LOG.log(Level.WARNING, msg);
-            return msg;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        if (CloudBeesAssurance.get().getBeekeeper().getPlugins().isThereAnyWarning()) {
-            sb.append("--- There are Beekeeper warnings. This makes the bundle export a \"best effort\".\n");
-            sb.append("--- Exported plugin catalog and plugins list might be incorrect and might need manual fixing before use.\n");
-            sb.append(CloudBeesAssurance.get().getBeekeeper().getPlugins().getWarnings().stream()
-                    .map(p -> "--- " + p.getName() + ". " + p.getDescription())
-                    .collect(Collectors.joining("\n")));
-            sb.append("\n");
-            sb.append(CloudBeesAssurance.get().getBeekeeper().getPlugins().getWarningsExtension().stream()
-                    .map(p -> "--- " + p.getName() + ". " + p.getDescription())
-                    .collect(Collectors.joining("\n")));
-            sb.append("\n");
-        }
         // get current catalog
         String jsonCatalog = null;
         ParsedEnvelopeExtension.Expanded installedExtension = CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
@@ -144,37 +207,46 @@ public final class PluginCatalogExporter extends BundleExporter {
             jsonCatalog = catalogFromTemplate(getInstanceName());
         }
         // add plugins in addToCatalog if they are not there yet
-        if (jsonCatalog != null) {
-            JSONObject json = JSONObject.fromObject(jsonCatalog);
-            JSONArray configurations = json.getJSONArray("configurations");
-            JSONObject conf;
-            if (configurations.size() >= 1) {
-                // new plugins will be added to the first configuration, this can be manually edited by the user later
-                // as a future improvement this could add the plugins to all configurations compatible with the current instance
-                conf = (JSONObject) configurations.get(0);
-            } else {
-                conf = new JSONObject();
-            }
-            JSONObject includePlugins = conf.getJSONObject("includePlugins");
-
-            addToCatalog.stream().sorted(new Comparator<PluginEntry>() {
-                @Override
-                public int compare(PluginEntry entry1, PluginEntry entry2) {
-                    return entry1.id.compareTo(entry2.id);
-                }
-            }).forEachOrdered( entry -> {
-                JSONObject version = new JSONObject();
-                version.put("version", entry.version);
-                includePlugins.put(entry.id, version);
-            } );
-
-            sb.append(toYaml(json));
-            return sb.toString();
-        } else {
-            String msg = "There is nothing to add to the generated catalog";
-            LOG.log(Level.FINE, msg);
-            return "";
+        if (jsonCatalog == null) {
+            return null;
         }
+        JSONObject generatedCatalog = JSONObject.fromObject(jsonCatalog);
+        if (!generatedCatalog.containsKey("configurations")) {
+            generatedCatalog.put("configurations", new JSONArray());
+        }
+        JSONArray configurations = generatedCatalog.getJSONArray("configurations");
+        if (configurations.isEmpty()) {
+            configurations.add(new JSONObject());
+        }
+        // new plugins will be added to the first configuration, this can be manually edited by the user later
+        // as a future improvement this could add the plugins to all configurations compatible with the current instance
+        JSONObject configuration = (JSONObject) configurations.get(0);
+        if (!configuration.containsKey("includePlugins")) {
+            configuration.put("includePlugins", new JSONObject());
+        }
+        JSONObject includePlugins = configuration.getJSONObject("includePlugins");
+
+        // Try to add configuration from the bundle
+        try {
+            JSONObject bundleConfiguration = (JSONObject) bundleCatalog.getJSONArray("configurations").get(0);
+            JSONObject bundleCatalogPlugins = bundleConfiguration.getJSONObject("includePlugins");
+            includePlugins.putAll(bundleCatalogPlugins);
+        } catch (JSONException e) {
+            // Nothing to do, continue to add
+        }
+
+        addToCatalog
+                .stream()
+                .filter(pluginEntry -> !includePlugins.containsKey(pluginEntry.id))
+                .sorted(Comparator.comparing(entry -> entry.id))
+                .forEachOrdered(entry -> {
+                    // Manually installed plugins
+                    JSONObject version = new JSONObject();
+                    version.put("version", entry.version);
+                    includePlugins.put(entry.id, version);
+                });
+
+        return toYaml(generatedCatalog);
     }
 
     @NonNull
@@ -202,8 +274,7 @@ public final class PluginCatalogExporter extends BundleExporter {
         Map<String, PluginConfiguration.Expanded> extensionPlugins =
                 installedExtension != null ? installedExtension.getConfiguration().getInclude() : Collections.emptyMap();
 
-        Map<String, EnvelopePlugin> capPlugins = new HashMap<>();
-        capPlugins.putAll(envelopePlugins);
+        Map<String, EnvelopePlugin> capPlugins = new HashMap<>(envelopePlugins);
 
         // envelope plugins and extended are the same
         for (PluginConfiguration.Expanded plugin : extensionPlugins.values()) {
@@ -211,8 +282,7 @@ public final class PluginCatalogExporter extends BundleExporter {
         }
 
         for (PluginWrapper p : installedPlugins) {
-            // if it is not in the envelope or in the plugin catalog, add it to the list
-            if (!(p.isActive() && capPlugins.containsKey(p.getShortName()) && capPlugins.get(p.getShortName()).getVersionNumber().equals(p.getVersionNumber()))) {
+            if (!(p.isActive() && capPlugins.containsKey(p.getShortName()))) {
                 toAdd.add(new PluginEntry(p.getShortName(), p.getVersion()));
             }
         }
