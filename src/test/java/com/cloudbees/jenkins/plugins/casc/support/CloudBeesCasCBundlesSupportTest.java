@@ -19,6 +19,7 @@ import java.util.zip.ZipFile;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -73,10 +74,9 @@ public class CloudBeesCasCBundlesSupportTest {
     }
 
     private void assertFileContent(ZipFile zip, String file) throws Exception {
-        assertTrue("Wrong content in file " + file, IOUtils.contentEquals(
-                zip.getInputStream(zip.getEntry(ConfigurationBundleManager.CASC_BUNDLE_DIR + "/" + file)),
-                CloudBeesCasCBundlesSupportTest.class.getResourceAsStream(CloudBeesCasCBundlesSupportTest.class.getSimpleName() + "/testGeneratedBundle/core-casc-bundle/" + file)
-        ));
+        String fromBundle = IOUtils.toString(zip.getInputStream(zip.getEntry(ConfigurationBundleManager.CASC_BUNDLE_DIR + "/" + file)), StandardCharsets.UTF_8);
+        String fromResources = IOUtils.toString(CloudBeesCasCBundlesSupportTest.class.getResourceAsStream(CloudBeesCasCBundlesSupportTest.class.getSimpleName() + "/testGeneratedBundle/core-casc-bundle/" + file), StandardCharsets.UTF_8);
+        assertThat("Wrong content in file " + file, fromBundle, is(fromResources));
     }
 
     private ZipFile getZipBundleAndAssertSummary(String content) throws Exception {
