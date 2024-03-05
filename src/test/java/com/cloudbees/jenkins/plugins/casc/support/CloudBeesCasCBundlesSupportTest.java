@@ -75,7 +75,7 @@ public class CloudBeesCasCBundlesSupportTest {
 
     private void assertFileContent(ZipFile zip, String file) throws Exception {
         String fromBundle = IOUtils.toString(zip.getInputStream(zip.getEntry(ConfigurationBundleManager.CASC_BUNDLE_DIR + "/" + file)), StandardCharsets.UTF_8).replaceAll("\r\n", "\n");
-        String fromResources = IOUtils.toString(CloudBeesCasCBundlesSupportTest.class.getResourceAsStream(CloudBeesCasCBundlesSupportTest.class.getSimpleName() + "/testGeneratedBundle/core-casc-bundle/" + file), StandardCharsets.UTF_8);
+        String fromResources = IOUtils.toString(CloudBeesCasCBundlesSupportTest.class.getResourceAsStream(CloudBeesCasCBundlesSupportTest.class.getSimpleName() + "/testGeneratedBundle/core-casc-bundle/" + file), StandardCharsets.UTF_8).replaceAll("\r\n", "\n");
         assertThat("Wrong content in file " + file, fromBundle, is(fromResources));
     }
 
