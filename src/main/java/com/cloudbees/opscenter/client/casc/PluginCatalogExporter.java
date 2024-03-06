@@ -130,11 +130,11 @@ public final class PluginCatalogExporter extends BundleExporter {
         String content;
         if (apiVersion == null) {
             // Fallback to apiVersion 1 export if no bundle is configured
-            content = getApiVersion1Export(bundleCatalog);
+            content = getApiVersion1Export();
         } else {
             switch (apiVersion){
                 case "1":
-                    content = getApiVersion1Export(bundleCatalog);
+                    content = getApiVersion1Export();
                     break;
                 case "2":
                     content = getApiVersion2Export(bundleCatalog);
@@ -196,7 +196,7 @@ public final class PluginCatalogExporter extends BundleExporter {
     @SuppressRestrictedWarnings(value = {CloudBeesAssurance.class, ParsedEnvelopeExtension.class, Beekeeper.class,
             Plugins.class, Plugins.PluginItemList.class, PluginItem.class})
     @CheckForNull
-    private String getApiVersion1Export(@Nullable JSONObject bundleCatalog) {
+    private String getApiVersion1Export() {
         final List<PluginEntry> addToCatalog = addToCatalog();
 
         // get current catalog
@@ -226,17 +226,6 @@ public final class PluginCatalogExporter extends BundleExporter {
             configuration.put("includePlugins", new JSONObject());
         }
         JSONObject includePlugins = configuration.getJSONObject("includePlugins");
-
-        // Try to add configuration from the bundle
-        if (bundleCatalog != null) {
-            try {
-                JSONObject bundleConfiguration = (JSONObject) bundleCatalog.getJSONArray("configurations").get(0);
-                JSONObject bundleCatalogPlugins = bundleConfiguration.getJSONObject("includePlugins");
-                includePlugins.putAll(bundleCatalogPlugins);
-            } catch (JSONException e) {
-                // Nothing to do, continue to add
-            }
-        }
 
         addToCatalog
                 .stream()
