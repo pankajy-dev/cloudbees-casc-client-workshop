@@ -238,6 +238,9 @@ public final class PluginCatalogExporter extends BundleExporter {
                     includePlugins.put(entry.id, version);
                 });
 
+        // Don't include beekeeperExceptions
+        configuration.remove("beekeeperExceptions");
+
         return toYaml(generatedCatalog);
     }
 
