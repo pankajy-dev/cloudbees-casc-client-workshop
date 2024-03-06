@@ -141,7 +141,7 @@ public final class PluginCatalogExporter extends BundleExporter {
                     content = getApiVersion2Export(bundleCatalog);
                     break;
                 default:
-                    content = "Unknown API version, the export cannot be performed.";
+                    content = "--- Unknown API version, current plugin catalog is exported.\n" + getApiVersion2Export(bundleCatalog);
                     break;
             }
         }
