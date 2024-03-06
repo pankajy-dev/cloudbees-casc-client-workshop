@@ -179,6 +179,7 @@ public final class PluginCatalogExporter extends BundleExporter {
         if (bundleCatalog != null) {
             return toYaml(bundleCatalog);
         } else {
+            LOG.log(Level.INFO, "No bundle catalog found");
             return null;
         }
     }
