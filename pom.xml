@@ -14,7 +14,7 @@
   </parent>
 
   <artifactId>cloudbees-casc-client</artifactId>
-  <version>2.43-SNAPSHOT</version>
+  <version>2.43</version>
   <packaging>hpi</packaging>
 
   <name>CloudBees CasC Client Plugin</name>
@@ -31,7 +31,7 @@
   <scm>
     <connection>scm:git:ssh://git@github.com/cloudbees/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/cloudbees/${project.artifactId}-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>cloudbees-casc-client-2.43</tag>
   </scm>
 
   <dependencyManagement>
@@ -123,8 +123,7 @@
           [ERROR]   +-com.cloudbees.jenkins.plugins:cloudbees-assurance:2.276.0.32
           [ERROR]     +-org.apache.maven:maven-aether-provider:3.3.9
           [ERROR]       +-org.apache.maven:maven-model-builder:3.3.9
-          [ERROR]         +-com.google.guava:guava:33.0.0-jre (managed) <- com.google.guava:guava:18.0
-          [ERROR]           +-com.google.errorprone:error_prone_annotations:2.18.0 (managed) <- com.google.errorprone:error_prone_annotations:2.23.0
+          [ERROR]         +-com.google.guava:guava:33.0.0-jre (managed) <- com.google.guava:guava:18.0 [ERROR]           +-com.google.errorprone:error_prone_annotations:2.18.0 (managed) <- com.google.errorprone:error_prone_annotations:2.23.0
           and it's not used, so excluding
           -->
           <groupId>org.apache.maven</groupId>
