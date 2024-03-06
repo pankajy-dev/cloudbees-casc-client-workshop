@@ -123,7 +123,8 @@ public final class PluginCatalogExporter extends BundleExporter {
             try {
                 bundleCatalog = JSONObject.fromObject(envelopeExtension.getMetadata());
             } catch (JSONException e) {
-                // export without the bundle catalog
+                LOG.log(Level.WARNING, "Installed plugin catalog cannot be parsed", e);
+                return null;
             }
         }
 
