@@ -1,0 +1,11 @@
+apiVersion: "1"
+id: "plugin-management"
+description: "This is a config bundle"
+version: "1"
+allowCapExceptions: true
+catalog:
+  - "plugin-catalog.yaml"
+plugins:
+  - "plugins.yaml"
+jcasc:
+  - "jenkins.yaml"
