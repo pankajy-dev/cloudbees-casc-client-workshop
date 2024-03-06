@@ -1,0 +1,4 @@
+plugins:
+  - id: configuration-as-code
+  - id: icon-shim
+  - id: beer
