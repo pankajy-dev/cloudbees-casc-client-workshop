@@ -1,0 +1,25 @@
+plugins:
+- id: configuration-as-code
+- id: beer
+- id: chucknorris
+- id: scm-api
+  url: %%URL%%/scm-api/latest/scm-api.hpi
+  credentialsId: cred2
+- id: icon-shim
+  groupId: "org.jenkins-ci.plugins"
+  version: "1.0.1"
+  repositoryId: test-repo
+repositories:
+- id: test-repo
+  layout: nexus3
+  url: %%URL%%
+  credentialsId: cred1
+credentials:
+- id: cred1
+  user: user1
+  password: passwd1
+- id: cred2
+  user: user2
+  password: passwd2
+- id: unused
+  token: fake
