@@ -1,5 +1,9 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginInstallConfiguration;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
@@ -10,6 +14,9 @@ import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConf
 import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.items.Items;
 import com.cloudbees.jenkins.plugins.casc.rbac.GlobalRbac;
+import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
+import com.cloudbees.jenkins.plugins.updates.envelope.Scope;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -17,6 +24,8 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.PluginWrapper;
 import jenkins.model.Jenkins;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -32,8 +41,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -130,7 +142,8 @@ public abstract class BundleExporter implements ExtensionPoint {
                         bundle = bundle.concat(String.format("  - \"%s\"%n", exporter.getYamlFile()));
                     }
                 }
-                return bundle.replace("%BUNDLE_ID%", bundleID != null ? bundleID : "jenkins").replace("%DESCRIPTION%", description);
+                String apiVersion = StringUtils.defaultIfBlank(ConfigurationBundleManager.get().getConfigurationBundle().getApiVersion(), "1");
+                return bundle.replace("%BUNDLE_ID%", bundleID != null ? bundleID : "jenkins").replace("%DESCRIPTION%", description).replace("%APIVERSION%", apiVersion);
             } catch (IOException e) {
                 LOG.log(Level.WARNING, "Cannot read bundle descriptor template to generate an export response", e);
                 return null;
@@ -170,20 +183,123 @@ public abstract class BundleExporter implements ExtensionPoint {
         @Override
         @CheckForNull
         public String getExport() {
-            List<String> plugins = new ArrayList<>();
             // check if the CAP is enabled
             Status status = BeekeeperRemote.get().getStatus();
             if (!status.isCap()) {
-                String msg = "Cannot export plugins because CAP is not enabled";
+                String msg = "# Cannot export plugins because CAP is not enabled";
                 LOG.log(Level.WARNING, msg);
                 return msg;
             }
+            String apiVersion = StringUtils.defaultIfBlank(ConfigurationBundleManager.get().getConfigurationBundle().getApiVersion(), "1");
+            if ("1".equals(apiVersion)) {
+                return exportForApiVersion1();
+            } else if ("2".equals(apiVersion)) {
+                return exportForApiVersion2();
+            } else {
+                return "# Unsupported apiVersion " + apiVersion + ". This is a simple export of the installed plugins\n" + exportForApiVersion1();
+            }
+        }
+
+        @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
+        private String exportForApiVersion2() {
+            ConfigurationBundle currentBundle = ConfigurationBundleManager.get().getConfigurationBundle();
+
+            if (currentBundle.getPluginConfigurations() == null || currentBundle.getPluginConfigurations().isEmpty()) {
+                // Nothing coming from the plugins.yaml files, so we only can consider that those plugins can be installed from the UC
+                // Those manually installed uploading the hpi file might fail
+                return "# Those plugins manually installed (not using a CasC bundle) might not be installable using the exported CasC bundle if they were uploaded instead of installed through the Plugin Manager\n" +
+                       exportForApiVersion1();
+            }
+
+            List<PluginWrapper> installedPlugins = Jenkins.get().getPluginManager().getPlugins();
+            Set<String> allDependencies = installedPlugins.stream().flatMap(plugin -> plugin.getDependencies().stream()).map(dependency -> dependency.shortName).collect(Collectors.toSet());
+
+            // First export those plugins that remains installed (not manually removed) which were installed using the CasC Bundle
+            Set<String> installedByIds = installedPlugins.stream().map(PluginWrapper::getShortName).collect(Collectors.toSet());
+            Set<PluginInstallConfiguration> confWithInstalledPlugins = currentBundle.getPluginConfigurations().stream().filter(conf -> CollectionUtils.containsAny(conf.getDefinedPlugins(), installedByIds)).collect(Collectors.toSet());
+            Set<PluginInstallConfiguration.Plugin> stillInstalledFromPluginYaml = confWithInstalledPlugins.stream().flatMap(conf -> conf.getPlugins().stream()).filter(plugin -> {
+                try {
+                    return installedByIds.contains(plugin.getId());
+                } catch (InvalidBundleException e) {
+                    // Cannot happen at this point. Bundle already validated
+                    return false;
+                }
+            }).collect(Collectors.toSet());
+            Set<String> stillInstalledFromPluginYamlIds = stillInstalledFromPluginYaml.stream().map(plugin -> {
+                try {
+                    return plugin.getId();
+                } catch (InvalidBundleException e) {
+                    // Cannot happen at this point. Bundle already validated
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet());
+
+            // For those still installed plugins, get the potential repositories. As the repository configuration might be in a plugins.yaml whose plugins are not more installed, we need to check all configurations
+            Set<String> repoIds = stillInstalledFromPluginYaml.stream().filter(plugin -> StringUtils.isNotBlank(plugin.getRepositoryId())).map(PluginInstallConfiguration.Plugin::getRepositoryId).collect(Collectors.toSet());
+            Set<PluginInstallConfiguration.Repository> repoForInstalledPlugins = currentBundle.getPluginConfigurations().stream().flatMap(config -> config.getRepositories().stream()).filter(repository -> {
+                try {
+                    return repoIds.contains(repository.getId());
+                } catch (InvalidBundleException e) {
+                    // Cannot happen at this point. Bundle already validated
+                    return false;
+                }
+            }).collect(Collectors.toSet());
+
+            // For those still installed plugins or their repositories, get the credentials. As the credentials might be in a plugins.yaml whose plugins are not more installed, we need to check all configurations
+            Set<String> credIds = new HashSet<>();
+            credIds.addAll(stillInstalledFromPluginYaml.stream().filter(plugin -> StringUtils.isNotBlank(plugin.getCredentialsId())).map(PluginInstallConfiguration.Plugin::getCredentialsId).collect(Collectors.toSet()));
+            credIds.addAll(repoForInstalledPlugins.stream().filter(repo -> StringUtils.isNotBlank(repo.getCredentialsId())).map(PluginInstallConfiguration.Repository::getCredentialsId).collect(Collectors.toSet()));
+            Set<PluginInstallConfiguration.Credential> credForInstalledPlugins = currentBundle.getPluginConfigurations().stream().flatMap(conf -> conf.getCredentials().stream()).filter(credential -> {
+                try {
+                    return credIds.contains(credential.getId());
+                } catch (InvalidBundleException e) {
+                    // Cannot happen at this point. Bundle already validated
+                    return false;
+                }
+            }).collect(Collectors.toSet());
+
+            // Next, those installed plugins that weren't installed using the bundle (manually or as a dependency).
+            // Best effort: We cannot know if they were installed uploading the hpi file or through the UC, so we will suppose the Plugin Manager (UC)
+            // Note: UC means either CAP plugins, or non CAP plugins from a plugin catalog or a non CAP plugin not in the plugin catalog. In all cases, the configuration is the same (just the id)
+            Set<String> installedManually = installedPlugins.stream().filter(pluginWrapper -> !stillInstalledFromPluginYamlIds.contains(pluginWrapper.getShortName())).map(PluginWrapper::getShortName).collect(Collectors.toSet());
+            Map<String, EnvelopePlugin> fromEnvelope = CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins();
+            Set<PluginInstallConfiguration.Plugin> installedManuallyConfig = installedManually.stream().filter(pluginId -> {
+                // If bootstrap, no need to have it there
+                if (fromEnvelope.containsKey(pluginId) && fromEnvelope.get(pluginId).getScope().equals(Scope.BOOTSTRAP)) {
+                    return false;
+                }
+
+                // If it is a dependency, no need to have it there
+                if (allDependencies.contains(pluginId)) {
+                    return false;
+                }
+
+                return true;
+            }).map(PluginInstallConfiguration.Plugin::fromUC).collect(Collectors.toSet());
+
+            List<PluginInstallConfiguration.Plugin> finalList = new ArrayList<>();
+            finalList.addAll(stillInstalledFromPluginYaml);
+            finalList.addAll(installedManuallyConfig);
+
+            try {
+                return "# Those plugins manually installed (not using a CasC bundle) might not be installable using the exported CasC bundle if they were uploaded instead of installed through the Plugin Manager\n" +
+                       PluginInstallConfiguration.from(finalList, new ArrayList<>(repoForInstalledPlugins), new ArrayList<>(credForInstalledPlugins)).toYaml();
+            } catch (InvalidBundleException | IOException e) {
+                LOG.log(Level.WARNING, "Plugins could not be exported. Returning an empty export", e);
+                return "";
+            }
+        }
+
+        private String exportForApiVersion1() {
+            List<String> plugins = new ArrayList<>();
+
             // get the list of installed plugins
             List<PluginWrapper> installedPlugins = Jenkins.get().getPluginManager().getPlugins();
             for (PluginWrapper p : installedPlugins) {
                 plugins.add(p.getShortName());
             }
             return toYamlPlugins(plugins);
+
         }
 
         @NonNull
@@ -199,7 +315,7 @@ public abstract class BundleExporter implements ExtensionPoint {
 
         private String toYamlPlugins(@Nonnull List<String> plugins) {
             plugins.sort(String.CASE_INSENSITIVE_ORDER);
-            List<Map<String, String>> list = plugins.stream().map(p -> {return Collections.singletonMap("id", p);}).collect(Collectors.toList());
+            List<Map<String, String>> list = plugins.stream().map(p -> Collections.singletonMap("id", p)).collect(Collectors.toList());
             Map<String, List<Map<String, String>>> obj = Collections.singletonMap("plugins", list);
 
             DumperOptions options = new DumperOptions();
