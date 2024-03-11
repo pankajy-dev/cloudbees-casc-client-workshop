@@ -19,6 +19,8 @@ import com.cloudbees.jenkins.plugins.updates.envelope.Scope;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -201,6 +203,7 @@ public abstract class BundleExporter implements ExtensionPoint {
         }
 
         @SuppressRestrictedWarnings({CloudBeesAssurance.class, Beekeeper.class})
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. currentBundle.getPluginConfigurations() is already checked")
         private String exportForApiVersion2() {
             ConfigurationBundle currentBundle = ConfigurationBundleManager.get().getConfigurationBundle();
 
