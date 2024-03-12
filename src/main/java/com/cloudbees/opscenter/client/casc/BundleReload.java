@@ -166,28 +166,34 @@ public abstract class BundleReload implements ExtensionPoint {
         }
 
         // Will deploy plugins that are indicated via url / coordinates and update the report
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Path is known to exist")
         public void doReloadV2(ConfigurationBundle bundle) throws CasCException {
             Set<String> capDependenciesToInstall = new HashSet<>();
             Map<String, Path> pluginsToinstall = new HashMap<>();
             try {
                 Path newPluginsList = PluginListExpander.expand(bundle, CloudBeesAssurance.get().getBeekeeper().getEnvelope(), CloudBeesAssurance.get().getBeekeeper().getInstalledExtension());
-                Path expandedPluginsDirectory = newPluginsList.getParent();
-                for (File pluginDir : expandedPluginsDirectory.toFile().listFiles()){
-                    if (pluginDir != null && pluginDir.isDirectory()) {
-                        if (pluginDir.listFiles().length == 0) { // Dependency is in CAP, no hpi was downloaded
-                            capDependenciesToInstall.add(pluginDir.getName());
-                        } else {
-                            for (File pluginFile : pluginDir.listFiles()) { // For downloaded plugins we will install them manually
-                                if (pluginFile.getName().endsWith(".hpi") || pluginFile.getName().endsWith(".jpi")) {
-                                    pluginsToinstall.put(pluginDir.getName(), pluginFile.toPath());
+                if (newPluginsList != null && newPluginsList.toFile().exists()) {
+                    Path expandedPluginsDirectory = newPluginsList.getParent();
+                    if (expandedPluginsDirectory == null) {
+                        return;
+                    }
+                    for (File pluginDir : expandedPluginsDirectory.toFile().listFiles()) {
+                        if (pluginDir != null && pluginDir.isDirectory()) {
+                            if (pluginDir.listFiles().length == 0) { // Dependency is in CAP, no hpi was downloaded
+                                capDependenciesToInstall.add(pluginDir.getName());
+                            } else {
+                                for (File pluginFile : pluginDir.listFiles()) { // For downloaded plugins we will install them manually
+                                    if (pluginFile.getName().endsWith(".hpi") || pluginFile.getName().endsWith(".jpi")) {
+                                        pluginsToinstall.put(pluginDir.getName(), pluginFile.toPath());
+                                    }
                                 }
                             }
                         }
                     }
+                    downloadPluginsFromUC(capDependenciesToInstall);
+                    pluginsToinstall.forEach(this::deployDownloadedPlugins);
+                    updatePluginReportV2(newPluginsList);
                 }
-                downloadPluginsFromUC(capDependenciesToInstall);
-                pluginsToinstall.forEach(this::deployDownloadedPlugins);
-                updatePluginReportV2(newPluginsList);
             } catch (InvalidBundleException e) {
                 LOGGER.log(Level.WARNING, String.format("Invalid bundle, could not process plugins: %s", e.getMessage()));
                 LOGGER.log(Level.FINE, "Invalid bundle, could not process plugins: %s", e);
@@ -249,7 +255,7 @@ public abstract class BundleReload implements ExtensionPoint {
                     } else {
                         // We need to go into the expanded plugin folder and check it's dependencies
                         Path expandedFile = PluginListExpander.getExpandedFile(plugin);
-                        if (!expandedFile.toFile().exists()) {
+                        if (expandedFile == null || !expandedFile.toFile().exists()) {
                             continue;
                         }
                         PluginEntry pluginEntry = PluginEntry.fromJarFile(expandedFile.toFile(), new LocalPluginExpansionURLFactory());
@@ -276,7 +282,7 @@ public abstract class BundleReload implements ExtensionPoint {
          * This class is needed as pluginExpansionUIRLFactory is restricted to installation manager,
          * code is just duplicating the logic in {@link PluginExpansionURLFactory}
          */
-        public class LocalPluginExpansionURLFactory implements URLFactory {
+        public static class LocalPluginExpansionURLFactory implements URLFactory {
 
             @Override
             public String makeUrl(String name, String version) {
