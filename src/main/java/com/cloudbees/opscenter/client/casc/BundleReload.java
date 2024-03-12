@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
@@ -127,13 +128,13 @@ public abstract class BundleReload implements ExtensionPoint {
 
         @Override
         public void doReload(ConfigurationBundle bundle) throws CasCException {
-            doReloadV1(bundle);
+            doReloadFromCatalogAndExtension(bundle);
             if ("2".equals(bundle.getApiVersion())) {
-                doReloadV2(bundle);
+                doReloadFromUrlAndMavenPlugins(bundle);
             }
         }
 
-        public void doReloadV1(ConfigurationBundle bundle) throws CasCException {
+        private void doReloadFromCatalogAndExtension(ConfigurationBundle bundle) throws CasCException {
             Set<String> beekperPlugins = Sets.newHashSet(CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins().keySet());
             ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
             Set<String> expandedPlugins = new HashSet<>();
@@ -167,7 +168,7 @@ public abstract class BundleReload implements ExtensionPoint {
 
         // Will deploy plugins that are indicated via url / coordinates and update the report
         @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Path is known to exist")
-        public void doReloadV2(ConfigurationBundle bundle) throws CasCException {
+        private void doReloadFromUrlAndMavenPlugins(ConfigurationBundle bundle) throws CasCException {
             Set<String> capDependenciesToInstall = new HashSet<>();
             Map<String, Path> pluginsToinstall = new HashMap<>();
             try {
@@ -258,7 +259,7 @@ public abstract class BundleReload implements ExtensionPoint {
                         if (expandedFile == null || !expandedFile.toFile().exists()) {
                             continue;
                         }
-                        PluginEntry pluginEntry = PluginEntry.fromJarFile(expandedFile.toFile(), new LocalPluginExpansionURLFactory());
+                        PluginEntry pluginEntry = PluginEntry.fromJarFile(expandedFile.toFile(), new PluginExpansionURLFactory());
                         if (pluginEntry != null) {
                             Map<String, VersionNumber> pluginDependencyReports = pluginEntry.getDependencies()
                                                                                     .stream()
@@ -270,41 +271,10 @@ public abstract class BundleReload implements ExtensionPoint {
                     }
                 }
                 // TODO: Change this into a static final in installation-manager so it can be reused
-                report.writeFile(new File(Jenkins.get().getRootDir(), "plugin-installation-report.json"));
+                report.writeFile(new File(Jenkins.get().getRootDir(), CJPPluginManager.PLUGIN_INSTALLATION_REPORT));
             } catch (IOException ex) {
                 LOGGER.log(Level.WARNING, String.format("Plugin installation report can not be read: %s", ex.getMessage()));
                 LOGGER.log(Level.FINE, "Plugin installation report can not be read", ex);
-            }
-
-        }
-
-        /**
-         * This class is needed as pluginExpansionUIRLFactory is restricted to installation manager,
-         * code is just duplicating the logic in {@link PluginExpansionURLFactory}
-         */
-        public static class LocalPluginExpansionURLFactory implements URLFactory {
-
-            @Override
-            public String makeUrl(String name, String version) {
-                URL url = asUrl(name);
-                if (url != null) {
-                    return url.toExternalForm();
-                }
-                return "";
-            }
-
-            @CheckForNull
-            private URL asUrl(String name) {
-                final Path asPath = PluginListExpander.getExpandedFile(name);
-                if (asPath == null) {
-                    return null;
-                }
-                final File asFile = asPath.toFile();
-                try {
-                    return asFile.toURI().toURL();
-                } catch (MalformedURLException e) {
-                }
-                return null;
             }
         }
 
