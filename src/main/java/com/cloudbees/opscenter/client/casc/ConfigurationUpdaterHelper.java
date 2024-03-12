@@ -265,7 +265,7 @@ public final class ConfigurationUpdaterHelper {
             if (envelope.contains(p)) {
                 filtered.add(p);
             } else {
-                LOGGER.log(Level.WARNING, "Skipping {0} plugin. Only plugins in the envelope can be installed.", p);
+                LOGGER.log(Level.WARNING, "Skipping {0} plugin. Only plugins in the envelope can be installed via update center.", p);
             }
         }
 
