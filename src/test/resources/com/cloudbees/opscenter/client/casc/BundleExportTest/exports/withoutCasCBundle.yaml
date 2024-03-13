@@ -41,6 +41,7 @@ plugins:
 - id: jaxb
 - id: jjwt-api
 - id: jquery3-api
+- id: json-api
 - id: json-path-api
 - id: junit
 - id: kubernetes-client-api

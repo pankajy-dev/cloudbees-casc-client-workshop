@@ -431,7 +431,6 @@ public class BundleExportTest extends AbstractCJPTest {
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
         String export = exporter.getExport();
-        System.out.println(export);
         assertThat("beer plugin is exported", export, containsString("beer"));
         assertThat("icon-shim is not exported as it is bootstrap", export, not(containsString("icon-shim")));
     }
