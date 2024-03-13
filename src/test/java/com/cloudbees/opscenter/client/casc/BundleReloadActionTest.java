@@ -4,7 +4,12 @@ import com.cloudbees.jenkins.cjp.installmanager.AbstractIMTest;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.InstalledPluginsReport;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.RequestedPluginReportEntry;
+import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
+import com.cloudbees.jenkins.plugins.updates.envelope.Scope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
@@ -49,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +69,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -78,22 +85,21 @@ public class BundleReloadActionTest extends AbstractIMTest {
     public static void processBundles() throws Exception {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
         wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
+        wiremock.stubFor(get(urlEqualTo("/chucknorris.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("chucknorris.hpi")));
 
         FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc").toFile(), bundlesSrc.getRoot());
         // Sanitise plugin-catalog.yaml
-        Path pcFile1 = bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog").resolve("plugin-catalog.yaml");
+        replaceUrlPlaceholder(bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog").resolve("plugin-catalog.yaml"));
+        replaceUrlPlaceholder(bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog-v2").resolve("plugin-catalog.yaml"));
+        replaceUrlPlaceholder(bundlesSrc.getRoot().toPath().resolve("plugins-v2").resolve("plugins.yaml"));
+    }
+
+    private static void replaceUrlPlaceholder(Path file) throws IOException {
         String content;
-        try (InputStream in = FileUtils.openInputStream(pcFile1.toFile())) {
+        try (InputStream in = FileUtils.openInputStream(file.toFile())) {
             content = IOUtils.toString(in, StandardCharsets.UTF_8);
         }
-        try (OutputStream out = FileUtils.openOutputStream(pcFile1.toFile(), false)) {
-            IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
-        }
-        Path pcFile2 = bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog-v2").resolve("plugin-catalog.yaml");
-        try (InputStream in = FileUtils.openInputStream(pcFile2.toFile())) {
-            content = IOUtils.toString(in, StandardCharsets.UTF_8);
-        }
-        try (OutputStream out = FileUtils.openOutputStream(pcFile2.toFile(), false)) {
+        try (OutputStream out = FileUtils.openOutputStream(file.toFile(), false)) {
             IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
         }
     }
@@ -250,6 +256,51 @@ public class BundleReloadActionTest extends AbstractIMTest {
         assertThat("Update was not applied in 2nd request", response.getString("reason"), containsString("A reload is already in progress"));
     }
 
+    @Test
+    @WithEnvelope(ThreePluginsV2dot289.class)
+    @Issue("BEE-22192")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/plugins-v1")
+    public void v2PluginsReloadTest() throws CheckNewBundleVersionException, CasCException {
+        // mock update center
+        System.setProperty("com.cloudbees.jenkins.plugins.assurance.StagingURLSource.CloudBees.url", wiremock.baseUrl());
+        wiremock.stubFor(get(urlEqualTo("/workflow-step-api/639.v6eca_cd8c04a_a_/workflow-step-api.hpi"))
+                 .willReturn(aResponse().withStatus(200).withBodyFile("workflow-step-api.hpi")));
+        wiremock.stubFor(get(urlEqualTo("/cloudbees-casc-shared/1.0/cloudbees-casc-shared.hpi"))
+                                 .willReturn(aResponse().withStatus(200).withBodyFile("cloudbees-casc-shared.hpi")));
+
+        // Updating to another version using apiVersion 1
+        System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/plugins-v1-2").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        BundleReload.PluginsReload reload = ExtensionList.lookupSingleton(BundleReload.PluginsReload.class);
+        reload.doReload(ConfigurationBundleManager.get().getCandidateAsConfigurationBundle());
+        await("Version 2 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
+        InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
+        assertThat("New plugin should appear as requested", report.getRequested().get("cloudbees-casc-shared"), notNullValue());
+        assertThat("Bootstrap plugin should still appear as bootstrap", report.getRequested().get("icon-shim"), nullValue());
+
+        // Updating to a apiVersion 2 bundle
+        System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/plugins-v2").toFile().getAbsolutePath());
+        ConfigurationUpdaterHelper.checkForUpdates();
+        reload = ExtensionList.lookupSingleton(BundleReload.PluginsReload.class);
+        reload.doReload(ConfigurationBundleManager.get().getCandidateAsConfigurationBundle());
+        await("Version 3 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+
+        assertThat("beer is installed", Jenkins.get().getPlugin("beer"), notNullValue());
+        assertThat("chucknorris is installed", Jenkins.get().getPlugin("chucknorris"), notNullValue());
+        assertThat("chucknorris dependency is installed", Jenkins.get().getPlugin("workflow-step-api"), notNullValue());
+        assertThat("dependency not in CAP nor with URL is not installed", Jenkins.get().getPlugin("manage-permissions"), nullValue());
+        // Report
+        report = ConfigurationBundleManager.get().getReport();
+        assertThat("icon-shim is still in bootstrap", report.getBootstrap().get("icon-shim"), notNullValue());
+        Map<String, RequestedPluginReportEntry> plugins = report.getRequested();
+        assertThat("beer is installed", plugins.get("beer"), notNullValue());
+        assertThat("beer has no dependencies", plugins.get("beer").getDependencies().keySet(), empty());
+        assertThat("chucknorris is installed", plugins.get("chucknorris"), notNullValue());
+        assertThat("chucknorris has dependencies", plugins.get("chucknorris").getDependencies().containsKey("workflow-step-api"), is(true));
+        assertThat("manage-permissions is not installed", plugins.get("manage-permissions"), nullValue());
+    }
+
     private boolean reloadComplete(User user, CJPRule.WebClient wc) throws IOException {
         WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-reload-running"), user, wc, false);
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
@@ -299,6 +350,18 @@ public class BundleReloadActionTest extends AbstractIMTest {
         @NonNull
         public Envelope call() {
             return TestEnvelopes.e("2.289.1", 1, "", TestEnvelopes.beer12(), TestEnvelopes.p("manage-permission", "1.0.1"));
+        }
+    }
+
+    public static final class ThreePluginsV2dot289 implements TestEnvelopeProvider {
+        public ThreePluginsV2dot289() {
+        }
+
+        @NonNull
+        public Envelope call() {
+            return TestEnvelopes.e("2.289.1", 1, "", TestEnvelopes.iconShim(),
+                                   TestEnvelopes.p("cloudbees-casc-shared", "1.0", Scope.FAT, "6404ee70ffeca0b6e6b22af28bcb16821f85e216"),
+                                   TestEnvelopes.p("workflow-step-api", "639.v6eca_cd8c04a_a_", Scope.FAT, "1ba5797d67fb17de1921570dc90c6deb7d20085c"));
         }
     }
 }

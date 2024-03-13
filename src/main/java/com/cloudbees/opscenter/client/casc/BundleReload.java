@@ -1,17 +1,24 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.cjp.installmanager.CJPPluginManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ItemRemoveStrategy;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginExpansionURLFactory;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginListExpander;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.InstalledPluginsReport;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
+import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.plugin.PluginEntry;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
 import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
+import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 
 import com.google.common.collect.Sets;
 import hudson.Extension;
@@ -19,15 +26,22 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.UpdateCenter;
 import hudson.model.UpdateSite;
+import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +54,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import net.sf.json.JSONObject;
 
 /**
  * Marker interface for each CasC bundle section to be reloaded.
@@ -110,15 +125,28 @@ public abstract class BundleReload implements ExtensionPoint {
 
         @Override
         public void doReload(ConfigurationBundle bundle) throws CasCException {
+            doReloadFromCatalogAndExtension(bundle);
+            if ("2".equals(bundle.getApiVersion())) {
+                doReloadFromUrlAndMavenPlugins(bundle);
+            }
+        }
+
+        private void doReloadFromCatalogAndExtension(ConfigurationBundle bundle) throws CasCException {
             Set<String> beekperPlugins = Sets.newHashSet(CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins().keySet());
             ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
+            Set<String> expandedPlugins = new HashSet<>();
             if (expanded != null) {
-                beekperPlugins.addAll(expanded.getConfiguration().getInclude().keySet());
+                expandedPlugins.addAll(expanded.getConfiguration().getInclude().keySet());
             }
+            beekperPlugins.addAll(expandedPlugins);
             Set<String> plugins = ConfigurationUpdaterHelper.getOnlyPluginsInEnvelope(bundle.getPlugins(), beekperPlugins);
 
             updateDirectlyUpdateSites();
+            downloadPluginsFromUC(plugins);
+            updatePluginReportV1(plugins, expandedPlugins);
+        }
 
+        private void downloadPluginsFromUC(Set<String> plugins) {
             List<UpdateSite.Plugin> pluginsToInstall = Jenkins.get().getUpdateCenter().getAvailables().stream().filter(p -> plugins.contains(p.name)).collect(Collectors.toList());
             List<Future<UpdateCenter.UpdateCenterJob>> status = pluginsToInstall.stream().map(p -> p.deploy(true)).collect(Collectors.toList());
 
@@ -132,6 +160,110 @@ public abstract class BundleReload implements ExtensionPoint {
                     LOGGER.log(Level.WARNING, "Plugin installation timeout");
                     LOGGER.log(Level.FINE, "Plugin installation timeout", e);
                 }
+            }
+        }
+
+        // Will deploy plugins that are indicated via url / coordinates and update the report
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Path is known to exist")
+        private void doReloadFromUrlAndMavenPlugins(ConfigurationBundle bundle) throws CasCException {
+            Set<String> capDependenciesToInstall = new HashSet<>();
+            Map<String, Path> pluginsToinstall = new HashMap<>();
+            try {
+                Path newPluginsList = PluginListExpander.expand(bundle, CloudBeesAssurance.get().getBeekeeper().getEnvelope(), CloudBeesAssurance.get().getBeekeeper().getInstalledExtension());
+                if (newPluginsList != null && newPluginsList.toFile().exists()) {
+                    List<String> plugins = FileUtils.readLines(newPluginsList.toFile());
+                    for (String plugin : plugins) {
+                        File pluginFile = PluginListExpander.getExpandedFile(plugin).toFile();
+                        if (pluginFile.exists()) {
+                            pluginsToinstall.put(plugin, pluginFile.toPath());
+                        } else {
+                            capDependenciesToInstall.add(plugin);
+                        }
+                    }
+                    downloadPluginsFromUC(capDependenciesToInstall);
+                    pluginsToinstall.forEach(this::deployDownloadedPlugins);
+                    updatePluginReportV2(newPluginsList);
+                }
+            } catch (InvalidBundleException e) {
+                LOGGER.log(Level.WARNING, String.format("Invalid bundle, could not process plugins: %s", e.getMessage()));
+                LOGGER.log(Level.FINE, "Invalid bundle, could not process plugins: %s", e);
+                throw new CasCException(e.getMessage());
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, String.format("Problem writing plugins to disk: %s", e.getMessage()));
+                LOGGER.log(Level.FINE, "Problem reading / writing plugins to disk", e);
+            }
+        }
+
+        private void deployDownloadedPlugins(String pluginName, Path pluginFile) {
+            JSONObject cfg = new JSONObject()
+                                     .element("name", pluginName)
+                                     .element("version", "0") // mandatory but not used in this case
+                                     .element("url", pluginFile.toUri().toString())
+                                     .element("dependencies", Collections.emptyList()); // not needed, as we're also adding dependencies
+            try {
+                new UpdateSite(UpdateCenter.ID_UPLOAD, null).new Plugin(UpdateCenter.ID_UPLOAD, cfg).deploy(true).get(1, TimeUnit.MINUTES);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.log(Level.WARNING, String.format("Could not download %s for plugin %s: %s", pluginFile, pluginName, e.getMessage()));
+                LOGGER.log(Level.FINE, String.format("Could not download %s for plugin %s", pluginFile, pluginName), e);
+            }
+        }
+
+        private void updatePluginReportV1(Set<String> plugins, Set<String> expandedPlugins){
+            // Plugins are already filtered and have been installed, only needed check is if they're in the catalog (non-CAP) or not (CAP)
+            // On this point all plugins are requested, bootstrap plugins should already be installed before reaching reload
+            InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
+            Map<String, EnvelopePlugin> beekeeperPlugins = CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins();
+            ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
+            if (expanded != null) {
+                expanded.getConfiguration().getInclude().forEach((k, v) -> beekeeperPlugins.put(k, v.asEnvelopePlugin()));
+            }
+            for (String plugin : plugins) {
+                if (!report.getBootstrap().containsKey(plugin)) {
+                    boolean cap = !expandedPlugins.contains(plugin);
+                    report.addRequestedPlugin(plugin, beekeeperPlugins.get(plugin).getVersionNumber(), cap, "requested", beekeeperPlugins.get(plugin).getDependencies());
+                }
+            }
+
+        }
+
+        private void updatePluginReportV2(Path pluginList){
+            InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
+            Map<String, EnvelopePlugin> beekeeperPlugins = CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins();
+            ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
+            if (expanded != null) {
+                expanded.getConfiguration().getInclude().forEach((k, v) -> beekeeperPlugins.put(k, v.asEnvelopePlugin()));
+            }
+            // On this point all plugins are requested, bootstrap plugins should already be installed before reaching reload
+            try {
+                for (String plugin : Files.readAllLines(pluginList).stream().filter(p -> !report.getBootstrap().containsKey(p)).collect(Collectors.toSet())) {
+                    if (beekeeperPlugins.containsKey(plugin)) { // We can get the dependencies from the envelope
+                        boolean cap = true;
+                        if (expanded != null && expanded.getConfiguration().getInclude().containsKey(plugin)) {
+                            cap = false; // If it's added by the catalog it's not in CAP
+                        }
+                        report.addRequestedPlugin(plugin, beekeeperPlugins.get(plugin).getVersionNumber(), cap, "requested", beekeeperPlugins.get(plugin).getDependencies());
+                    } else {
+                        // We need to go into the expanded plugin folder and check it's dependencies
+                        Path expandedFile = PluginListExpander.getExpandedFile(plugin);
+                        if (expandedFile == null || !expandedFile.toFile().exists()) {
+                            continue;
+                        }
+                        PluginEntry pluginEntry = PluginEntry.fromJarFile(expandedFile.toFile(), new PluginExpansionURLFactory());
+                        if (pluginEntry != null) {
+                            Map<String, VersionNumber> pluginDependencyReports = pluginEntry.getDependencies()
+                                                                                    .stream()
+                                                                                    .collect(Collectors.toMap(
+                                                                                              dependencyEntry -> dependencyEntry.getName(),
+                                                                                              dependencyEntry -> new VersionNumber(dependencyEntry.getVersion())));
+                            report.addRequestedPlugin(plugin, pluginEntry.getVersionNumber(), false, "requested", pluginDependencyReports);
+                        }
+                    }
+                }
+                // TODO: Change this into a static final in installation-manager so it can be reused
+                report.writeFile(new File(Jenkins.get().getRootDir(), CJPPluginManager.PLUGIN_INSTALLATION_REPORT));
+            } catch (IOException ex) {
+                LOGGER.log(Level.WARNING, String.format("Plugin installation report can not be read: %s", ex.getMessage()));
+                LOGGER.log(Level.FINE, "Plugin installation report can not be read", ex);
             }
         }
 
