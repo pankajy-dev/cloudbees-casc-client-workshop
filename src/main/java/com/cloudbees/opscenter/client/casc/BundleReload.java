@@ -10,7 +10,6 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginLis
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.InstalledPluginsReport;
 import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.model.Beekeeper;
-import com.cloudbees.jenkins.plugins.assurance.remote.URLFactory;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.ParsedEnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.plugin.PluginEntry;
 import com.cloudbees.jenkins.plugins.casc.Bootstrap;
@@ -30,6 +29,7 @@ import hudson.model.UpdateSite;
 import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -37,8 +37,6 @@ import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -55,7 +53,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONObject;
 
@@ -174,21 +171,13 @@ public abstract class BundleReload implements ExtensionPoint {
             try {
                 Path newPluginsList = PluginListExpander.expand(bundle, CloudBeesAssurance.get().getBeekeeper().getEnvelope(), CloudBeesAssurance.get().getBeekeeper().getInstalledExtension());
                 if (newPluginsList != null && newPluginsList.toFile().exists()) {
-                    Path expandedPluginsDirectory = newPluginsList.getParent();
-                    if (expandedPluginsDirectory == null) {
-                        return;
-                    }
-                    for (File pluginDir : expandedPluginsDirectory.toFile().listFiles()) {
-                        if (pluginDir != null && pluginDir.isDirectory()) {
-                            if (pluginDir.listFiles().length == 0) { // Dependency is in CAP, no hpi was downloaded
-                                capDependenciesToInstall.add(pluginDir.getName());
-                            } else {
-                                for (File pluginFile : pluginDir.listFiles()) { // For downloaded plugins we will install them manually
-                                    if (pluginFile.getName().endsWith(".hpi") || pluginFile.getName().endsWith(".jpi")) {
-                                        pluginsToinstall.put(pluginDir.getName(), pluginFile.toPath());
-                                    }
-                                }
-                            }
+                    List<String> plugins = FileUtils.readLines(newPluginsList.toFile());
+                    for (String plugin : plugins) {
+                        File pluginFile = PluginListExpander.getExpandedFile(plugin).toFile();
+                        if (pluginFile.exists()) {
+                            pluginsToinstall.put(plugin, pluginFile.toPath());
+                        } else {
+                            capDependenciesToInstall.add(plugin);
                         }
                     }
                     downloadPluginsFromUC(capDependenciesToInstall);
