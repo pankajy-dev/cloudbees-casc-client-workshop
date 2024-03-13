@@ -63,11 +63,12 @@ public class CascScmRetrieverSupport extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        if(Files.exists(Path.of(getLogDirectory()))) {
+        Path logDirectoryPath = Path.of(getLogDirectory());
+        if(Files.exists(logDirectoryPath)) {
             this.getCascRetrieverLogs(result);
         } else {
             // log directory does not exist, most likely this means that the casc-retriever is not deployed
-            result.add((new StringContent(CASC_RETRIEVER_MD_FILE, CASC_RETRIEVER_NOT_DEPLOYED)));
+            result.add((new StringContent(logDirectoryPath.getFileName() + "/" + CASC_RETRIEVER_MD_FILE, CASC_RETRIEVER_NOT_DEPLOYED)));
         }
     }
 
@@ -77,14 +78,12 @@ public class CascScmRetrieverSupport extends Component {
      *
      * @param result  The container to add the log file to
      */
-    @NonNull
     private void getCascRetrieverLogs(Container result) {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(getLogDirectory()),   "*.log*")) {
+        Path logDirectoryPath = Path.of(getLogDirectory());
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(logDirectoryPath, "*.log*")) {
             for (Path entry: stream) {
                 File file = entry.toFile();
-                if (file != null) {
-                    result.add(new FileContent(file.getName(), entry.toFile()));
-                }
+                result.add(new FileContent(logDirectoryPath.getFileName() + "/" + file.getName(), entry.toFile()));
             }
         }
         catch (IOException e) {
