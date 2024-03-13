@@ -1,0 +1,8 @@
+apiVersion: "2"
+id: "plugin-management"
+description: "This is a config bundle"
+version: "1"
+catalog:
+  - "plugin-catalog.yaml"
+plugins:
+  - "plugins.yaml"
