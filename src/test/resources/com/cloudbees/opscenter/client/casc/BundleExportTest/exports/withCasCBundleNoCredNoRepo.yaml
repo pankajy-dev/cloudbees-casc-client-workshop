@@ -1,0 +1,9 @@
+# Those plugins manually installed (not using a CasC bundle) might not be installable using the exported CasC bundle if they were uploaded instead of installed through the Plugin Manager
+plugins:
+- id: beer
+- id: chucknorris
+- id: cloudbees-casc-client
+- id: cloudbees-casc-items-controller
+- id: configuration-as-code
+- id: master-provisioning-kubernetes
+- id: scm-api
