@@ -38,11 +38,12 @@ public class CascScmRetrieverSupportTest {
      */
     @Test
     public void testRetrieverNotDeployedCreateSupportBundle() throws Exception {
-        System.setProperty(CascScmRetrieverSupport.CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, j.jenkins.getRootDir().getAbsolutePath() + "/casc-retriever");
+        String cascRetrieverFolderName = "casc-retriever";
+        System.setProperty(CascScmRetrieverSupport.CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, j.jenkins.getRootDir().getAbsolutePath() + "/" + cascRetrieverFolderName);
         ZipFile zip = getZipBundleAndAssertManifest("Support Bundle Manifest");
-        ZipEntry cascRetrieverLog = zip.getEntry("casc_retriever.log");
-        assertNull("casc_retriever.log should not have been included", cascRetrieverLog);
-        ZipEntry cascRetriever = zip.getEntry(CascScmRetrieverSupport.CASC_RETRIEVER_MD_FILE);
+        ZipEntry cascRetrieverLog = zip.getEntry(cascRetrieverFolderName + "/casc_retriever.log");
+        assertNull(cascRetrieverFolderName + "casc_retriever.log should not have been included", cascRetrieverLog);
+        ZipEntry cascRetriever = zip.getEntry(cascRetrieverFolderName + "/" + CascScmRetrieverSupport.CASC_RETRIEVER_MD_FILE);
         assertNotNull("casc retriever markdown file should be present", cascRetriever);
         assertThat("content should indicate casc-retriever is not deployed", IOUtils.toString(zip.getInputStream(cascRetriever), StandardCharsets.UTF_8), containsString(CascScmRetrieverSupport.CASC_RETRIEVER_NOT_DEPLOYED));
     }
@@ -55,20 +56,21 @@ public class CascScmRetrieverSupportTest {
     @Test
     @LocalData
     public void testCascRetrieverLogsIncludedInSupportBundle() throws Exception {
-        System.setProperty(CascScmRetrieverSupport.CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, j.jenkins.getRootDir().getAbsolutePath() + "/casc-retriever");
+        String cascRetrieverFolderName = "casc-retriever";
+        System.setProperty(CascScmRetrieverSupport.CASC_RETRIEVER_LOG_DIR_SYSPROP_NAME, j.jenkins.getRootDir().getAbsolutePath() + "/" + cascRetrieverFolderName);
 
         ZipFile zip = getZipBundleAndAssertManifest("Support Bundle Manifest");
 
-        ZipEntry cascRetrieverLog = zip.getEntry("casc_retriever.log");
-        assertNotNull("casc_retriever.log should exist in support bundle", cascRetrieverLog);
-        assertThat("casc_retriever.log should not be empty", cascRetrieverLog.getSize() > 0);
+        ZipEntry cascRetrieverLog = zip.getEntry(cascRetrieverFolderName + "/casc_retriever.log");
+        assertNotNull(cascRetrieverFolderName + "casc_retriever.log should exist in support bundle", cascRetrieverLog);
+        assertThat(cascRetrieverFolderName + "casc_retriever.log should not be empty", cascRetrieverLog.getSize() > 0);
 
-        ZipEntry cascRetrieverLog2 = zip.getEntry("casc_retriever.log.1");
-        assertNotNull("casc_retriever.log.1 should exist in support bundle", cascRetrieverLog2);
-        assertThat("casc_retriever.log.1 should not be empty", cascRetrieverLog2.getSize() > 0);
+        ZipEntry cascRetrieverLog2 = zip.getEntry(cascRetrieverFolderName + "/casc_retriever.log.1");
+        assertNotNull(cascRetrieverFolderName + "casc_retriever.log.1 should exist in support bundle", cascRetrieverLog2);
+        assertThat(cascRetrieverFolderName + "casc_retriever.log.1 should not be empty", cascRetrieverLog2.getSize() > 0);
 
-        ZipEntry shouldBeNull = zip.getEntry("foo.log");
-        assertNotNull("foo.log should  have been included", shouldBeNull);
+        ZipEntry shouldBeNull = zip.getEntry(cascRetrieverFolderName + "/foo.log");
+        assertNotNull(cascRetrieverFolderName + "foo.log should  have been included", shouldBeNull);
 
     }
 
