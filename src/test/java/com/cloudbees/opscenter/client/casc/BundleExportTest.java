@@ -375,8 +375,15 @@ public class BundleExportTest extends AbstractCJPTest {
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
         // The test dependencies are installed as well, as if they were
-        assertThat("Export all the plugins", exporter.getExport().replaceAll("\r\n", "\n"),
-                   is(FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withCasCBundle.yaml").toFile(), StandardCharsets.UTF_8).replaceAll("%%URL%%", wiremock.baseUrl()).replaceAll("\r\n", "\n")));
+        String export = exporter.getExport();
+        assertThat("The export is not null", export, notNullValue());
+        String actual = export.replaceAll("\r\n", "\n") // Sanitised for windows tests
+                              .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
+        String expected = FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withCasCBundle.yaml").toFile(), StandardCharsets.UTF_8)
+                                   .replaceAll("%%URL%%", wiremock.baseUrl())
+                                   .replaceAll("\r\n", "\n") // Sanitised for windows tests
+                                   .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
+        assertThat("Export all the plugins", actual, is(expected));
     }
 
     @Test

@@ -20,8 +20,8 @@ repositories:
   url: %%URL%%
 credentials:
 - id: cred1
-  password: passwd1
+  password: '{dummy encryption for test}'
   user: user1
 - id: cred2
-  password: passwd2
+  password: '{dummy encryption for test}'
   user: user2
