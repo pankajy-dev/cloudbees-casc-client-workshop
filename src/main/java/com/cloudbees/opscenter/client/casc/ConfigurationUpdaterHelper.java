@@ -818,7 +818,7 @@ public final class ConfigurationUpdaterHelper {
                 ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
                 return service.isHotReloadable(bundle);
             } catch (IllegalStateException e) {
-                LOGGER.log(Level.FINE, "Reload is disabled because ConfigurationBundleService is not loaded.");
+                LOGGER.log(Level.WARNING, "Reload is disabled because either ConfigurationBundleService is not loaded or plugins could not be checked.", e);
             }
         }
 
