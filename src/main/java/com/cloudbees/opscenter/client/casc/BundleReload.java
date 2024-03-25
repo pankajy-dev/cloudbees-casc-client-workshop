@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Plugin;
 import hudson.model.UpdateCenter;
 import hudson.model.UpdateSite;
 import hudson.util.VersionNumber;
@@ -173,11 +174,15 @@ public abstract class BundleReload implements ExtensionPoint {
                 if (newPluginsList != null && newPluginsList.toFile().exists()) {
                     List<String> plugins = FileUtils.readLines(newPluginsList.toFile());
                     for (String plugin : plugins) {
-                        File pluginFile = PluginListExpander.getExpandedFile(plugin).toFile();
-                        if (pluginFile.exists()) {
-                            pluginsToinstall.put(plugin, pluginFile.toPath());
-                        } else {
-                            capDependenciesToInstall.add(plugin);
+                        Plugin install = Jenkins.get().getPlugin(plugin);
+                        if (install == null) {
+                            // For performance reasons, only install new plugins (Updates won't be allowed as they will need a restart)
+                            File pluginFile = PluginListExpander.getExpandedFile(plugin).toFile();
+                            if (pluginFile.exists()) {
+                                pluginsToinstall.put(plugin, pluginFile.toPath());
+                            } else {
+                                capDependenciesToInstall.add(plugin);
+                            }
                         }
                     }
                     downloadPluginsFromUC(capDependenciesToInstall);
