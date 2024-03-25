@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import groovyjarjarantlr.Version;
 
 import jenkins.model.Jenkins;
 
@@ -243,8 +242,8 @@ public class BundleExportTest extends AbstractCJPTest {
                    configuration.get("beekeeperExceptions"), nullValue());
 
         Map<String, Map<String, String>> includedPlugins = (Map<String, Map<String, String>>) configuration.get("includePlugins");
-        assertThat("The version of the beer plugin is the one defined in the plugin-catalog",
-                   includedPlugins.get("beer").get("version"), equalTo("1.2"));
+        assertThat("The version of the chucknorris plugin is the one defined in the plugin-catalog",
+                   includedPlugins.get("chucknorris").get("version"), equalTo("1.2"));
 
         assertThat("The version of the icon-shim plugin is the one defined in the plugin-catalog",
                    includedPlugins.get("icon-shim").get("url"), endsWith("icon-shim-1.0.1.hpi"));
@@ -286,8 +285,8 @@ public class BundleExportTest extends AbstractCJPTest {
                    configuration.get("beekeeperExceptions"), nullValue());
 
         Map<String, Map<String, String>> includedPlugins = (Map<String, Map<String, String>>) configuration.get("includePlugins");
-        assertThat("Exported catalog should not contains beer",
-                   includedPlugins.get("beer"), nullValue());
+        assertThat("Exported catalog should not contains chucknorris",
+                   includedPlugins.get("chucknorris"), nullValue());
 
         assertThat("Exported catalog should not contains icon-shim",
                    includedPlugins.get("icon-shim"), nullValue());
@@ -331,8 +330,8 @@ public class BundleExportTest extends AbstractCJPTest {
                    caffeineException.get("version"), equalTo("2.9.3-111.va_4034a_92d8b_c"));
 
         Map<String, Map<String, String>> includedPlugins = (Map<String, Map<String, String>>) configuration.get("includePlugins");
-        assertThat("The version of the beer plugin is the one defined in the plugin-catalog",
-                   includedPlugins.get("beer").get("version"), equalTo("1.2"));
+        assertThat("The version of the chucknorris plugin is the one defined in the plugin-catalog",
+                   includedPlugins.get("chucknorris").get("version"), equalTo("1.2"));
 
         assertThat("The version of the icon-shim plugin is the one defined in the plugin-catalog",
                    includedPlugins.get("icon-shim").get("url"), endsWith("icon-shim-1.0.1.hpi"));
@@ -365,7 +364,7 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-text-api"));
         assertNotNull("snakeyaml-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("snakeyaml-api"));
         assertNotNull("commons-lang3-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-lang3-api"));
-        assertNotNull("Beer is installed from the plugin catalog", Jenkins.get().getPlugin("beer"));
+        assertNotNull("Beer is installed from the plugin catalog", Jenkins.get().getPlugin("chucknorris"));
         assertNotNull("chucknorris is expanded and installed from the plugins.yaml", Jenkins.get().getPlugin("chucknorris"));
         assertNotNull("icon-shim is expanded and installed from the plugins.yaml", Jenkins.get().getPlugin("icon-shim"));
         assertNotNull("scm-api is expanded and installed from the plugins.yaml", Jenkins.get().getPlugin("scm-api"));
@@ -377,13 +376,89 @@ public class BundleExportTest extends AbstractCJPTest {
         // The test dependencies are installed as well, as if they were
         String export = exporter.getExport();
         assertThat("The export is not null", export, notNullValue());
-        String actual = export.replaceAll("\r\n", "\n") // Sanitised for windows tests
-                              .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
-        String expected = FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withCasCBundle.yaml").toFile(), StandardCharsets.UTF_8)
-                                   .replaceAll("%%URL%%", wiremock.baseUrl())
-                                   .replaceAll("\r\n", "\n") // Sanitised for windows tests
-                                   .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
-        assertThat("Export all the plugins", actual, is(expected));
+        Map<String, Object> exportedYaml = toYaml(export);
+        List<Map<String, Object>> plugins = (List<Map<String, Object>>) exportedYaml.get("plugins");
+        Map<String, Object> beer = plugins.stream().filter(m -> m.get("id").equals("chucknorris")).findFirst().orElse(null);
+        assertNotNull("chucknorris from Plugin catalog", beer);
+        assertNull("chucknorris from Plugin catalog", beer.get("url"));
+        assertNull("chucknorris from Plugin catalog", beer.get("credentialsId"));
+        assertNull("chucknorris from Plugin catalog", beer.get("repository"));
+        assertNull("chucknorris from Plugin catalog", beer.get("groupId"));
+        assertNull("chucknorris from Plugin catalog", beer.get("version"));
+
+        Map<String, Object> chucknorris = plugins.stream().filter(m -> m.get("id").equals("chucknorris")).findFirst().orElse(null);
+        assertNotNull("chucknorris from UC", chucknorris);
+        assertNull("chucknorris from UC", chucknorris.get("url"));
+        assertNull("chucknorris from UC", chucknorris.get("credentialsId"));
+        assertNull("chucknorris from UC", chucknorris.get("repository"));
+        assertNull("chucknorris from UC", chucknorris.get("groupId"));
+        assertNull("chucknorris from UC", chucknorris.get("version"));
+
+        Map<String, Object> cloudbeesCascItemsController = plugins.stream().filter(m -> m.get("id").equals("cloudbees-casc-items-controller")).findFirst().orElse(null);
+        assertNotNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController);
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("url"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("credentialsId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("repository"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("groupId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("version"));
+
+        Map<String, Object> masterProvisioningKubernetes = plugins.stream().filter(m -> m.get("id").equals("master-provisioning-kubernetes")).findFirst().orElse(null);
+        assertNotNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes);
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("url"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("credentialsId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("repository"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("groupId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("version"));
+
+        Map<String, Object> configurationAsCode = plugins.stream().filter(m -> m.get("id").equals("configuration-as-code")).findFirst().orElse(null);
+        assertNotNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode);
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("url"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("credentialsId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("repository"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("groupId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("version"));
+
+        Map<String, Object> caffeineApi = plugins.stream().filter(m -> m.get("id").equals("caffeine-api")).findFirst().orElse(null);
+        assertNull("caffeine-api is a dependency of configuration-as-code, so not in the export", caffeineApi);
+
+        Map<String, Object> scmApi = plugins.stream().filter(m -> m.get("id").equals("scm-api")).findFirst().orElse(null);
+        assertNotNull("scm-api is from URL", scmApi);
+        assertThat("scm-api is from URL", scmApi.get("url"), is(wiremock.baseUrl() + "/scm-api/latest/scm-api.hpi"));
+        assertThat("scm-api is from URL", scmApi.get("credentialsId"), is("cred2"));
+        assertNull("scm-api is from URL", scmApi.get("repository"));
+        assertNull("scm-api is from URL", scmApi.get("groupId"));
+        assertNull("scm-api is from URL", scmApi.get("version"));
+
+        Map<String, Object> structs = plugins.stream().filter(m -> m.get("id").equals("structs")).findFirst().orElse(null);
+        assertNull("structs is a dependency of scm-api, so not in the export", structs);
+
+        Map<String, Object> iconShim = plugins.stream().filter(m -> m.get("id").equals("icon-shim")).findFirst().orElse(null);
+        assertNotNull("icon-shim is from maven", iconShim);
+        assertNull("icon-shim is from maven", iconShim.get("url"));
+        assertNull("icon-shim is from maven", iconShim.get("credentialsId"));
+        assertThat("icon-shim is from maven", iconShim.get("repositoryId"), is("test-repo"));
+        assertThat("icon-shim is from maven", iconShim.get("groupId"), is("org.jenkins-ci.plugins"));
+        assertThat("icon-shim is from maven", iconShim.get("version"), is("1.0.1"));
+
+        List<Map<String, Object>> repositories = (List<Map<String, Object>>) exportedYaml.get("repositories");
+        Map<String, Object> testRepo = repositories.stream().filter(m -> m.get("id").equals("test-repo")).findFirst().orElse(null);
+        assertNotNull("testRepo repository is exported", testRepo);
+        assertThat("testRepo repository is exported", testRepo.get("url"), is(wiremock.baseUrl()));
+        assertThat("testRepo repository is exported", testRepo.get("credentialsId"), is("cred1"));
+        assertThat("testRepo repository is exported", testRepo.get("layout"), is("nexus3"));
+
+        List<Map<String, Object>> credentials = (List<Map<String, Object>>) exportedYaml.get("credentials");
+        Map<String, Object> cred1 = credentials.stream().filter(m -> m.get("id").equals("cred1")).findFirst().orElse(null);
+        assertNotNull("cred1 credential is exported", cred1);
+        assertThat("cred1 credential is exported", cred1.get("user"), is("user1"));
+        assertNotNull("cred1 credential is exported", cred1.get("password"));
+        assertNull("cred1 credential is exported", cred1.get("token"));
+
+        Map<String, Object> cred2 = credentials.stream().filter(m -> m.get("id").equals("cred2")).findFirst().orElse(null);
+        assertNotNull("cred2 credential is exported", cred2);
+        assertThat("cred2 credential is exported", cred2.get("user"), is("user2"));
+        assertNotNull("cred2 credential is exported", cred2.get("password"));
+        assertNull("cred2 credential is exported", cred2.get("token"));
     }
 
     @Test
@@ -396,7 +471,7 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-text-api"));
         assertNotNull("snakeyaml-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("snakeyaml-api"));
         assertNotNull("commons-lang3-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-lang3-api"));
-        assertNotNull("Beer is installed from the plugin catalog", Jenkins.get().getPlugin("beer"));
+        assertNotNull("Beer is installed from the plugin catalog", Jenkins.get().getPlugin("chucknorris"));
         assertNotNull("chucknorris is expanded and installed from the plugins.yaml", Jenkins.get().getPlugin("chucknorris"));
         assertNotNull("scm-api is expanded and installed from the plugins.yaml", Jenkins.get().getPlugin("scm-api"));
         assertNotNull("structs is installed as a dependency of scm-api", Jenkins.get().getPlugin("structs"));
@@ -418,7 +493,7 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("commons-text-api"));
         assertNotNull("snakeyaml-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("snakeyaml-api"));
         assertNotNull("commons-lang3-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("commons-lang3-api"));
-        assertNull("Beer is not installed", Jenkins.get().getPlugin("beer"));
+        assertNull("Beer is not installed", Jenkins.get().getPlugin("chucknorris"));
         assertNull("chucknorris is not installed", Jenkins.get().getPlugin("chucknorris"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
@@ -433,12 +508,12 @@ public class BundleExportTest extends AbstractCJPTest {
     @WithEnvelope(WithIconShimBootstrap.class) // We want a bootstrap plugin
     @WithConfigBundleAndWiremock("apiVersion2ExportNoCredNoRepo") // With bundle so it can have apiVersion 2
     public void exportWithBootstrap() {
-        assertNotNull("Beer is installed, so the CasC Bundle is applied", Jenkins.get().getPlugin("beer"));
+        assertNotNull("Beer is installed, so the CasC Bundle is applied", Jenkins.get().getPlugin("chucknorris"));
         assertNotNull("icon-shim is installed as it is bootstrap", Jenkins.get().getPlugin("icon-shim"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
         String export = exporter.getExport();
-        assertThat("beer plugin is exported", export, containsString("beer"));
+        assertThat("chucknorris plugin is exported", export, containsString("chucknorris"));
         assertThat("icon-shim is not exported as it is bootstrap", export, not(containsString("icon-shim")));
     }
 
