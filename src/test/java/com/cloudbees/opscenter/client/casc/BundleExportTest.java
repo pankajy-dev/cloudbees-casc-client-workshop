@@ -554,7 +554,7 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("commons-text-api"));
         assertNotNull("snakeyaml-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("snakeyaml-api"));
         assertNotNull("commons-lang3-api is installed as dependency of configuration-as-code, so it won't appear in the export", Jenkins.get().getPlugin("commons-lang3-api"));
-        assertNull("Beer is not installed", Jenkins.get().getPlugin("chucknorris"));
+        assertNull("Beer is not installed", Jenkins.get().getPlugin("beer"));
         assertNull("chucknorris is not installed", Jenkins.get().getPlugin("chucknorris"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
@@ -630,12 +630,12 @@ public class BundleExportTest extends AbstractCJPTest {
     @WithEnvelope(WithIconShimBootstrap.class) // We want a bootstrap plugin
     @WithConfigBundleAndWiremock("apiVersion2ExportNoCredNoRepo") // With bundle so it can have apiVersion 2
     public void exportWithBootstrap() {
-        assertNotNull("Beer is installed, so the CasC Bundle is applied", Jenkins.get().getPlugin("chucknorris"));
+        assertNotNull("Beer is installed, so the CasC Bundle is applied", Jenkins.get().getPlugin("beer"));
         assertNotNull("icon-shim is installed as it is bootstrap", Jenkins.get().getPlugin("icon-shim"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
         String export = exporter.getExport();
-        assertThat("chucknorris plugin is exported", export, containsString("chucknorris"));
+        assertThat("beer plugin is exported", export, containsString("beer"));
         assertThat("icon-shim is not exported as it is bootstrap", export, not(containsString("icon-shim")));
     }
 
