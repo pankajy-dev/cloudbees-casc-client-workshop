@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import groovyjarjarantlr.Version;
 
 import jenkins.model.Jenkins;
 
@@ -359,7 +358,7 @@ public class BundleExportTest extends AbstractCJPTest {
     @Issue("BEE-43473 - Plugin Management 2.0")
     @WithConfigBundleAndWiremock("apiVersion2Export")
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    public void exportPluginsApiVersion2() throws Exception {
+    public void exportPluginsApiVersion2() {
         assertNotNull("configuration-as-code is installed as CAP plugin", Jenkins.get().getPlugin("configuration-as-code"));
         assertNotNull("caffeine-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("caffeine-api"));
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-text-api"));
@@ -374,23 +373,99 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("As example, master-provisioning-kubernetes is a test dependency, so installed as if manually - it will appear in the export", Jenkins.get().getPlugin("master-provisioning-kubernetes"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
-        // The test dependencies are installed as well, as if they were
+        // The test dependencies are installed as well, as if they were manually installed
         String export = exporter.getExport();
         assertThat("The export is not null", export, notNullValue());
-        String actual = export.replaceAll("\r\n", "\n") // Sanitised for windows tests
-                              .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
-        String expected = FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withCasCBundle.yaml").toFile(), StandardCharsets.UTF_8)
-                                   .replaceAll("%%URL%%", wiremock.baseUrl())
-                                   .replaceAll("\r\n", "\n") // Sanitised for windows tests
-                                   .replaceAll("'\\{.*}'", "{encrypted}"); // Don't compare the encryption
-        assertThat("Export all the plugins", actual, is(expected));
+        Map<String, Object> exportedYaml = toYaml(export);
+        List<Map<String, Object>> plugins = (List<Map<String, Object>>) exportedYaml.get("plugins");
+        Map<String, Object> beer = plugins.stream().filter(m -> m.get("id").equals("beer")).findFirst().orElse(null);
+        assertNotNull("beer from Plugin catalog", beer);
+        assertNull("beer from Plugin catalog", beer.get("url"));
+        assertNull("beer from Plugin catalog", beer.get("credentialsId"));
+        assertNull("beer from Plugin catalog", beer.get("repository"));
+        assertNull("beer from Plugin catalog", beer.get("groupId"));
+        assertNull("beer from Plugin catalog", beer.get("version"));
+
+        Map<String, Object> chucknorris = plugins.stream().filter(m -> m.get("id").equals("chucknorris")).findFirst().orElse(null);
+        assertNotNull("chucknorris from UC", chucknorris);
+        assertNull("chucknorris from UC", chucknorris.get("url"));
+        assertNull("chucknorris from UC", chucknorris.get("credentialsId"));
+        assertNull("chucknorris from UC", chucknorris.get("repository"));
+        assertNull("chucknorris from UC", chucknorris.get("groupId"));
+        assertNull("chucknorris from UC", chucknorris.get("version"));
+
+        Map<String, Object> cloudbeesCascItemsController = plugins.stream().filter(m -> m.get("id").equals("cloudbees-casc-items-controller")).findFirst().orElse(null);
+        assertNotNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController);
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("url"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("credentialsId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("repository"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("groupId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("version"));
+
+        Map<String, Object> masterProvisioningKubernetes = plugins.stream().filter(m -> m.get("id").equals("master-provisioning-kubernetes")).findFirst().orElse(null);
+        assertNotNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes);
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("url"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("credentialsId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("repository"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("groupId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("version"));
+
+        Map<String, Object> configurationAsCode = plugins.stream().filter(m -> m.get("id").equals("configuration-as-code")).findFirst().orElse(null);
+        assertNotNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode);
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("url"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("credentialsId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("repository"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("groupId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("version"));
+
+        Map<String, Object> caffeineApi = plugins.stream().filter(m -> m.get("id").equals("caffeine-api")).findFirst().orElse(null);
+        assertNull("caffeine-api is a dependency of configuration-as-code, so not in the export", caffeineApi);
+
+        Map<String, Object> scmApi = plugins.stream().filter(m -> m.get("id").equals("scm-api")).findFirst().orElse(null);
+        assertNotNull("scm-api is from URL", scmApi);
+        assertThat("scm-api is from URL", scmApi.get("url"), is(wiremock.baseUrl() + "/scm-api/latest/scm-api.hpi"));
+        assertThat("scm-api is from URL", scmApi.get("credentialsId"), is("cred2"));
+        assertNull("scm-api is from URL", scmApi.get("repository"));
+        assertNull("scm-api is from URL", scmApi.get("groupId"));
+        assertNull("scm-api is from URL", scmApi.get("version"));
+
+        Map<String, Object> structs = plugins.stream().filter(m -> m.get("id").equals("structs")).findFirst().orElse(null);
+        assertNull("structs is a dependency of scm-api, so not in the export", structs);
+
+        Map<String, Object> iconShim = plugins.stream().filter(m -> m.get("id").equals("icon-shim")).findFirst().orElse(null);
+        assertNotNull("icon-shim is from maven", iconShim);
+        assertNull("icon-shim is from maven", iconShim.get("url"));
+        assertNull("icon-shim is from maven", iconShim.get("credentialsId"));
+        assertThat("icon-shim is from maven", iconShim.get("repositoryId"), is("test-repo"));
+        assertThat("icon-shim is from maven", iconShim.get("groupId"), is("org.jenkins-ci.plugins"));
+        assertThat("icon-shim is from maven", iconShim.get("version"), is("1.0.1"));
+
+        List<Map<String, Object>> repositories = (List<Map<String, Object>>) exportedYaml.get("repositories");
+        Map<String, Object> testRepo = repositories.stream().filter(m -> m.get("id").equals("test-repo")).findFirst().orElse(null);
+        assertNotNull("testRepo repository is exported", testRepo);
+        assertThat("testRepo repository is exported", testRepo.get("url"), is(wiremock.baseUrl()));
+        assertThat("testRepo repository is exported", testRepo.get("credentialsId"), is("cred1"));
+        assertThat("testRepo repository is exported", testRepo.get("layout"), is("nexus3"));
+
+        List<Map<String, Object>> credentials = (List<Map<String, Object>>) exportedYaml.get("credentials");
+        Map<String, Object> cred1 = credentials.stream().filter(m -> m.get("id").equals("cred1")).findFirst().orElse(null);
+        assertNotNull("cred1 credential is exported", cred1);
+        assertThat("cred1 credential is exported", cred1.get("user"), is("user1"));
+        assertNotNull("cred1 credential is exported", cred1.get("password"));
+        assertNull("cred1 credential is exported", cred1.get("token"));
+
+        Map<String, Object> cred2 = credentials.stream().filter(m -> m.get("id").equals("cred2")).findFirst().orElse(null);
+        assertNotNull("cred2 credential is exported", cred2);
+        assertThat("cred2 credential is exported", cred2.get("user"), is("user2"));
+        assertNotNull("cred2 credential is exported", cred2.get("password"));
+        assertNull("cred2 credential is exported", cred2.get("token"));
     }
 
     @Test
     @Issue("BEE-43473 - Plugin Management 2.0")
     @WithConfigBundleAndWiremock("apiVersion2ExportNoCredNoRepo")
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    public void exportPluginsApiVersion2NoCredNoRepo() throws Exception {
+    public void exportPluginsApiVersion2NoCredNoRepo() {
         assertNotNull("configuration-as-code is installed as CAP plugin", Jenkins.get().getPlugin("configuration-as-code"));
         assertNotNull("caffeine-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("caffeine-api"));
         assertNotNull("commons-text-api is installed as dependency of configuration-as-code", Jenkins.get().getPlugin("commons-text-api"));
@@ -404,9 +479,70 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNotNull("As example, master-provisioning-kubernetes is a test dependency, so installed as if manually - it will appear in the export", Jenkins.get().getPlugin("master-provisioning-kubernetes"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
-        // The test dependencies are installed as well, as if they were
-        assertThat("Export all the plugins", exporter.getExport().replaceAll("\r\n", "\n"),
-                   is(FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withCasCBundleNoCredNoRepo.yaml").toFile(), StandardCharsets.UTF_8).replaceAll("\r\n", "\n")));
+        // The test dependencies are installed as well, as if they were manually installed
+        String export = exporter.getExport();
+        assertThat("The export is not null", export, notNullValue());
+        Map<String, Object> exportedYaml = toYaml(export);
+        List<Map<String, Object>> plugins = (List<Map<String, Object>>) exportedYaml.get("plugins");
+        Map<String, Object> beer = plugins.stream().filter(m -> m.get("id").equals("beer")).findFirst().orElse(null);
+        assertNotNull("beer from Plugin catalog", beer);
+        assertNull("beer from Plugin catalog", beer.get("url"));
+        assertNull("beer from Plugin catalog", beer.get("credentialsId"));
+        assertNull("beer from Plugin catalog", beer.get("repository"));
+        assertNull("beer from Plugin catalog", beer.get("groupId"));
+        assertNull("beer from Plugin catalog", beer.get("version"));
+
+        Map<String, Object> chucknorris = plugins.stream().filter(m -> m.get("id").equals("chucknorris")).findFirst().orElse(null);
+        assertNotNull("chucknorris from UC", chucknorris);
+        assertNull("chucknorris from UC", chucknorris.get("url"));
+        assertNull("chucknorris from UC", chucknorris.get("credentialsId"));
+        assertNull("chucknorris from UC", chucknorris.get("repository"));
+        assertNull("chucknorris from UC", chucknorris.get("groupId"));
+        assertNull("chucknorris from UC", chucknorris.get("version"));
+
+        Map<String, Object> cloudbeesCascItemsController = plugins.stream().filter(m -> m.get("id").equals("cloudbees-casc-items-controller")).findFirst().orElse(null);
+        assertNotNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController);
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("url"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("credentialsId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("repository"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("groupId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed", cloudbeesCascItemsController.get("version"));
+
+        Map<String, Object> masterProvisioningKubernetes = plugins.stream().filter(m -> m.get("id").equals("master-provisioning-kubernetes")).findFirst().orElse(null);
+        assertNotNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes);
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("url"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("credentialsId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("repository"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("groupId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed", masterProvisioningKubernetes.get("version"));
+
+        Map<String, Object> configurationAsCode = plugins.stream().filter(m -> m.get("id").equals("configuration-as-code")).findFirst().orElse(null);
+        assertNotNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode);
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("url"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("credentialsId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("repository"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("groupId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed", configurationAsCode.get("version"));
+
+        Map<String, Object> caffeineApi = plugins.stream().filter(m -> m.get("id").equals("caffeine-api")).findFirst().orElse(null);
+        assertNull("caffeine-api is a dependency of configuration-as-code, so not in the export", caffeineApi);
+
+        Map<String, Object> scmApi = plugins.stream().filter(m -> m.get("id").equals("scm-api")).findFirst().orElse(null);
+        assertNotNull("scm-api is from UC", scmApi);
+        assertNull("scm-api is from UC", scmApi.get("url"));
+        assertNull("scm-api is from UC", scmApi.get("credentialsId"));
+        assertNull("scm-api is from UC", scmApi.get("repository"));
+        assertNull("scm-api is from UC", scmApi.get("groupId"));
+        assertNull("scm-api is from UC", scmApi.get("version"));
+
+        Map<String, Object> structs = plugins.stream().filter(m -> m.get("id").equals("structs")).findFirst().orElse(null);
+        assertNull("structs is a dependency of scm-api, so not in the export", structs);
+
+        List<Map<String, Object>> repositories = (List<Map<String, Object>>) exportedYaml.get("repositories");
+        assertNull("repositories are not exported", repositories);
+
+        List<Map<String, Object>> credentials = (List<Map<String, Object>>) exportedYaml.get("credentials");
+        assertNull("credentials are not exported", credentials);
     }
 
     @Test
@@ -422,9 +558,70 @@ public class BundleExportTest extends AbstractCJPTest {
         assertNull("chucknorris is not installed", Jenkins.get().getPlugin("chucknorris"));
 
         BundleExporter.PluginsExporter exporter = ExtensionList.lookupSingleton(BundleExporter.PluginsExporter.class);
-        // The test dependencies are installed as well, as if they were
-        assertThat("Export all the plugins", exporter.getExport().replaceAll("\r\n", "\n"),
-                   is(FileUtils.readFileToString(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleExportTest/exports/withoutCasCBundle.yaml").toFile(), StandardCharsets.UTF_8).replaceAll("\r\n", "\n")));
+        // The test dependencies are installed as well, as if they were manually installed
+        String export = exporter.getExport();
+        assertThat("The export is not null", export, notNullValue());
+        Map<String, Object> exportedYaml = toYaml(export);
+        List<Map<String, Object>> plugins = (List<Map<String, Object>>) exportedYaml.get("plugins");
+        Map<String, Object> beer = plugins.stream().filter(m -> m.get("id").equals("beer")).findFirst().orElse(null);
+        assertNull("beer is not installed as we don't have CasC Bundle", beer);
+
+        Map<String, Object> chucknorris = plugins.stream().filter(m -> m.get("id").equals("chucknorris")).findFirst().orElse(null);
+        assertNull("chucknorris is not installed as we don't have CasC Bundle", chucknorris);
+
+        Map<String, Object> cloudbeesCascItemsController = plugins.stream().filter(m -> m.get("id").equals("cloudbees-casc-items-controller")).findFirst().orElse(null);
+        assertNotNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController);
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController.get("url"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController.get("credentialsId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController.get("repository"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController.get("groupId"));
+        assertNull("cloudbees-casc-items-controller is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", cloudbeesCascItemsController.get("version"));
+
+        Map<String, Object> masterProvisioningKubernetes = plugins.stream().filter(m -> m.get("id").equals("master-provisioning-kubernetes")).findFirst().orElse(null);
+        assertNotNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes);
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes.get("url"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes.get("credentialsId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes.get("repository"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes.get("groupId"));
+        assertNull("master-provisioning-kubernetes is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", masterProvisioningKubernetes.get("version"));
+
+        Map<String, Object> configurationAsCode = plugins.stream().filter(m -> m.get("id").equals("configuration-as-code")).findFirst().orElse(null);
+        assertNotNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode);
+        assertNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode.get("url"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode.get("credentialsId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode.get("repository"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode.get("groupId"));
+        assertNull("configuration-as-code is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", configurationAsCode.get("version"));
+
+        Map<String, Object> caffeineApi = plugins.stream().filter(m -> m.get("id").equals("caffeine-api")).findFirst().orElse(null);
+        assertNotNull("caffeine-api is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi);
+        assertNull("caffeine-api  is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi.get("url"));
+        assertNull("caffeine-api  is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi.get("credentialsId"));
+        assertNull("caffeine-api  is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi.get("repository"));
+        assertNull("caffeine-api  is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi.get("groupId"));
+        assertNull("caffeine-api  is a dependency of configuration-as-code, as there is no bundle is like with apiVersion 1", caffeineApi.get("version"));
+
+        Map<String, Object> scmApi = plugins.stream().filter(m -> m.get("id").equals("scm-api")).findFirst().orElse(null);
+        assertNotNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi);
+        assertNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi.get("url"));
+        assertNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi.get("credentialsId"));
+        assertNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi.get("repository"));
+        assertNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi.get("groupId"));
+        assertNull("scm-api is dependency, so as if manually deployed. As there is no bundle is like with apiVersion 1", scmApi.get("version"));
+
+        Map<String, Object> structs = plugins.stream().filter(m -> m.get("id").equals("structs")).findFirst().orElse(null);
+        assertNotNull("structs is a dependency of scm-api, so not in the export", structs);
+        assertNull("structs  is a dependency of scm-api, as there is no bundle is like with apiVersion 1", structs.get("url"));
+        assertNull("structs  is a dependency of scm-api, as there is no bundle is like with apiVersion 1", structs.get("credentialsId"));
+        assertNull("structs  is a dependency of scm-api, as there is no bundle is like with apiVersion 1", structs.get("repository"));
+        assertNull("structs  is a dependency of scm-api, as there is no bundle is like with apiVersion 1", structs.get("groupId"));
+        assertNull("structs  is a dependency of scm-api, as there is no bundle is like with apiVersion 1", structs.get("version"));
+
+        List<Map<String, Object>> repositories = (List<Map<String, Object>>) exportedYaml.get("repositories");
+        assertNull("repositories are not exported", repositories);
+
+        List<Map<String, Object>> credentials = (List<Map<String, Object>>) exportedYaml.get("credentials");
+        assertNull("credentials are not exported", credentials);
 
     }
 
