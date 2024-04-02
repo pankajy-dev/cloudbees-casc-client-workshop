@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.InstalledPluginsReport;
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.RequestedPluginReportEntry;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.Scope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
@@ -139,9 +140,10 @@ public class BundleReloadActionTest extends AbstractIMTest {
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
         await("Version 1 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         initializeRealm(rule);
-        // GIVEN The bundle is version 1 and there are 2 users: admin (with ADMINISTER role) and user (with READ role)
-        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
-        User plainUser = setSecurityRealmUser(rule, "user", Jenkins.READ);
+        // GIVEN The bundle is version 1 and there are 2 users: admin (with CASC_ADMIN role) and user (with CASC_READ role)
+        // Jenkins.READ permission is needed to access any endpoint
+        User admin = setSecurityRealmUser(rule, "admin", CascPermission.CASC_ADMIN, Jenkins.READ);
+        User plainUser = setSecurityRealmUser(rule, "user", CascPermission.CASC_READ, Jenkins.READ);
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
 
@@ -204,7 +206,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle")
     public void asynchronousReloadRaisesMonitorTest() throws Exception {
         initializeRealm(rule);
-        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
+        User admin = setSecurityRealmUser(rule, "admin", CascPermission.CASC_ADMIN, Jenkins.READ);
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
 
@@ -312,12 +314,14 @@ public class BundleReloadActionTest extends AbstractIMTest {
         j.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
     }
 
-    private static User setSecurityRealmUser(CJPRule j, String username, Permission permission) throws IOException {
+    private static User setSecurityRealmUser(CJPRule j, String username, Permission... permissions) throws IOException {
         HudsonPrivateSecurityRealm realm = (HudsonPrivateSecurityRealm) j.jenkins.getSecurityRealm();
         User user = realm.createAccount(username, "password");
         j.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) j.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(permission, user.getId());
+        for (Permission permission: permissions) {
+            authorizationStrategy.add(permission, user.getId());
+        }
         j.jenkins.setAuthorizationStrategy(authorizationStrategy);
         user.addProperty(new ApiTokenProperty());
         user.getProperty(ApiTokenProperty.class).changeApiToken();

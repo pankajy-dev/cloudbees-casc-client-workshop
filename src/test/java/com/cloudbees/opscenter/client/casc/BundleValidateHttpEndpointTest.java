@@ -27,6 +27,8 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.logging.Level;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -56,12 +58,14 @@ public class BundleValidateHttpEndpointTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
+        authorizationStrategy.add(Jenkins.READ, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
 
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
-        authorizationStrategy.add(Jenkins.READ, user.getId());
+        authorizationStrategy.add(CascPermission.CASC_READ, user.getId());
+        authorizationStrategy.add(Jenkins.READ, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
     }
 

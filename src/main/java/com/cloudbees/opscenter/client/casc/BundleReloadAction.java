@@ -307,7 +307,7 @@ public class BundleReloadAction implements RootAction {
      * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-update }
      * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
      *                                     or disabled (false). If not present, use the value from the config.
-     * Permission required: READ
+     * Permission required: CASC_ADMIN
      * </p>
      * @return 200 and a boolean update-available field indicating if new version is available.
      */
@@ -315,7 +315,7 @@ public class BundleReloadAction implements RootAction {
     @WebMethod(name = "check-bundle-update")
     public HttpResponse doGetBundleNewerVersion(@QueryParameter("quiet") String quietParam) {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
-        Jenkins.get().checkPermission(CascPermission.CASC_READ);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         UpdateType reload = null;
         // First, check if an update is available
@@ -351,7 +351,7 @@ public class BundleReloadAction implements RootAction {
     @GET
     @WebMethod(name = "check-bundle-reload-running")
     public HttpResponse doCheckReloadInProgress() {
-        Jenkins.get().checkPermission(CascPermission.CASC_READ);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
     }
 

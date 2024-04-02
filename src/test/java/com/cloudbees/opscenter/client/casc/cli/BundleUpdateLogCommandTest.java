@@ -2,6 +2,8 @@ package com.cloudbees.opscenter.client.casc.cli;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+
 import hudson.cli.CLICommandInvoker;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
@@ -40,13 +42,15 @@ public class BundleUpdateLogCommandTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
+        authorizationStrategy.add(Jenkins.READ, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         admin.addProperty(new ApiTokenProperty());
         admin.getProperty(ApiTokenProperty.class).changeApiToken();
 
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_READ, user.getId());
         authorizationStrategy.add(Jenkins.READ, user.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         user.addProperty(new ApiTokenProperty());
@@ -56,7 +60,7 @@ public class BundleUpdateLogCommandTest {
     @Test
     public void check_permissions() {
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(user.getId()).invoke();
-        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
+        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CasC/Admin permission"));
         assertThat("User user does not have permissions", result.returnCode(), is(6));
         result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("User admin has permissions", result.returnCode(), is(0));

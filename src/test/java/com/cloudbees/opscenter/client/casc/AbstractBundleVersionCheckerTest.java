@@ -3,6 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import java.util.stream.Collectors;
 
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -36,7 +37,8 @@ public abstract class AbstractBundleVersionCheckerTest extends AbstractCJPTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
+        authorizationStrategy.add(Jenkins.READ, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         admin.addProperty(new ApiTokenProperty());
         admin.getProperty(ApiTokenProperty.class).changeApiToken();

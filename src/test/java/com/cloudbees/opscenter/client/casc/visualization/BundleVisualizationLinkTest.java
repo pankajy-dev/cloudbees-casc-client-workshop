@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.model.User;
@@ -48,6 +49,8 @@ public class BundleVisualizationLinkTest {
 
     private User adminUser;
     private User readUser;
+    private User cascAdmin;
+    private User cascUser;
 
     @Before
     public void setUp() throws Exception {
@@ -56,10 +59,13 @@ public class BundleVisualizationLinkTest {
 
         adminUser = realm.createAccount("alice", "alice");
         readUser = realm.createAccount("bob", "bob");
-
+        cascAdmin = realm.createAccount("carol", "carol");
+        cascUser = realm.createAccount("dan", "dan");
         ProjectMatrixAuthorizationStrategy authorizationStrategy = new ProjectMatrixAuthorizationStrategy();
         authorizationStrategy.add(Jenkins.READ, readUser.getId());
         authorizationStrategy.add(Jenkins.ADMINISTER, adminUser.getId());
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, cascAdmin.getId());
+        authorizationStrategy.add(CascPermission.CASC_READ, cascUser.getId());
         j.jenkins.setAuthorizationStrategy(authorizationStrategy);
     }
 
@@ -69,15 +75,24 @@ public class BundleVisualizationLinkTest {
             BundleVisualizationLink.get().doBundleUpdate();
         }
 
+        try (ACLContext ctx = ACL.as(cascAdmin)) {
+            BundleVisualizationLink.get().doBundleUpdate();
+        }
+
         try (ACLContext ctx = ACL.as(readUser)) {
             AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> BundleVisualizationLink.get().doBundleUpdate());
-            assertThat(exception.getMessage(), containsString("bob is missing the Overall/Administer permission"));
+            assertThat(exception.getMessage(), containsString("bob is missing the CasC/Admin permission"));
+        }
+
+        try (ACLContext ctx = ACL.as(cascUser)) {
+            AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> BundleVisualizationLink.get().doBundleUpdate());
+            assertThat(exception.getMessage(), containsString("dan is missing the CasC/Admin permission"));
         }
     }
 
     @Test
     public void checkUpdate() throws Exception {
-        try (ACLContext ctx = ACL.as(adminUser); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class);
+        try (ACLContext ctx = ACL.as(cascAdmin); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class);
              MockedStatic<AbstractValidator> abstractValidatorMockedStatic = mockStatic(AbstractValidator.class)) {
             abstractValidatorMockedStatic.when(AbstractValidator::validateCandidateBundle).thenAnswer(invocationOnMock -> null);
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
@@ -114,7 +129,7 @@ public class BundleVisualizationLinkTest {
 
     @Test
     public void checkUpdate_downloadError() throws Exception {
-        try (ACLContext ctx = ACL.as(adminUser); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class)) {
+        try (ACLContext ctx = ACL.as(cascAdmin); MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(ConfigurationBundleManager.class)) {
             configurationBundleManagerMockedStatic.when(ConfigurationBundleManager::isSet).thenReturn(true);
             ConfigurationBundleManager mockedConfManager = mock(ConfigurationBundleManager.class);
             when(mockedConfManager.downloadIfNewVersionIsAvailable()).thenThrow(new RuntimeException(new InvalidBundleException(ValidationCode.LOAD, "Error loading the CasC bundle.", new IOException("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404"))));
@@ -143,7 +158,7 @@ public class BundleVisualizationLinkTest {
     }
 
     private void doTestValiationSectionQuietConfig(boolean quiet) {
-        try (ACLContext ctx = ACL.as(adminUser);
+        try (ACLContext ctx = ACL.as(cascAdmin);
                 MockedStatic<ConfigurationBundleManager> configurationBundleManagerMockedStatic = mockStatic(
                         ConfigurationBundleManager.class)) {
 

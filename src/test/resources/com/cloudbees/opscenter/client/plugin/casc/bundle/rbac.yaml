@@ -3,7 +3,8 @@ removeStrategy:
 
 roles:
   - permissions:
-      - hudson.model.Hudson.Administer
+      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.CascPermission.Admin
+      - hudson.model.Hudson.Read
     name: administer
   - permissions:
       - hudson.model.Hudson.Manage
@@ -11,6 +12,7 @@ roles:
       - hudson.model.Item.Create
       - hudson.model.Item.Read
       - hudson.model.Hudson.Read
+      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.Read
     name: manage
 
 groups:
