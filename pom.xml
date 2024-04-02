@@ -223,7 +223,9 @@
     <profile>
       <id>sonar-plugin</id>
       <activation>
-        <activeByDefault>false</activeByDefault>
+        <property>
+          <name>sonar.login</name>
+        </property>
       </activation>
       <build>
         <plugins>
