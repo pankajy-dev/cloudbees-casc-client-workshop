@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.annotations.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -44,7 +45,7 @@ public class BundleExport implements RootAction {
     }
 
     public HttpResponse doDynamic(StaplerRequest request) throws IOException {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         String yamlFile = request.getRestOfPath();
         if (yamlFile.startsWith("/")) {

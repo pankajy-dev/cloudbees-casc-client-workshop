@@ -1,6 +1,7 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import hudson.Extension;
 import hudson.FilePath;
@@ -50,15 +51,15 @@ public class BundleValidatorCommand extends CLICommand {
      *      <tr><th>Code</th><th>Output</th></tr>
      *      <tr><td>0</td><td>JSON output with the validation result</td></tr>
      *      <tr><td>3</td><td>The input is not a valid zip.</td></tr>
-     *      <tr><td>6</td><td>User does not have {@link Jenkins#MANAGE} permission</td></tr>
+     *      <tr><td>6</td><td>User does not have {@link CascPermission#CASC_ADMIN} permission</td></tr>
      *      </table>
      * @throws Exception If an unknown and/or unexpected issue occurred
      * @throws IllegalArgumentException If the zip file does not have the correct format
-     * @throws AccessDeniedException If the user does not have {@link Jenkins#MANAGE} permission
+     * @throws AccessDeniedException If the user does not have {@link CascPermission#CASC_ADMIN} permission
      */
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         Path tempFolder = null;
         try {

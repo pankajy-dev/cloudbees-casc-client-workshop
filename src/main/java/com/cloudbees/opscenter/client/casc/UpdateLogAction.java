@@ -2,6 +2,7 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -63,13 +64,13 @@ public class UpdateLogAction implements RootAction {
 
     // Visible for testing
     void checkPermissions() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
     }
 
     /**
      * Content of the yaml file containing the validation.
      * @return 200 and the content of the yaml file.
-     *         403 - Not authorized. Administer permission required or attempt to access a bundle outside the bundle directory.
+     *         403 - Not authorized. CASC_ADMIN permission required or attempt to access a bundle outside the bundle directory.
      *         404 - Controller not configured with CasC or nonexistent file
      *         500 - Error processing the request
      */
@@ -129,7 +130,7 @@ public class UpdateLogAction implements RootAction {
     /**
      * Content of the registry in zip format
      * @return 200 and the bundle version in zip format.
-     *         403 - Not authorized. Administer permission required or attempt to access a bundle outside the bundle directory.
+     *         403 - Not authorized. CASC_ADMIN permission required or attempt to access a bundle outside the bundle directory.
      *         404 - Update log is disabled or the log does not exist
      *         500 - Error processing the request
      */

@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import hudson.security.ACL;
+import hudson.security.ACLContext;
+
 /**
  * Validates a plugin catalog. Always returns warnings, never error.
  */
@@ -57,14 +60,16 @@ public class PluginCatalogValidator extends AbstractValidator {
             return Arrays.asList("The catalog file content is not valid");
         }
 
-        boolean oldAllow = BeekeeperRemote.get().isCapExceptionsAllowed();
-        BeekeeperRemote.get().setCapExceptionsAllowed(true);
+        try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
+            boolean oldAllow = BeekeeperRemote.get().isCapExceptionsAllowed();
+            BeekeeperRemote.get().setCapExceptionsAllowed(true);
 
-        List<String> validationErrors = BeekeeperRemote.get().validateExtension(json, null);
+            List<String> validationErrors = BeekeeperRemote.get().validateExtension(json, null);
 
-        BeekeeperRemote.get().setCapExceptionsAllowed(oldAllow);
+            BeekeeperRemote.get().setCapExceptionsAllowed(oldAllow);
 
-        return validationErrors;
+            return validationErrors;
+        }
     }
 
     private String yaml2json(String yaml) {

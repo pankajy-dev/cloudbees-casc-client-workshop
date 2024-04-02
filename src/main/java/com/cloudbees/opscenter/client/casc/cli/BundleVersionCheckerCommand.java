@@ -2,7 +2,7 @@ package com.cloudbees.opscenter.client.casc.cli;
 
 import org.kohsuke.args4j.Option;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
@@ -35,7 +35,7 @@ public class BundleVersionCheckerCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.BundleReloadAction.doGetBundleNewerVersion
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             UpdateType reload = null;
             // First, check if an update is available

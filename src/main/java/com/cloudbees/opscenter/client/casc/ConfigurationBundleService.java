@@ -15,6 +15,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConf
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
 import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
 import com.cloudbees.jenkins.plugins.updates.envelope.Validation;
@@ -99,7 +100,8 @@ public class ConfigurationBundleService {
             return true;
         }
 
-        try {
+        // As check is done with CASC_ADMIN now instead of ADMINISTER we need to impersonate SYSTEM2
+        try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)){
             List<String> errors = BeekeeperRemote.get().validateExtension(catalog.getMetadata(), null);
             if (!errors.isEmpty()) {
                 LOGGER.log(Level.WARNING, "Bundle cannot be reloaded as the Plugin Catalog has validation errors and it cannot be installed:\n" + errors.stream().collect(Collectors.joining("\n")));
@@ -199,7 +201,7 @@ public class ConfigurationBundleService {
      * @throws CasCException if the issue is related to bundle itself
      */
     public void reloadIfIsHotReloadable(ConfigurationBundle bundle) throws IOException, CasCException {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         if(isHotReloadable(bundle)) {
             reload(bundle, false);
         }
@@ -217,7 +219,7 @@ public class ConfigurationBundleService {
     }
 
     private void reload(ConfigurationBundle bundle, boolean forceFull) throws IOException, CasCException {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try (ACLContext ctx = ACL.as2(ACL.SYSTEM2)) {
             String jcascMergeStrategy = bundle.getJcascMergeStrategy();
             if (jcascMergeStrategy != null) {

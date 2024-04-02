@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import hudson.Extension;
@@ -28,7 +29,7 @@ public class CheckReloadItemsCommand extends CLICommand {
      */
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             stdout.println(ConfigurationUpdaterHelper.getUpdateCheckReloadItemsDeletionJsonResponse());
             return 0;
