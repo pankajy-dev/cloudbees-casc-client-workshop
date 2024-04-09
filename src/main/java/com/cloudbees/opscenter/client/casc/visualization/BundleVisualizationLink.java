@@ -38,6 +38,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.BundleExporter;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationBundleService;
@@ -86,7 +87,7 @@ public class BundleVisualizationLink extends ManagementLink {
     @NonNull
     @Override
     public Permission getRequiredPermission() {
-        return Jenkins.MANAGE;
+        return CascPermission.CASC_ADMIN;
     }
 
     // used in jelly
@@ -100,7 +101,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     // stapler
     public HttpResponse doIndex() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             // Only Overall/Administer is allowed to see the list of files in the bundle and download them, as well as
             // any other tab in the UI.
@@ -129,7 +130,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     // stapler
     public HttpResponse doBundleUpdate() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             ConfigurationUpdaterHelper.checkForUpdates();
         } catch (CheckNewBundleVersionException e) {
@@ -139,7 +140,7 @@ public class BundleVisualizationLink extends ManagementLink {
     }
 
     public HttpResponse doUpdateLog() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         return HttpResponses.forwardToView(this, "_updateLog.jelly");
     }
 
@@ -227,7 +228,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     /**
      *
-     * @return true if a bundle reload is runnign in the background, false otherwise
+     * @return true if a bundle reload is running in the background, false otherwise
      */
     // Used by jelly
     public boolean isReloadInProgress() {
@@ -430,7 +431,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         if (req.hasParameter("restart")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,

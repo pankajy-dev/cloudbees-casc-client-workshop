@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import static com.cloudbees.opscenter.client.casc.CasCMatchers.hasInfoMessage;
@@ -50,13 +51,15 @@ public class BundleValidatorCommandTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
+        authorizationStrategy.add(Jenkins.READ, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         admin.addProperty(new ApiTokenProperty());
         admin.getProperty(ApiTokenProperty.class).changeApiToken();
 
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_READ, admin.getId());
         authorizationStrategy.add(Jenkins.READ, user.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         user.addProperty(new ApiTokenProperty());
@@ -70,7 +73,7 @@ public class BundleValidatorCommandTest {
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(user.getId()).invoke();
         assertThat("User user does not have permissions", result.returnCode(), is(6));
-        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the Overall/Administer permission"));
+        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CasC/Admin permission"));
 
         // Valid without warnings
         logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);

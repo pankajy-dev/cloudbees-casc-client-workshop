@@ -1,6 +1,8 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -76,7 +78,7 @@ public class EffectiveBundleExport implements RootAction {
 
     // Visible for testing
     void checkPermissions() {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
     }
 
     // Visible for testing

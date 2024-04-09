@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import hudson.Extension;
@@ -75,13 +76,13 @@ public class BundleReloadAction implements RootAction {
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
      *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
-     *         403 - Not authorized. Administer permission required.
+     *         403 - Not authorized. CASC_ADMIN permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
     @POST
     @WebMethod(name = "reload-bundle")
     public HttpResponse doReloadBundle(@QueryParameter boolean asynchronous) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
@@ -116,13 +117,13 @@ public class BundleReloadAction implements RootAction {
      *              "reloaded": Boolean that indicates if bundle was reloaded
      *              "reason": Optional String, indicating the reason why bundle wasn't reloaded if reloaded == false
      *              "completed": Optional, false if operation is happening asynchronously and hasn't completed
-     *         403 - Not authorized. Administer permission required.
+     *         403 - Not authorized. CASC_ADMIN permission required.
      *         500 - Server error while validating the catalog or trying to create the items
      */
     @POST
     @WebMethod(name = "force-reload-bundle")
     public HttpResponse doForceReloadBundle(@QueryParameter boolean asynchronous) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.API);
             return new JsonHttpResponse(executeForceReload(asynchronous));
@@ -140,13 +141,13 @@ public class BundleReloadAction implements RootAction {
      * </p>
      * @return  200 and a JSON object with the result:
      *              "deletions": ["item-1", "item-2", ...]
-     *          403 - Not authorized. READ permission required.
+     *          403 - Not authorized. CASC_ADMIN permission required.
      *          500 - Server error while checking items or bundle remove strategy
      */
     @GET
     @WebMethod(name = "check-reload-items")
     public HttpResponse doCheckReloadDeletions() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE); // Not performing any real deletion, so should be safe
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN); // Not performing any real deletion, so should be safe
         try {
             return new JsonHttpResponse(ConfigurationUpdaterHelper.getUpdateCheckReloadItemsDeletionJsonResponse());
         } catch (CasCException ex) {
@@ -214,7 +215,7 @@ public class BundleReloadAction implements RootAction {
     }
 
     public boolean tryReload(boolean async) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         String username = Jenkins.getAuthentication2().getName();
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             LOGGER.log(Level.INFO, "Reloading bundle configuration, requested by {0}.", username);
@@ -306,7 +307,7 @@ public class BundleReloadAction implements RootAction {
      * {@code JENKINS_URL/casc-bundle-mgnt/check-bundle-update }
      * Parameters: {@code quiet=[STRING] } optional parameter to indicate if the quiet mode should be enabled (true)
      *                                     or disabled (false). If not present, use the value from the config.
-     * Permission required: READ
+     * Permission required: CASC_ADMIN
      * </p>
      * @return 200 and a boolean update-available field indicating if new version is available.
      */
@@ -314,7 +315,7 @@ public class BundleReloadAction implements RootAction {
     @WebMethod(name = "check-bundle-update")
     public HttpResponse doGetBundleNewerVersion(@QueryParameter("quiet") String quietParam) {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand.run
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         UpdateType reload = null;
         // First, check if an update is available
@@ -350,7 +351,7 @@ public class BundleReloadAction implements RootAction {
     @GET
     @WebMethod(name = "check-bundle-reload-running")
     public HttpResponse doCheckReloadInProgress() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
     }
 
@@ -365,7 +366,7 @@ public class BundleReloadAction implements RootAction {
     @GET
     @WebMethod(name = "casc-bundle-update-log")
     public HttpResponse doGetBundleUpdateLog() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         try {
             return new JsonHttpResponse(getBundleUpdateLog());
         } catch (Exception e) {
@@ -410,7 +411,7 @@ public class BundleReloadAction implements RootAction {
     public HttpResponse doBundleValidate(StaplerRequest req,
                                          @QueryParameter String commit,
                                          @QueryParameter("quiet") String quietParam) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         Path tempFolder = null;
         try {
@@ -494,7 +495,7 @@ public class BundleReloadAction implements RootAction {
     @POST
     @WebMethod(name = "casc-bundle-skip")
     public HttpResponse doSkipBundle(StaplerRequest req) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
         if (!configuration.isEnabled()) {

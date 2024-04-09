@@ -217,7 +217,7 @@ public abstract class BundleReload implements ExtensionPoint {
             // Plugins are already filtered and have been installed, only needed check is if they're in the catalog (non-CAP) or not (CAP)
             // On this point all plugins are requested, bootstrap plugins should already be installed before reaching reload
             InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
-            Map<String, EnvelopePlugin> beekeeperPlugins = CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins();
+            Map<String, EnvelopePlugin> beekeeperPlugins = new HashMap<>(CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins());
             ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
             if (expanded != null) {
                 expanded.getConfiguration().getInclude().forEach((k, v) -> beekeeperPlugins.put(k, v.asEnvelopePlugin()));
@@ -233,7 +233,7 @@ public abstract class BundleReload implements ExtensionPoint {
 
         private void updatePluginReportV2(Path pluginList){
             InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
-            Map<String, EnvelopePlugin> beekeeperPlugins = CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins();
+            Map<String, EnvelopePlugin> beekeeperPlugins = new HashMap(CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins());
             ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
             if (expanded != null) {
                 expanded.getConfiguration().getInclude().forEach((k, v) -> beekeeperPlugins.put(k, v.asEnvelopePlugin()));

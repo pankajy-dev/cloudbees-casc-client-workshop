@@ -7,6 +7,7 @@ import hudson.ExtensionList;
 import hudson.cli.CLICommand;
 import jenkins.model.Jenkins;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 
@@ -25,13 +26,13 @@ public class BundleReloadInProgressCommand extends CLICommand {
 
     /**
      * Checks if bundle reload is currently running
-     * User needs READ role to run this
+     * User needs CASC_ADMIN role to run this
      * @return 0 and prints a json {"in-progress": true | false}
      * @throws Exception As described in CLICommand
      */
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         stdout.println(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
         return 0;
     }

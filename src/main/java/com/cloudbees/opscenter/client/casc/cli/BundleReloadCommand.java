@@ -14,6 +14,7 @@ import jenkins.model.Jenkins;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.BundleReloadAction;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
@@ -35,7 +36,7 @@ public class BundleReloadCommand extends CLICommand {
 
     /**
      * Tries to reload the CasC bundle
-     * User needs ADMINISTER role to run this
+     * User needs CASC_ADMIN role to run this
      * @return 0 Everything went ok, bundle is reloaded
      *         1 Bundle could not be reloaded (normally, because it's not hot reloadable)
      *         2 Some exception happened that didn't allow the bundle reload
@@ -43,7 +44,7 @@ public class BundleReloadCommand extends CLICommand {
      */
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
 
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
         if (configuration.isEnabled()) {

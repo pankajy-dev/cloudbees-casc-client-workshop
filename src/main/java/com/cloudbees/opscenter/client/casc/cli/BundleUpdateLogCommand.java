@@ -1,5 +1,6 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import hudson.Extension;
 import hudson.cli.CLICommand;
@@ -24,7 +25,7 @@ public class BundleUpdateLogCommand extends CLICommand {
      */
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(Jenkins.MANAGE); // Same as in UI
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN); // Same as in UI
         try {
             stdout.println(ConfigurationUpdaterHelper.getUpdateLog());
         } catch (Exception e) {

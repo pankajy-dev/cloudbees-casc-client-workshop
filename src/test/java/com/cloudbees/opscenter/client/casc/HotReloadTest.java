@@ -10,6 +10,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.TextFile;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
@@ -18,6 +19,7 @@ import hudson.ExtensionList;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.security.AccessDeniedException3;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -64,6 +66,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.jvnet.hudson.test.LoggerRule.recorded;
 
@@ -97,7 +100,17 @@ public class HotReloadTest extends AbstractCJPTest {
 
         try (ACLContext a = ACL.as(User.getById("manager", false))) {
             assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
+            assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
             assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_READ));
+
+            assertThrows(AccessDeniedException3.class, () -> service.reloadIfIsHotReloadable(bundle));
+        }
+        try (ACLContext a = ACL.as(User.getById("admin", false))) {
+            assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
+            assertFalse(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_READ));
 
             service.reloadIfIsHotReloadable(bundle);
 
@@ -120,8 +133,8 @@ public class HotReloadTest extends AbstractCJPTest {
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
 
         try (ACLContext a = ACL.as(User.getById("admin", false))) {
-            assertTrue(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
-            assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
+            assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_READ));
 
             Status status = BeekeeperRemote.get().getStatus();
 

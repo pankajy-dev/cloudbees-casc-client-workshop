@@ -7,6 +7,7 @@ import hudson.cli.CLICommand;
 import jenkins.model.Jenkins;
 
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
@@ -29,7 +30,7 @@ public class BundleVersionSkipCommand extends CLICommand {
      */
     /**
      * Skip the candidate bundle if there's an available version.
-     * Permission required: MANAGE
+     * Permission required: CASC_ADMIN
      * @return 0 and a text indicating the bundle is or not skipped
      *         1 if there's an error skipping the candidate
      */
@@ -37,7 +38,7 @@ public class BundleVersionSkipCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         // Dev memo: please keep the business logic in this class in line with com.cloudbees.opscenter.client.casc.BundleReloadAction.doSkipBundle
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         BundleUpdateTimingConfiguration configuration = BundleUpdateTimingConfiguration.get();
         if (!configuration.isEnabled()) {
             stderr.println("This instance does not allow to skip bundles. Please, enable Bundle Update Timing by setting the System property -Dcore.casc.bundle.update.timing.enabled=true");
