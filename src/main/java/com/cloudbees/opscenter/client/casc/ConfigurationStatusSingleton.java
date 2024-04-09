@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * Singleton for internal tracking of the status of a configuration.
  */
-public enum ConfigurationStatus {
+public enum ConfigurationStatusSingleton {
     INSTANCE;
 
     /**
