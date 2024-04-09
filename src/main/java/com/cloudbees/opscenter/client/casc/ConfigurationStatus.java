@@ -2,14 +2,21 @@ package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
+import com.cloudbees.jenkins.plugins.casc.replication.ConfigurationStatusReplication;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.ExtensionList;
 
 import java.util.Date;
 
 public interface ConfigurationStatus {
     static ConfigurationStatus get() {
-        return ConfigurationStatusSingleton.INSTANCE;
+        ExtensionList<ConfigurationStatusReplication> lookup = ExtensionList.lookup(ConfigurationStatusReplication.class);
+        if (lookup.isEmpty()) {
+            return ConfigurationStatusSingleton.INSTANCE;
+        } else {
+            return lookup.get(0).getProxyInstance();
+        }
     }
 
     boolean isUpdateAvailable();

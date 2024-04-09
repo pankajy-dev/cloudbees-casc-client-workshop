@@ -25,6 +25,7 @@ import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
+import com.cloudbees.jenkins.plugins.casc.replication.CasCPublisher;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -33,6 +34,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.lifecycle.RestartNotSupportedException;
 import jenkins.model.Jenkins;
+import jenkins.util.Listeners;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -786,6 +788,7 @@ public final class ConfigurationUpdaterHelper {
             }
             ConfigurationStatus.get().setUpdateAvailable(!skipped);
             ConfigurationBundleManager.refreshUpdateLog();
+            Listeners.notify(CasCPublisher.class, true, CasCPublisher::publishRefreshUpdateLog);
             return skipped;
     }
 
@@ -819,7 +822,11 @@ public final class ConfigurationUpdaterHelper {
 
         String currentVersion = StringUtils.defaultString(currentBundle.getBundleInfo());
         String promotedVersion = StringUtils.defaultString(promoted.getBundleInfo());
-        return !promotedVersion.equals(currentVersion);
+        boolean isPromoted = !promotedVersion.equals(currentVersion);
+        if (isPromoted) {
+            Listeners.notify(CasCPublisher.class, true, CasCPublisher::publishBundlePromote);
+        }
+        return isPromoted;
     }
 
     /**
