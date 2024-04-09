@@ -1,7 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginListExpander;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
@@ -32,7 +31,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -236,7 +234,7 @@ public class ConfigurationBundleService {
                 // Differences are not valid anymore if:
                 //   1. bundle is reloaded
                 //   2. an error happens during the reload process and it has to happen again, so let's force a full reload for security
-                ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
+                ConfigurationStatus.get().setChangesInNewVersion(null);
             }
         }
     }

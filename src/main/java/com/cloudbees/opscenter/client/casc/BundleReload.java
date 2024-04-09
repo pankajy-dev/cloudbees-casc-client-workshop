@@ -86,7 +86,7 @@ public abstract class BundleReload implements ExtensionPoint {
      * @throws CasCException if an error happens when reloading a section
      */
     public static void reload(ConfigurationBundle bundle) throws CasCException {
-        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
         boolean fullReload = comparisonResult == null || comparisonResult.getVariables().withChanges();
         reload(bundle, fullReload);
     }
@@ -274,7 +274,7 @@ public abstract class BundleReload implements ExtensionPoint {
 
         @Override
         public boolean isReloadable() {
-            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
             return comparisonResult != null && comparisonResult.getPlugins().withChanges();
         }
 
@@ -336,7 +336,7 @@ public abstract class BundleReload implements ExtensionPoint {
             }
             boolean isRemoveStrategyWithRemoval = "sync".equalsIgnoreCase(removeStrategy);
 
-            BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+            BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
             boolean withChangesInItems = comparisonResult != null && comparisonResult.getRbac().withChanges();
 
             return isRemoveStrategyWithRemoval || withChangesInItems;
@@ -385,7 +385,7 @@ public abstract class BundleReload implements ExtensionPoint {
                 }
                 boolean isRemoveStrategyWithRemoval = !"none".equalsIgnoreCase(removeStrategy);
 
-                BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+                BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
                 boolean withChangesInItems = comparisonResult != null && comparisonResult.getItems().withChanges();
 
                 return isRemoveStrategyWithRemoval || withChangesInItems;

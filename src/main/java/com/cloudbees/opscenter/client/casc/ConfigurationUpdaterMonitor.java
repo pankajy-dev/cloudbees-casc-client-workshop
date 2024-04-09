@@ -38,7 +38,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
 
     @Override
     public boolean isActivated() {
-        boolean isReloading = ConfigurationStatus.INSTANCE.isCurrentlyReloading();
+        boolean isReloading = ConfigurationStatus.get().isCurrentlyReloading();
 
         if (isReloading) {
             LOGGER.fine("Bundle reload in progress. Skipping");
@@ -89,7 +89,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     private boolean checkCandidateAvailable() {
-        boolean isCandidateAvailable = ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        boolean isCandidateAvailable = ConfigurationStatus.get().isCandidateAvailable();
         // The candidate might be:
         // * invalid (and rejected) bundle
         // * Skipped valid bundle
@@ -134,7 +134,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
-        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+        if (!ConfigurationStatus.get().isUpdateAvailable()) {
             // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
             return false;
         }
@@ -154,7 +154,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canManualSkip() {
-        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
+        if (!ConfigurationStatus.get().isUpdateAvailable()) {
             // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
             return false;
         }
@@ -166,7 +166,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canRestart() {
-        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        return ConfigurationStatus.get().isUpdateAvailable();
     }
 
     @RequirePOST
@@ -181,7 +181,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
-            ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+            ConfigurationStatus.get().setUpdateAvailable(false);
             return HttpResponses.redirectViaContextPath("/manage");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {

@@ -64,7 +64,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doDescriptor() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "descriptor.jelly");
@@ -78,7 +78,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doJcasc() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "jcasc.jelly");
@@ -92,7 +92,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doRbac() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "rbac.jelly");
@@ -106,7 +106,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doItems() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "items.jelly");
@@ -120,7 +120,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doCatalog() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "catalog.jelly");
@@ -134,7 +134,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doPlugins() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "plugins.jelly");
@@ -148,7 +148,7 @@ public class BundleDiffAction implements RootAction {
      */
     public HttpResponse doVariables() {
         checkPermissions();
-        if (ConfigurationStatus.INSTANCE.getChangesInNewVersion() == null) {
+        if (ConfigurationStatus.get().getChangesInNewVersion() == null) {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "variables.jelly");
@@ -160,7 +160,7 @@ public class BundleDiffAction implements RootAction {
      */
     @CheckForNull
     public String getCurrentVersion() {
-        BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        BundleComparator.Result changes = ConfigurationStatus.get().getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
             return BundleVisualizationLink.get().getBundleVersion();
@@ -179,7 +179,7 @@ public class BundleDiffAction implements RootAction {
      */
     @CheckForNull
     public String getNewVersion() {
-        BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        BundleComparator.Result changes = ConfigurationStatus.get().getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
             return BundleVisualizationLink.get().getUpdateVersion();
@@ -199,7 +199,7 @@ public class BundleDiffAction implements RootAction {
      */
     @CheckForNull
     public BundleComparator.Result getBundleDiff() {
-        return ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        return ConfigurationStatus.get().getChangesInNewVersion();
     }
 
     /**
@@ -208,7 +208,7 @@ public class BundleDiffAction implements RootAction {
      */
     @CheckForNull
     public List<DiffRow> getBundleDescriptorDifferences() {
-        BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        BundleComparator.Result changes = ConfigurationStatus.get().getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
             return null;
@@ -224,7 +224,7 @@ public class BundleDiffAction implements RootAction {
      */
     @CheckForNull
     public List<DiffRow> getFileDifferences(String file) {
-        BundleComparator.Result changes = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
+        BundleComparator.Result changes = ConfigurationStatus.get().getChangesInNewVersion();
         if (changes == null) {
             // Should not happen since the method doIndex should have checked
             return null;

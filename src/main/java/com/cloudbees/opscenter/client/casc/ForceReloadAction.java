@@ -39,7 +39,7 @@ public class ForceReloadAction implements RootAction {
     }
 
     public boolean isUpdateAvailable(){
-        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        return ConfigurationStatus.get().isUpdateAvailable();
     }
 
     public boolean isHotReloadable() {
@@ -47,7 +47,7 @@ public class ForceReloadAction implements RootAction {
     }
 
     // Used by jelly
-    public boolean isReloadInProgress() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
+    public boolean isReloadInProgress() {return ConfigurationStatus.get().isCurrentlyReloading();}
 
     @RequirePOST
     public HttpResponse doForceReload() {

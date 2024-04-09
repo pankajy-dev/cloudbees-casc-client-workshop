@@ -199,7 +199,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public boolean isUpdateAvailable() {
-        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
+        return ConfigurationStatus.get().isUpdateAvailable();
     }
 
     /**
@@ -207,7 +207,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public boolean isCandidateAvailable() {
-        return ConfigurationStatus.INSTANCE.isCandidateAvailable();
+        return ConfigurationStatus.get().isCandidateAvailable();
     }
 
     /**
@@ -215,7 +215,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public boolean isErrorInNewVersion(){
-        return ConfigurationStatus.INSTANCE.isErrorInNewVersion();
+        return ConfigurationStatus.get().isErrorInNewVersion();
     }
 
     /**
@@ -223,7 +223,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public String getErrorMessage(){
-        return ConfigurationStatus.INSTANCE.getErrorMessage();
+        return ConfigurationStatus.get().getErrorMessage();
     }
 
     /**
@@ -232,7 +232,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     // Used by jelly
     public boolean isReloadInProgress() {
-        return ConfigurationStatus.INSTANCE.isCurrentlyReloading();
+        return ConfigurationStatus.get().isCurrentlyReloading();
     }
 
     /**
@@ -258,9 +258,9 @@ public class BundleVisualizationLink extends ManagementLink {
         if(isUpdateAvailable()) {
             if (isUpdateTimingEnabled()) {
                 ConfigurationBundle candidate = ConfigurationBundleManager.get().getCandidateAsConfigurationBundle();
-                return candidate != null ? ConfigurationStatus.INSTANCE.bundleInfo(candidate) : null;
+                return candidate != null ? ConfigurationStatus.get().bundleInfo(candidate) : null;
             }
-            return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
+            return ConfigurationStatus.get().bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
         }
         return null;
     }
@@ -271,8 +271,8 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     @CheckForNull
     public String getBundleVersion(){
-        if(ConfigurationStatus.INSTANCE.getOutdatedVersion() != null) {
-            return ConfigurationStatus.INSTANCE.getOutdatedVersion();
+        if(ConfigurationStatus.get().getOutdatedVersion() != null) {
+            return ConfigurationStatus.get().getOutdatedVersion();
         }
         return ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
     }
@@ -283,10 +283,10 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     @CheckForNull
     public String getBundleInformation() {
-        if(ConfigurationStatus.INSTANCE.getOutdatedVersion() != null) {
-            return ConfigurationStatus.INSTANCE.getOutdatedBundleInformation();
+        if(ConfigurationStatus.get().getOutdatedVersion() != null) {
+            return ConfigurationStatus.get().getOutdatedBundleInformation();
         }
-        return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
+        return ConfigurationStatus.get().bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
     }
 
     /**
@@ -322,7 +322,7 @@ public class BundleVisualizationLink extends ManagementLink {
     //used in jelly
     @CheckForNull
     public String getDownloadedBundleInfo(){
-        return ConfigurationStatus.INSTANCE.bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
+        return ConfigurationStatus.get().bundleInfo(ConfigurationBundleManager.get().getConfigurationBundle());
     }
 
     /**
@@ -383,7 +383,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     //used in jelly
     public Date getLastCheckForUpdate(){
-        return ConfigurationStatus.INSTANCE.getLastCheckForUpdate();
+        return ConfigurationStatus.get().getLastCheckForUpdate();
     }
 
     //used in jelly
@@ -399,7 +399,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     // used in jelly
     public boolean withDiff() {
-        return ConfigurationStatus.INSTANCE.getChangesInNewVersion() != null;
+        return ConfigurationStatus.get().getChangesInNewVersion() != null;
     }
 
     // used in jelly
@@ -662,7 +662,7 @@ public class BundleVisualizationLink extends ManagementLink {
             boolean quiet = ConfigurationBundleManager.get().isQuiet();
             this.validations = new ValidationSection(warnings, errors, infos, quiet);
             this.version = version;
-            this.info = ConfigurationStatus.INSTANCE.bundleInfo(id, version, checksum);
+            this.info = ConfigurationStatus.get().bundleInfo(id, version, checksum);
             this.skipped = skipped;
             this.invalid = invalid;
         }

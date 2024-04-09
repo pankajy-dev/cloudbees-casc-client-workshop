@@ -16,6 +16,6 @@ public class BundleReloadErrorMonitor extends AdministrativeMonitor {
 
     @Override
     public boolean isActivated() {
-        return ConfigurationStatus.INSTANCE.isErrorInReload();
+        return ConfigurationStatus.get().isErrorInReload();
     }
 }
