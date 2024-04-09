@@ -33,7 +33,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import com.cloudbees.opscenter.client.casc.UpdateType;
@@ -98,9 +98,9 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         rule.getInstance().setAuthorizationStrategy(new MockAuthorizationStrategy().grant(Jenkins.ADMINISTER).everywhere().toEveryone());
 
         // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
-        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
-        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
-        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationStatusSingleton.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedBundleInformation(null);
         ConfigurationBundleManager.reset();
     }
 
@@ -222,7 +222,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         assertThat("Bundle version in the skipped bundle is the newest", FileUtils.readFileToString(newest.resolve("bundle").resolve("bundle.yaml").toFile(), StandardCharsets.UTF_8), containsString("version: \"2\""));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
         verifyCurrentUpdateStatus("Not skipped, reloaded",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
@@ -314,7 +314,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         // Let's reload as if the user had clicked the button, as it's not skipped
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -562,7 +562,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("Bundle reloaded", response.get("reloaded"));
         assertTrue("Bundle reloaded", response.getBoolean("reloaded"));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -609,7 +609,7 @@ public class SkipNewVersionsTest extends AbstractCJPTest {
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
         result = new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser("alice").invoke();
         assertThat("Bundle reloaded", result.stdout().trim(), is("Bundle successfully reloaded."));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());

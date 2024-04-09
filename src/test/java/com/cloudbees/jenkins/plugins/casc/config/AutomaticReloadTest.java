@@ -39,7 +39,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import com.cloudbees.opscenter.client.casc.UpdateType;
@@ -144,9 +144,9 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         rule.getInstance().setAuthorizationStrategy(new MockAuthorizationStrategy().grant(Jenkins.ADMINISTER).everywhere().toEveryone());
 
         // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
-        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
-        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
-        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationStatusSingleton.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedBundleInformation(null);
         ConfigurationBundleManager.reset();
     }
 
@@ -174,7 +174,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -214,7 +214,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -234,7 +234,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleUpdateTab.getUpdateVersion(), is("3"));
@@ -275,7 +275,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't promoted", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -332,7 +332,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Let's reload as if the user had clicked the button
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -388,7 +388,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't hot loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -443,7 +443,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         // Let's reload as if the user had clicked the button
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getConfigurationBundle().isHotReloadable());
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -502,7 +502,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -537,7 +537,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -574,7 +574,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -590,7 +590,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be not an automatic reload, so the bundle must be restarted or skipped", response.get("update-type"), is(UpdateType.RESTART_OR_SKIP.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleUpdateTab.getUpdateVersion(), is("3"));
@@ -625,7 +625,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be an automatic reload", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
@@ -641,7 +641,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should be not an automatic reload, so the bundle must be restarted or skipped", response.get("update-type"), is(UpdateType.RESTART_OR_SKIP.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("New bundle cannot be hot loaded, so not promoted", bundleUpdateTab.getUpdateVersion(), is("3"));
@@ -678,7 +678,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should not be an automatic reload", response.get("update-type"), is(UpdateType.RELOAD_OR_SKIP.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't promoted", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -714,7 +714,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertThat("There should not be an automatic reload", response.get("update-type"), is(UpdateType.RELOAD_OR_SKIP.label));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle isn't promoted", bundleManager.getConfigurationBundle().getVersion(), is("1"));
@@ -764,7 +764,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertNotNull("Bundle reloaded", response.get("reloaded"));
         assertTrue("Bundle reloaded", response.getBoolean("reloaded"));
 
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -820,7 +820,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         assertTrue("This version 2 is Hot Reloadable", bundleManager.getCandidateAsConfigurationBundle().isHotReloadable());
         result = new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser("alice").invoke();
         assertThat("Bundle reloaded", result.stdout().trim(), is("Bundle successfully reloaded."));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is now loaded", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertNull("New bundle is now loaded", bundleUpdateTab.getUpdateVersion());
@@ -868,7 +868,7 @@ public class AutomaticReloadTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         BundleVisualizationLink bundleUpdateTab = BundleVisualizationLink.get();
         assertThat("New bundle is rejected", bundleManager.getConfigurationBundle().getVersion(), is("1"));

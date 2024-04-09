@@ -35,7 +35,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterMonitor;
 import com.cloudbees.opscenter.client.casc.HotReloadAction;
@@ -108,9 +108,9 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         rule.getInstance().setAuthorizationStrategy(new MockAuthorizationStrategy().grant(Jenkins.ADMINISTER).everywhere().toEveryone());
 
         // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
-        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
-        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
-        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationStatusSingleton.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedBundleInformation(null);
         ConfigurationBundleManager.reset();
     }
 
@@ -138,7 +138,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -151,7 +151,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.skipCandidate();
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is still a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         assertFalse("Bundle Update tab doesn't show the button bar", link.isUpdateAvailable());
@@ -195,7 +195,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -206,11 +206,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         // Reload (as if the user had clicked on the button)
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is now v2", Jenkins.get().getSystemMessage(), is("From Version 2"));
-        assertFalse("There is no candidate anymore", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is no candidate anymore", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is no candidate anymore", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate anymore", bundleManager.getUpdateLog().getCandidateBundle());
 
@@ -254,7 +254,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
 
@@ -269,7 +269,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.skipCandidate();
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is still a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         assertFalse("Monitor does not show up", monitor.isActivated());
@@ -312,7 +312,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         ConfigurationUpdaterMonitor monitor = ExtensionList.lookupSingleton(ConfigurationUpdaterMonitor.class);
@@ -324,11 +324,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         // Reload (as if the user had clicked on the button)
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is now v2", Jenkins.get().getSystemMessage(), is("From Version 2"));
-        assertFalse("There is no candidate anymore", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is no candidate anymore", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is no candidate anymore", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate anymore", bundleManager.getUpdateLog().getCandidateBundle());
 
@@ -371,11 +371,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         // Update version to 2
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/jenkins/plugins/casc/config/SkipSingleVersionTest/new-bundle-version").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is now v2", Jenkins.get().getSystemMessage(), is("From Version 2"));
-        assertFalse("There is no candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is no candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is no candidate", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate", bundleManager.getUpdateLog().getCandidateBundle());
 
@@ -425,7 +425,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -467,7 +467,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getUpdateLog().getCandidateBundle());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getCandidateAsConfigurationBundle());
 
@@ -519,7 +519,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -536,7 +536,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is still a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         assertFalse("Bundle Update tab doesn't show the button bar", link.isUpdateAvailable());
@@ -582,7 +582,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate, and it's v2", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -597,7 +597,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is still a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is still a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         assertFalse("Bundle Update tab doesn't show the button bar", link.isUpdateAvailable());
@@ -642,11 +642,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("The bundle cannot be skipped", response.get("update-type"));
         assertThat("The bundle cannot be skipped", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is now v2", Jenkins.get().getSystemMessage(), is("From Version 2"));
-        assertFalse("There is no candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is no candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is no candidate", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate", bundleManager.getUpdateLog().getCandidateBundle());
 
@@ -697,11 +697,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertNotNull("The bundle cannot be skipped", response.get("update-type"));
         assertThat("The bundle cannot be skipped", response.get("update-type"), is(UpdateType.SKIPPED.label));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -750,11 +750,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertNotNull("The bundle cannot be skipped", response.get("update-type"));
         assertThat("The bundle cannot be skipped", response.get("update-type"), is(UpdateType.AUTOMATIC_RELOAD.label));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is now v2", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is now v2", Jenkins.get().getSystemMessage(), is("From Version 2"));
-        assertFalse("There is no candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is no candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is no candidate", bundleManager.getCandidateAsConfigurationBundle());
         assertNull("There is no candidate", bundleManager.getUpdateLog().getCandidateBundle());
 
@@ -801,11 +801,11 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertNotNull("The bundle cannot be skipped", response.get("update-type"));
         assertThat("The bundle cannot be skipped", response.get("update-type"), is(UpdateType.SKIPPED.label));
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("Current Version is still v1", bundleManager.getConfigurationBundle().getVersion(), is("1"));
         assertThat("Current Version is still v1", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertFalse("There is a candidate but the button bar is not displayed", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertThat("There is a candidate but the button bar is not displayed", bundleManager.getCandidateAsConfigurationBundle().getVersion(), is("2"));
 
         BundleVisualizationLink link = BundleVisualizationLink.get();
@@ -849,7 +849,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getUpdateLog().getCandidateBundle());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getCandidateAsConfigurationBundle());
 
@@ -896,7 +896,7 @@ public class SkipSingleVersionTest extends AbstractCJPTest {
 
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", bundleManager.getConfigurationBundle().getVersion(), is("2"));
         assertThat("Current Version is still v1, but the bundle is promoted as Bundle Update Timing is disabled", Jenkins.get().getSystemMessage(), is("From Version 1"));
-        assertTrue("There is a candidate", ConfigurationStatus.INSTANCE.isUpdateAvailable());
+        assertTrue("There is a candidate", ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getUpdateLog().getCandidateBundle());
         assertNull("There is a candidate, but it's already promoted", bundleManager.getCandidateAsConfigurationBundle());
 

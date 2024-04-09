@@ -62,7 +62,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-2").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -90,7 +90,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-3").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -111,7 +111,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-4").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -136,7 +136,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-5").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -162,7 +162,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-6").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -183,7 +183,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/items/version-7").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         fsp1 = Jenkins.get().getItemByFullName("free-root", FreeStyleProject.class);
         fsp2 = Jenkins.get().getItemByFullName("folder-root/free-in-folder", FreeStyleProject.class);
@@ -225,7 +225,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-2").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         global = container.getGroups();
         assertThat(global.size(), Matchers.is(3));
@@ -244,7 +244,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-3").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         global = container.getGroups();
         assertThat(global.size(), Matchers.is(3));
@@ -263,7 +263,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-4").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         global = container.getGroups();
         assertThat(global.size(), Matchers.is(2));
@@ -291,7 +291,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-5").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         global = container.getGroups();
         assertThat(global.size(), Matchers.is(3));
@@ -311,7 +311,7 @@ public class HotReloadAndRemoveStrategyFromDescriptorTest extends AbstractCJPTes
         System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadAndRemoveStrategyFromDescriptorTest/rbac/version-6").toFile().getAbsolutePath());
         BundleVisualizationLink.get().doBundleUpdate(); // Force the bundle update
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload(); // Reload the bundle
-        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(Duration.ofSeconds(60)).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         global = container.getGroups();
         assertThat(global.size(), Matchers.is(3));

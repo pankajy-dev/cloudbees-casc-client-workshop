@@ -7,7 +7,7 @@ import hudson.cli.CLICommandInvoker;
 
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -18,11 +18,11 @@ public class BundleReloadInProgressCommandTest extends AbstractBundleVersionChec
     @WithEnvelope(TestEnvelope.class)
     public void update_bundles() throws Exception {
         // Simulate bundle reload
-        ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+        ConfigurationStatusSingleton.INSTANCE.setCurrentlyReloading(true);
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleReloadInProgressCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("reload-in-progress"), is(true));
         // Simulate reload completed
-        ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
+        ConfigurationStatusSingleton.INSTANCE.setCurrentlyReloading(false);
         result = new CLICommandInvoker(rule, BundleReloadInProgressCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("in-progress is true", JSONObject.fromObject(result.stdout()).getBoolean("reload-in-progress"), is(false));
     }

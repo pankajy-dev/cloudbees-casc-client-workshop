@@ -138,7 +138,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await("Version 1 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await("Version 1 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
         initializeRealm(rule);
         // GIVEN The bundle is version 1 and there are 2 users: admin (with CASC_ADMIN role) and user (with CASC_READ role)
         // Jenkins.READ permission is needed to access any endpoint
@@ -250,7 +250,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
 
         // Doing 2 consecutive requests, 2nd one should answer "reloaded": false as 1st one is still running
         // Simulate a request is already running
-        ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+        ConfigurationStatusSingleton.INSTANCE.setCurrentlyReloading(true);
         resp = requestWithToken(HttpMethod.POST, new URL(rule.getURL(), "casc-bundle-mgnt/reload-bundle"), admin, wc, true);
         response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
@@ -275,7 +275,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         ConfigurationUpdaterHelper.checkForUpdates();
         BundleReload.PluginsReload reload = ExtensionList.lookupSingleton(BundleReload.PluginsReload.class);
         reload.doReload(ConfigurationBundleManager.get().getCandidateAsConfigurationBundle());
-        await("Version 2 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await("Version 2 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         InstalledPluginsReport report = ConfigurationBundleManager.get().getReport();
         assertThat("New plugin should appear as requested", report.getRequested().get("cloudbees-casc-shared"), notNullValue());
@@ -286,7 +286,7 @@ public class BundleReloadActionTest extends AbstractIMTest {
         ConfigurationUpdaterHelper.checkForUpdates();
         reload = ExtensionList.lookupSingleton(BundleReload.PluginsReload.class);
         reload.doReload(ConfigurationBundleManager.get().getCandidateAsConfigurationBundle());
-        await("Version 3 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await("Version 3 is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("beer is installed", Jenkins.get().getPlugin("beer"), notNullValue());
         assertThat("chucknorris is installed", Jenkins.get().getPlugin("chucknorris"), notNullValue());

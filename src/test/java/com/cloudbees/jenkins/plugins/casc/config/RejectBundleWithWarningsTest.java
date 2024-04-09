@@ -13,7 +13,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 
 import static org.awaitility.Awaitility.await;
@@ -68,9 +68,9 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
     @Before
     public void setUp() {
         // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
-        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
-        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
-        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationStatusSingleton.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatusSingleton.INSTANCE.setOutdatedBundleInformation(null);
         ConfigurationBundleManager.reset();
     }
 
@@ -99,7 +99,7 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
 
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
 
@@ -241,7 +241,7 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
         verifyCurrentUpdateStatus("Automatic reload",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
@@ -277,7 +277,7 @@ public class RejectBundleWithWarningsTest extends AbstractCJPTest {
         assertThat("New bundle is accepted", bundleManager.getConfigurationBundle().getVersion(), is("2"));
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
         verifyCurrentUpdateStatus("Automatic reload",
                                   BundleUpdateLog.BundleUpdateLogAction.RELOAD,
                                   BundleUpdateLog.BundleUpdateLogActionSource.AUTOMATIC,
