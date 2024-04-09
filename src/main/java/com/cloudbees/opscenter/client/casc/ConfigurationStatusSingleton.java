@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * Singleton for internal tracking of the status of a configuration.
  */
-public enum ConfigurationStatusSingleton {
+public enum ConfigurationStatusSingleton implements ConfigurationStatus {
     INSTANCE;
 
     /**
@@ -75,6 +75,7 @@ public enum ConfigurationStatusSingleton {
      * Returns true if there is a new version available.
      * @return True/False if there is/isn't a new version available.
      */
+    @Override
     public boolean isUpdateAvailable(){
         return updateAvailable;
     }
@@ -83,6 +84,7 @@ public enum ConfigurationStatusSingleton {
      * Set the availability of a new version of the configuration bundle.
      * @param updateAvailable boolean for setting the update availability.
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setUpdateAvailable(boolean updateAvailable) {
         this.updateAvailable = updateAvailable;
@@ -92,6 +94,7 @@ public enum ConfigurationStatusSingleton {
      * Returns true if there is a new version that was rejected.
      * @return True/False if there is/isn't a new version that was rejected.
      */
+    @Override
     public boolean isCandidateAvailable(){
         return candidateAvailable;
     }
@@ -100,6 +103,7 @@ public enum ConfigurationStatusSingleton {
      * Set the existence of a new version that has been rejected.
      * @param candidateAvailable boolean for setting the candidate availability.
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setCandidateAvailable(boolean candidateAvailable) {
         this.candidateAvailable = candidateAvailable;
@@ -108,6 +112,7 @@ public enum ConfigurationStatusSingleton {
     /**
      * @return the Date when the last check for update was done (by default it is the jenkins startup date).
      */
+    @Override
     @NonNull
     public Date getLastCheckForUpdate() {
         return new Date(lastCheckForUpdate.getTime());
@@ -117,6 +122,7 @@ public enum ConfigurationStatusSingleton {
      * Set the timestamp of the last time OC was checked for a newer version of the bundle.
      * @param lastCheckForUpdate date, never null.
      */
+    @Override
     public void setLastCheckForUpdate(@NonNull Date lastCheckForUpdate) {
         this.lastCheckForUpdate = new Date(lastCheckForUpdate.getTime());
     }
@@ -124,6 +130,7 @@ public enum ConfigurationStatusSingleton {
     /**
      * @return the version of the current bundle when a new version is available. Null if there is no new version.
      */
+    @Override
     @CheckForNull
     public String getOutdatedVersion() {
         return outdatedVersion;
@@ -133,6 +140,7 @@ public enum ConfigurationStatusSingleton {
      * Set the version of the current bundle before downloading a new version
      * @param outdatedVersion null if there is no new version
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedVersion(@CheckForNull String outdatedVersion) {
         this.outdatedVersion = outdatedVersion;
@@ -141,6 +149,7 @@ public enum ConfigurationStatusSingleton {
     /**
      * @return the bundle id, version and checksum of current bundle until it is updated
      */
+    @Override
     @CheckForNull
     public String getOutdatedBundleInformation() {
         return outdatedBundleInformation;
@@ -150,6 +159,7 @@ public enum ConfigurationStatusSingleton {
      * Set the bundle id, version and checksum of current bundle until it is updated
      * @param outdatedBundleInformation null if there is no new version
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedBundleInformation(@CheckForNull String outdatedBundleInformation) {
         this.outdatedBundleInformation = outdatedBundleInformation;
@@ -161,11 +171,13 @@ public enum ConfigurationStatusSingleton {
      * @param version bundle version
      * @param checksum bundle checksum
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setOutdatedBundleInformation(String bundleId, String version, String checksum) {
         this.outdatedBundleInformation = bundleInfo(bundleId, version, checksum);
     }
 
+    @Override
     @CheckForNull
     public String bundleInfo(ConfigurationBundle bundle) {
         if (bundle == null) {
@@ -175,6 +187,7 @@ public enum ConfigurationStatusSingleton {
         return bundleInfo(bundle.getId(), bundle.getVersion(), bundle.getChecksum());
     }
 
+    @Override
     @CheckForNull
     public String bundleInfo(String id, String version, String checksum) {
         final String id_ = StringUtils.defaultString(id);
@@ -205,6 +218,7 @@ public enum ConfigurationStatusSingleton {
     /**
      * @return a true if an error happened when the new version of the bundle was checked or downloaded. false otherwise.
      */
+    @Override
     public boolean isErrorInNewVersion() {
         return errorInNewVersion;
     }
@@ -213,6 +227,7 @@ public enum ConfigurationStatusSingleton {
      * Set if an error happened when the new version of the bundle was checked or downloaded.
      * @param errorInNewVersion true if an error happened when the new version of the bundle was checked or downloaded. false otherwise.
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorInNewVersion(boolean errorInNewVersion) {
         this.errorInNewVersion = errorInNewVersion;
@@ -221,6 +236,7 @@ public enum ConfigurationStatusSingleton {
     /**
      * Message after an error happened when the new version of the bundle was checked or downloaded. Empty string if there was no error.
      */
+    @Override
     public String getErrorMessage() {
         if (!this.errorInNewVersion) {
             return "";
@@ -232,6 +248,7 @@ public enum ConfigurationStatusSingleton {
      * Set the error message
      * @param errorMessage null if errorInNewVersion is false
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
@@ -241,6 +258,7 @@ public enum ConfigurationStatusSingleton {
      * Set the result of comparing the new available version to the current version
      * @param changesInNewVersion The results to set.
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setChangesInNewVersion(BundleComparator.Result changesInNewVersion) {
         this.changesInNewVersion = changesInNewVersion;
@@ -250,6 +268,7 @@ public enum ConfigurationStatusSingleton {
      * Get the result of comparing the new available version to the current version
      * @return the result of comparing the new available version to the current version. It might be null.
      */
+    @Override
     @CheckForNull
     public BundleComparator.Result getChangesInNewVersion() {
         return this.changesInNewVersion;
@@ -259,6 +278,7 @@ public enum ConfigurationStatusSingleton {
      * Checks if a hot reload is currently running
      * @return true if reload is running, false otherwise
      */
+    @Override
     public boolean isCurrentlyReloading() {
         return currentlyReloading;
     }
@@ -267,11 +287,13 @@ public enum ConfigurationStatusSingleton {
      * Sets the currently running parameter for a hot reload
      * @param currentlyReloading Indicates if the system is currently reloading
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setCurrentlyReloading(boolean currentlyReloading) {
         this.currentlyReloading = currentlyReloading;
     }
 
+    @Override
     public boolean isErrorInReload() {
         return errorInReload;
     }
@@ -280,11 +302,13 @@ public enum ConfigurationStatusSingleton {
      * Sets the error during reload flag in case a hot reload fails
      * @param errorInReload Indicates if there was an error during reload
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setErrorInReload(boolean errorInReload) {
         this.errorInReload = errorInReload;
     }
 
+    @Override
     public boolean isShowSuccessfulInstallMonitor() {
         return showSuccessfulInstallMonitor;
     }
@@ -293,6 +317,7 @@ public enum ConfigurationStatusSingleton {
      * Sets the flag to show the successful reload monitor
      * @param showSuccessfulInstallMonitor indicates if the monitor should be showed or not
      */
+    @Override
     @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public synchronized void setShowSuccessfulInstallMonitor(boolean showSuccessfulInstallMonitor) {
         this.showSuccessfulInstallMonitor = showSuccessfulInstallMonitor;
