@@ -16,7 +16,7 @@ public class CasCListenerImpl implements CasCListener {
 
     @Override
     public void onBundlePromote() {
-        ConfigurationUpdaterHelper.promoteCandidate();
+        ConfigurationBundleManager.promote(true);
     }
 
     @Override
