@@ -5,7 +5,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:i="jelly:fmt" xmlns:l="/lib/layout" xmlns:f="/lib/form"
          xmlns:cbcipm="/lib/cbci/pluginManagement"
          xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
-    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${app.MANAGE}" type="one-column">
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${it.getPermission()}" type="one-column">
         <l:header>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/css/font-awesome/css/font-awesome.css" type="text/css"/>
