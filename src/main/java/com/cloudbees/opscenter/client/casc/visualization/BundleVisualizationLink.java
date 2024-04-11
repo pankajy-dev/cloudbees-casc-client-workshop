@@ -102,7 +102,7 @@ public class BundleVisualizationLink extends ManagementLink {
     // stapler
     public HttpResponse doIndex() {
         Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
-        if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+        if (Jenkins.get().hasPermission(CascPermission.CASC_ADMIN)) {
             // Only Overall/Administer is allowed to see the list of files in the bundle and download them, as well as
             // any other tab in the UI.
             return HttpResponses.forwardToView(this, "index.jelly");
@@ -233,6 +233,15 @@ public class BundleVisualizationLink extends ManagementLink {
     // Used by jelly
     public boolean isReloadInProgress() {
         return ConfigurationStatus.INSTANCE.isCurrentlyReloading();
+    }
+
+    /**
+     *
+     * @return allowed permission to view jelly page / fragment
+     */
+    // Used by jelly
+    public Permission getPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 
     /**
