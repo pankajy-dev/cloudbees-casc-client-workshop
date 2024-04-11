@@ -56,7 +56,7 @@ public class HotReloadAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doReload() {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
+        Jenkins.get().checkPermission(getPermission());
         if (BundleUpdateTimingConfiguration.get().isEnabled()) {
             if (!ConfigurationUpdaterHelper.promoteCandidate()) {
                 LOGGER.warning(() -> "Something failed promoting the new bundle version");

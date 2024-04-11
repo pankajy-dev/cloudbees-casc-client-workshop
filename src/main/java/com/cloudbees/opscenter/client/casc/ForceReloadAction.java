@@ -53,7 +53,7 @@ public class ForceReloadAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doForceReload() {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
+        Jenkins.get().checkPermission(getPermission());
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
         BundleUpdateLog.BundleUpdateStatus.updateCurrent(bundleUpdateStatus -> {
             if (!bundleUpdateStatus.isOngoingAction()) {
