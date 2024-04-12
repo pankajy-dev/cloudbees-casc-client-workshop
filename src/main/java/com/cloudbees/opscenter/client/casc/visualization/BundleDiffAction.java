@@ -45,7 +45,7 @@ public class BundleDiffAction implements RootAction {
     }
 
     private void checkPermissions() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
     }
 
     /**
