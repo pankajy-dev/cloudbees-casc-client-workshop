@@ -4,10 +4,12 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
@@ -51,7 +53,7 @@ public class ForceReloadAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doForceReload() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(getPermission());
         BundleReloadAction realAction = ExtensionList.lookupSingleton(BundleReloadAction.class);
         BundleUpdateLog.BundleUpdateStatus.updateCurrent(bundleUpdateStatus -> {
             if (!bundleUpdateStatus.isOngoingAction()) {
@@ -69,5 +71,14 @@ public class ForceReloadAction implements RootAction {
         }
 
         return HttpResponses.redirectViaContextPath("/manage");
+    }
+
+    /**
+     *
+     * @return allowed permission to view jelly page / fragment
+     */
+    // Used by jelly
+    public Permission getPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 }

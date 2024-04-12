@@ -2,12 +2,14 @@ package com.cloudbees.opscenter.client.casc.visualization;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.BundleLoader;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.RootAction;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -43,7 +45,7 @@ public class BundleDiffAction implements RootAction {
     }
 
     private void checkPermissions() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
     }
 
     /**
@@ -152,6 +154,15 @@ public class BundleDiffAction implements RootAction {
             return HttpResponses.notFound();
         }
         return HttpResponses.forwardToView(this, "variables.jelly");
+    }
+
+    /**
+     *
+     * @return allowed permission to view jelly page / fragment
+     */
+    // Used by jelly
+    public Permission getPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 
     /**

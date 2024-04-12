@@ -6,11 +6,13 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.RootAction;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
@@ -54,7 +56,7 @@ public class HotReloadAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doReload() {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(getPermission());
         if (BundleUpdateTimingConfiguration.get().isEnabled()) {
             if (!ConfigurationUpdaterHelper.promoteCandidate()) {
                 LOGGER.warning(() -> "Something failed promoting the new bundle version");
@@ -76,5 +78,14 @@ public class HotReloadAction implements RootAction {
             LOGGER.log(Level.INFO, "Configuration Bundle hot reload has been requested but the current bundle can not be reloaded");
         }
         return HttpResponses.redirectViaContextPath("/manage");
+    }
+
+    /**
+     *
+     * @return allowed permission to view jelly page / fragment
+     */
+    // Used by jelly
+    public Permission getPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 }
