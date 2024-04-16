@@ -5,7 +5,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:i="jelly:fmt" xmlns:l="/lib/layout" xmlns:f="/lib/form"
          xmlns:cbcipm="/lib/cbci/pluginManagement"
          xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
-    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${it.getPermission()}" type="one-column">
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${it.getRequiredPermission()}" type="one-column">
         <l:header>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/css/font-awesome/css/font-awesome.css" type="text/css"/>
@@ -35,7 +35,9 @@
                         </j:if>
                         <cbcipm:tabcontent class="plugin-management-content plugin-management-content--margin">
                             <strong>You are using bundle ${it.fullBundleInformation}.</strong>
-                            <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleInfo}"/>
+                            <j:if test="${it.hasCascAdminPermission()}">
+                                <cbcipm:valcontent validationObject="${it.bundleValidations}" bundleVersion="${it.downloadedBundleInfo}"/>
+                            </j:if>
                         </cbcipm:tabcontent>
                         <j:choose>
                             <j:when test="${it.isErrorInNewVersion()}">
@@ -58,55 +60,61 @@
                                                         <j:set var="version" value="(${it.getUpdateInfo()}) "/>
                                                     </j:if>
                                                     <header>A new version of the <b>Configuration Bundle ${version}</b>is available</header>
-                                                    <p class="mb-0">You can perform a restart now to apply the new Configuration
-                                                        Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
-                                                    <j:if test="${it.isHotReloadable()}">
-                                                        <p class="mb-0">You can also apply the new Configuration Bundle without
-                                                            restarting,
-                                                            using the "Reload Configuration" button.</p>
-                                                    </j:if>
-                                                    <j:if test="${it.withDiff()}">
-                                                        <p class="mb-0">See the differences with the current version.</p>
-                                                        <a id="diff" class="yui-button icon-button" href="${rootURL}/bundle-diff-visualization/descriptor">
-                                                            <l:icon src="symbol-swap-horizontal-outline plugin-ionicons-api" class="icon-sm" title="See differences" />
-                                                        </a>
-                                                    </j:if>
-                                                </div>
-                                                <div class="alert__form">
-                                                    <f:form method="post" action="act" name="act-update-bundle">
-                                                        <f:submit name="restart" value="Safe Restart" />
+                                                    <j:if test="${it.hasCascAdminPermission()}">
+                                                        <p class="mb-0">You can perform a restart now to apply the new Configuration
+                                                            Bundle immediately, or wait for the configuration to be applied on the next restart.</p>
                                                         <j:if test="${it.isHotReloadable()}">
-                                                            <j:choose>
-                                                                <j:when test="${it.isReloadInProgress()}">
-                                                                    Hot reload is not available as there's a reload already running.
-                                                                </j:when>
-                                                                <j:otherwise>
-                                                                    <f:submit name="reload" value="Reload Configuration"/>
-                                                                </j:otherwise>
-                                                            </j:choose>
+                                                            <p class="mb-0">You can also apply the new Configuration Bundle without
+                                                                restarting,
+                                                                using the "Reload Configuration" button.</p>
                                                         </j:if>
-                                                        <j:if test="${it.canManualSkip()}">
-                                                            <f:submit name="skip" value="Skip"/>
+                                                        <j:if test="${it.withDiff()}">
+                                                            <p class="mb-0">See the differences with the current version.</p>
+                                                            <a id="diff" class="yui-button icon-button" href="${rootURL}/bundle-diff-visualization/descriptor">
+                                                                <l:icon src="symbol-swap-horizontal-outline plugin-ionicons-api" class="icon-sm" title="See differences" />
+                                                            </a>
                                                         </j:if>
-                                                    </f:form>
+                                                    </j:if>
                                                 </div>
-                                            </div>
-                                            <j:if test="${it.isUpdateTimingEnabled()}" >
-                                            <cbcipm:valcontent validationObject="${it.candidate.validations}" bundleVersion="${it.getUpdateInfo()}"/>
-                                            </j:if>
-                                            <j:set var="items" value="${it.getItemsToDelete()}" />
-                                            <j:if test="${items.size() > 0}">
-                                                <div class="alert alert-info">
-                                                    <div class="alert__body">
-                                                        <header>Some items will be deleted when applying this bundle</header>
-                                                        <p>According to the bundle's remove strategy, the following items will be deleted during bundle update</p>
-                                                        <ul>
-                                                            <j:forEach items="${items}" var="item">
-                                                                <li>${item}</li>
-                                                            </j:forEach>
-                                                        </ul>
+                                                <j:if test="${it.hasCascAdminPermission()}">
+                                                    <div class="alert__form">
+                                                        <f:form method="post" action="act" name="act-update-bundle">
+                                                            <f:submit name="restart" value="Safe Restart" />
+                                                            <j:if test="${it.isHotReloadable()}">
+                                                                <j:choose>
+                                                                    <j:when test="${it.isReloadInProgress()}">
+                                                                        Hot reload is not available as there's a reload already running.
+                                                                    </j:when>
+                                                                    <j:otherwise>
+                                                                        <f:submit name="reload" value="Reload Configuration"/>
+                                                                    </j:otherwise>
+                                                                </j:choose>
+                                                            </j:if>
+                                                            <j:if test="${it.canManualSkip()}">
+                                                                <f:submit name="skip" value="Skip"/>
+                                                            </j:if>
+                                                        </f:form>
                                                     </div>
-                                                </div>
+                                                </j:if>
+                                            </div>
+                                            <j:if test="${it.hasCascAdminPermission()}">
+                                                <j:if test="${it.isUpdateTimingEnabled()}" >
+                                                <cbcipm:valcontent validationObject="${it.candidate.validations}" bundleVersion="${it.getUpdateInfo()}"/>
+                                                </j:if>
+                                                <j:set var="items" value="${it.getItemsToDelete()}" />
+                                                <j:if test="${items.size() > 0}">
+                                                    <div class="alert alert-info">
+                                                        <div class="alert__body">
+                                                            <header>Some items will be deleted when applying this bundle</header>
+                                                            <p>According to the bundle's remove strategy, the following items will be deleted during bundle update</p>
+                                                            <ul>
+                                                                <j:forEach items="${items}" var="item">
+                                                                    <li>${item}</li>
+                                                                </j:forEach>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </j:if>
                                             </j:if>
                                         </cbcipm:tabcontent>
                                     </j:when>
@@ -152,8 +160,10 @@
                                                         <span class="secondary-text">Force hot reload is not available as there's a reload already running.</span>
                                                     </j:when>
                                                     <j:otherwise>
-                                                        <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn"/>
-                                                        <span class="secondary-text">Force the reload of the installed bundle</span>
+                                                        <j:if test="${it.hasCascAdminPermission()}">
+                                                            <cbcipm:submit name="force" value="Force Reload" class="yui-button primary check-updates-btn"/>
+                                                            <span class="secondary-text">Force the reload of the installed bundle</span>
+                                                        </j:if>
                                                     </j:otherwise>
                                                 </j:choose>
                                             </f:form>
