@@ -4,12 +4,12 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.casc.replication.CasCListener;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
-import org.jenkinsci.plugins.variant.OptionalExtension;
+import hudson.Extension;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@OptionalExtension(requirePlugins = "cloudbees-replication")
+@Extension
 @SuppressWarnings("unused")
 public class CasCListenerImpl implements CasCListener {
     private static final Logger LOGGER = Logger.getLogger(CasCListenerImpl.class.getName());
