@@ -87,11 +87,17 @@ public final class ConfigurationUpdaterHelper {
         return newVersionAvailable;
     }
 
-    public synchronized static boolean checkForUpdates(boolean force) throws CheckNewBundleVersionException {
+    /**
+     * Check for new updates in configuration bundle are available.
+     * @param replicated true if called in response to another replicas checking for update
+     * @return True if a new version is available
+     * @throws CheckNewBundleVersionException if an error happens when the new version is checked or downloaded
+     */
+    public synchronized static boolean checkForUpdates(boolean replicated) throws CheckNewBundleVersionException {
         boolean error = false;
         ConfigurationStatus configurationStatus;
-        if(force) {
-            // If force is true, this comes from an event so there is no need to propagate the changes
+        if(replicated) {
+            // If this is called because of another replicas, there is no need to propagate the changes
             configurationStatus = ConfigurationStatusSingleton.INSTANCE;
         } else {
             configurationStatus = ConfigurationStatus.get();
@@ -105,7 +111,7 @@ public final class ConfigurationUpdaterHelper {
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
                 String idBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getId();
                 String checksumBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getChecksum();
-                if (force || ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                if (replicated || ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
                     PromotionErrorMonitor.get().hide();
                     configurationStatus.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
