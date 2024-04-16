@@ -2,11 +2,11 @@ package com.cloudbees.jenkins.plugins.casc.replication;
 
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
-import org.jenkinsci.plugins.variant.OptionalExtension;
+import hudson.Extension;
 
 import java.lang.reflect.Proxy;
 
-@OptionalExtension(requirePlugins = "cloudbees-replication")
+@Extension
 public class ConfigurationStatusReplication extends ReplicationSetterProxy {
     private final ConfigurationStatus proxyInstance = (ConfigurationStatus) Proxy.newProxyInstance(
             ConfigurationStatusSingleton.class.getClassLoader(),
