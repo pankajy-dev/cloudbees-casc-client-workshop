@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.plugins.casc.listener;
 
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.plugins.casc.replication.CasCListener;
+import com.cloudbees.jenkins.plugins.casc.events.CasCListener;
 import com.cloudbees.opscenter.client.casc.CheckNewBundleVersionException;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import hudson.Extension;

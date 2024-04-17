@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.plugins.casc.replication;
 
+import com.cloudbees.jenkins.plugins.casc.events.CasCStateChangeListener;
+import com.cloudbees.jenkins.plugins.casc.events.CasCStateChangePublisher;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.util.Listeners;
