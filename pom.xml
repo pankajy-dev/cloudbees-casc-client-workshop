@@ -48,7 +48,7 @@
       <dependency>  <!-- Remove once in URR -->
         <groupId>com.cloudbees.jenkins.plugins</groupId>
         <artifactId>cloudbees-casc-shared</artifactId>
-        <version>1.0</version>
+        <version>1.1-20240417.083230-2</version> <!-- TODO Remove once in URR BOM -->
       </dependency>
 
     </dependencies>
@@ -148,12 +148,6 @@
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
       <optional>true</optional>
-    </dependency>
-    <!-- BEE-46234, add dependency to trigger Hazelcast message -->
-    <dependency>
-      <groupId>com.cloudbees.jenkins.plugins</groupId>
-      <artifactId>cloudbees-casc-shared</artifactId>
-      <version>1.1-20240409.162827-1</version> <!-- TODO Remove once in URR BOM -->
     </dependency>
 
     <!-- dependency for the icons -->
