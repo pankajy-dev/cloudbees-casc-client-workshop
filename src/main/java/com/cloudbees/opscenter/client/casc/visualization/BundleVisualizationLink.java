@@ -142,7 +142,7 @@ public class BundleVisualizationLink extends ManagementLink {
      */
     // stapler
     public HttpResponse doBundleUpdate() throws Exception {
-        Jenkins.get().checkPermission(getRequiredPermission());
+        Jenkins.get().checkAnyPermission(getRequiredPermission(), getAdminPermission());
         if (Jenkins.get().hasPermission(getAdminPermission())) {
             try {
                 ConfigurationUpdaterHelper.checkForUpdates();
