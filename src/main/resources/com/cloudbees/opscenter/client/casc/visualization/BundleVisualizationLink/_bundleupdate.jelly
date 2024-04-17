@@ -139,7 +139,9 @@
                                                 class="plugin-management-content--narrow-900 plugin-management-content--margin">
 
                                             <!-- The form reloads this page-->
-                                            <a class="yui-button primary check-updates-btn" href="${request.getRequestURI()}">Check for Updates</a>
+                                            <j:if test="${it.hasCascAdminPermission()}">
+                                                <a class="yui-button primary check-updates-btn" href="${request.getRequestURI()}">Check for Updates</a>
+                                            </j:if>
                                             <j:if test="${it.lastCheckForUpdate != null}">
                                                 <span class="secondary-text">
                                                     Last check <i:formatDate value="${it.lastCheckForUpdate}"

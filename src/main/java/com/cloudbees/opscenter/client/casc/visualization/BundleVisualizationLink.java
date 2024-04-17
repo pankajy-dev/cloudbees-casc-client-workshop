@@ -114,7 +114,7 @@ public class BundleVisualizationLink extends ManagementLink {
     // stapler
     public HttpResponse doIndex() {
         Jenkins.get().checkPermission(getRequiredPermission());
-        if (Jenkins.get().hasPermission(getRequiredPermission())) {
+        if (Jenkins.get().hasPermission(getAdminPermission())) {
             // Only Overall/Administer is allowed to see the list of files in the bundle and download them, as well as
             // any other tab in the UI.
             return HttpResponses.forwardToView(this, "index.jelly");
@@ -136,23 +136,25 @@ public class BundleVisualizationLink extends ManagementLink {
     /**
      * Serves "casc-bundle-export-ui/bundleUpdate".
      *
-     * Requires MANAGE permission.
-     * Renders the tab "Bundle Update", but first checks if there is any bundle update.
+     * Requires CASC_READ permission.
+     * Renders the tab "Bundle Update", but first checks if there is any bundle update if user has CASC_ADMIN permissions.
      * @return forward to the view "_bundleupdate.view"
      */
     // stapler
     public HttpResponse doBundleUpdate() throws Exception {
         Jenkins.get().checkPermission(getRequiredPermission());
-        try {
-            ConfigurationUpdaterHelper.checkForUpdates();
-        } catch (CheckNewBundleVersionException e) {
-            LOGGER.log(Level.WARNING, "Error checking the new bundle version.", e);
+        if (Jenkins.get().hasPermission(getAdminPermission())) {
+            try {
+                ConfigurationUpdaterHelper.checkForUpdates();
+            } catch (CheckNewBundleVersionException e) {
+                LOGGER.log(Level.WARNING, "Error checking the new bundle version.", e);
+            }
         }
         return HttpResponses.forwardToView(this, "_bundleupdate.jelly");
     }
 
     public HttpResponse doUpdateLog() {
-        Jenkins.get().checkPermission(getRequiredPermission());
+        Jenkins.get().checkPermission(getAdminPermission());
         return HttpResponses.forwardToView(this, "_updateLog.jelly");
     }
 
@@ -443,7 +445,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
-        Jenkins.get().checkPermission(getRequiredPermission());
+        Jenkins.get().checkPermission(getAdminPermission());
 
         if (req.hasParameter("restart")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,
