@@ -22,12 +22,14 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.MockedStatic;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -80,13 +82,15 @@ public class BundleVisualizationLinkTest {
         }
 
         try (ACLContext ctx = ACL.as(readUser)) {
-            AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> BundleVisualizationLink.get().doBundleUpdate());
-            assertThat(exception.getMessage(), containsString("bob is missing the CasC/Admin permission"));
+            AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> BundleVisualizationLink.get().doBundleUpdate());
+            assertThat(exception.getMessage(), containsString("bob is missing a permission, one of CasC/Read, CasC/Admin is required"));
         }
 
         try (ACLContext ctx = ACL.as(cascUser)) {
-            AccessDeniedException3 exception = assertThrows(AccessDeniedException3.class, () -> BundleVisualizationLink.get().doBundleUpdate());
-            assertThat(exception.getMessage(), containsString("dan is missing the CasC/Admin permission"));
+            // User can see the page, but update should not be triggered
+            Date lastUpdateCheck = ConfigurationStatus.INSTANCE.getLastCheckForUpdate();
+            BundleVisualizationLink.get().doBundleUpdate();
+            assertThat("There was no check for update", lastUpdateCheck, is(ConfigurationStatus.INSTANCE.getLastCheckForUpdate()));
         }
     }
 

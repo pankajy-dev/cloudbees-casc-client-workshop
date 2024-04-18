@@ -5,7 +5,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler"
          xmlns:cbcipm="/lib/cbci/pluginManagement"
          xmlns:common="/com/cloudbees/opscenter/client/casc/visualization/BundleVisualizationLink/common">
-    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${it.getPermission()}" type="one-column">
+    <l:layout norefresh="true" title="${%Configuration as Code Bundle}" permission="${it.getRequiredPermission()}" type="one-column">
         <l:header>
             <script type="text/javascript" src="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.js"/>
             <link rel="stylesheet" href="${resURL}/plugin/cloudbees-casc-client/jsbundles/bundleVisualization.css" type="text/css"/>
@@ -20,9 +20,11 @@
                 <cbcipm:tabcontent class="plugin-management-content--narrow-900 plugin-management-content--margin">
                     You must verify there are no Beekeeper plugin warnings in the exported configuration. Otherwise, the files may be unusable and require modifications due to warning comments in the files caused by plugin conflicts.
                 </cbcipm:tabcontent>
-                <cbcipm:tabcontent class="plugin-management-content--margin">
-                    <st:include page="_filesTable.jelly" />
-                </cbcipm:tabcontent>
+                <j:if test="${it.hasCascAdminPermission()}">
+                    <cbcipm:tabcontent class="plugin-management-content--margin">
+                        <st:include page="_filesTable.jelly" />
+                    </cbcipm:tabcontent>
+                </j:if>
             </common:layout>
         </l:main-panel>
     </l:layout>
