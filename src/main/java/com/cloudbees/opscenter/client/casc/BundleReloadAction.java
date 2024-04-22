@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
@@ -90,7 +91,7 @@ public class BundleReloadAction implements RootAction {
                 if (configuration.isAutomaticReload()) {
                     return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "Automatic reload configured. It's not possible to manually reload the bundle. If there is any issue, proceed with a restart"));
                 } else {
-                    if (ConfigurationStatus.get().isCurrentlyReloading()) {
+                    if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
                         LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", Jenkins.getAuthentication2().getName());
                         return new JsonHttpResponse(new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete"));
                     }
@@ -158,14 +159,14 @@ public class BundleReloadAction implements RootAction {
 
     public JSONObject executeReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
-        if (ConfigurationStatus.get().isCurrentlyReloading()) {
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
             LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
         }
         if (tryReload(async)) {
             JSONObject response = new JSONObject().accumulate("reloaded", true);
             if (async) {
-                response.accumulate("completed", !ConfigurationStatus.get().isCurrentlyReloading());
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
             }
             return response;
         } else {
@@ -187,14 +188,14 @@ public class BundleReloadAction implements RootAction {
 
     public JSONObject executeForceReload(boolean async) throws CasCException, IOException {
         String username = Jenkins.getAuthentication2().getName();
-        if (ConfigurationStatus.get().isCurrentlyReloading()) {
+        if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
             LOGGER.log(Level.INFO, "Reload bundle configuration requested by {0}.  Ignored as a reload is already in progress", username);
             return new JSONObject().accumulate("reloaded", false).accumulate("reason", "A reload is already in progress, please wait for it to complete");
         }
         if (forceReload(async)) {
             JSONObject response = new JSONObject().accumulate("reloaded", true);
             if (async) {
-                response.accumulate("completed", !ConfigurationStatus.get().isCurrentlyReloading());
+                response.accumulate("completed", !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
             }
             return response;
         } else {
@@ -225,9 +226,10 @@ public class BundleReloadAction implements RootAction {
                 launchSynchronousReload(false);
             }
             LOGGER.log(Level.INFO, "Reloading bundle configuration requested by {0} completed", username);
-            ConfigurationStatus.get().setUpdateAvailable(false);
-            ConfigurationStatus.get().setOutdatedVersion(null);
-            ConfigurationStatus.get().setOutdatedBundleInformation(null);
+            ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+            ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
+            ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+            CasCPublisherHelper.publishCasCUpdate();
             return true;
         } else {
             if (!ConfigurationBundleManager.isSet()) {
@@ -282,22 +284,24 @@ public class BundleReloadAction implements RootAction {
     private void launchSynchronousReload(boolean force) {
         ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
         ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-        ConfigurationStatus.get().setCurrentlyReloading(true);
-        ConfigurationStatus.get().setErrorInReload(false);
-        ConfigurationStatus.get().setShowSuccessfulInstallMonitor(false);
+        ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
+        ConfigurationStatus.INSTANCE.setErrorInReload(false);
+        ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
+        CasCPublisherHelper.publishCasCUpdate();
         try {
             if (force) {
                 service.reload(bundle);
             } else {
                 service.reloadIfIsHotReloadable(bundle);
             }
-            ConfigurationStatus.get().setShowSuccessfulInstallMonitor(true);
+            ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(true);
         } catch (IOException | CasCException ex) {
             LOGGER.log(Level.WARNING, String.format("Error while executing hot reload %s", ex.getMessage()), ex);
-            ConfigurationStatus.get().setErrorInReload(true);
+            ConfigurationStatus.INSTANCE.setErrorInReload(true);
             BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
         } finally {
-            ConfigurationStatus.get().setCurrentlyReloading(false);
+            ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
+            CasCPublisherHelper.publishCasCUpdate();
         }
     }
 
@@ -329,7 +333,7 @@ public class BundleReloadAction implements RootAction {
         }
         if (!update) {
             // maybe the bundle is the same, but it is not yet applied, also check if an update is available (Only possible if Bundle Update Timing is disabled)
-            update = ConfigurationStatus.get().isUpdateAvailable();
+            update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
         }
 
         if (update) {
@@ -352,7 +356,7 @@ public class BundleReloadAction implements RootAction {
     @WebMethod(name = "check-bundle-reload-running")
     public HttpResponse doCheckReloadInProgress() {
         Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
-        return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.get().isCurrentlyReloading()));
+        return new JsonHttpResponse(new JSONObject().accumulate("reload-in-progress", ConfigurationStatus.INSTANCE.isCurrentlyReloading()));
     }
 
     /**

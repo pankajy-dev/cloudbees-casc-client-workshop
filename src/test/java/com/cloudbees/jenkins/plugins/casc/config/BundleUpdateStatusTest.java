@@ -8,7 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateStatus;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationUpdaterHelper;
 import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
@@ -100,9 +100,9 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
     @Before
     public void setUp() {
         // This is a dirty hack because the instance (it's an ENUM) is not reset between tests
-        ConfigurationStatusSingleton.INSTANCE.setUpdateAvailable(false);
-        ConfigurationStatusSingleton.INSTANCE.setOutdatedVersion(null);
-        ConfigurationStatusSingleton.INSTANCE.setOutdatedBundleInformation(null);
+        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+        ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
+        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
         ConfigurationBundleManager.reset();
     }
 
@@ -181,7 +181,7 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
         ConfigurationUpdaterHelper.checkForUpdates();
 
         // Just in case the async reload hasn't finished
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
         verifyCurrentUpdateStatus(
                 "Auto reload from 1 to 5",
                 BundleUpdateLog.BundleUpdateLogAction.RELOAD,
@@ -223,7 +223,7 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
 
         // Let's reload as if the user had clicked the button
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // API because HotReloadAction was used directly
         verifyCurrentUpdateStatus("Reload using the Java API",
@@ -269,7 +269,7 @@ public class BundleUpdateStatusTest extends AbstractCJPTest {
 
         // Let's reload as if the user had clicked the button
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         // MANUAL because there is an ongoing action
         verifyCurrentUpdateStatus("Reload using the Java API",

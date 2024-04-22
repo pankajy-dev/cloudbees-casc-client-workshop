@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogAction;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -38,7 +39,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
 
     @Override
     public boolean isActivated() {
-        boolean isReloading = ConfigurationStatus.get().isCurrentlyReloading();
+        boolean isReloading = ConfigurationStatus.INSTANCE.isCurrentlyReloading();
 
         if (isReloading) {
             LOGGER.fine("Bundle reload in progress. Skipping");
@@ -89,7 +90,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     private boolean checkCandidateAvailable() {
-        boolean isCandidateAvailable = ConfigurationStatus.get().isCandidateAvailable();
+        boolean isCandidateAvailable = ConfigurationStatus.INSTANCE.isCandidateAvailable();
         // The candidate might be:
         // * invalid (and rejected) bundle
         // * Skipped valid bundle
@@ -134,7 +135,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     }
 
     public boolean isHotReloadable() {
-        if (!ConfigurationStatus.get().isUpdateAvailable()) {
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
             // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
             return false;
         }
@@ -154,7 +155,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canManualSkip() {
-        if (!ConfigurationStatus.get().isUpdateAvailable()) {
+        if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
             // Check safe. If the admin monitor will show up in the mid-time the new version is applied, then do not display the button
             return false;
         }
@@ -166,7 +167,7 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
      */
     // used in jelly
     public boolean canRestart() {
-        return ConfigurationStatus.get().isUpdateAvailable();
+        return ConfigurationStatus.INSTANCE.isUpdateAvailable();
     }
 
     @RequirePOST
@@ -181,7 +182,8 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RELOAD, BundleUpdateLogActionSource.MANUAL);
             return HttpResponses.redirectViaContextPath("/coreCasCHotReload");
         } else if (req.hasParameter("dismiss")) {
-            ConfigurationStatus.get().setUpdateAvailable(false);
+            ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
+            CasCPublisherHelper.publishCasCUpdate();
             return HttpResponses.redirectViaContextPath("/manage");
         } else if (req.hasParameter("skip")) {
             if (isUpdateTimingEnabled()) {

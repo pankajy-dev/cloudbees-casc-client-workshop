@@ -4,7 +4,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.cli.CLICommandInvoker;
 import hudson.model.FreeStyleProject;
 import net.sf.json.JSONObject;
@@ -72,7 +72,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-2.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         verifyCurrentUpdateStatus(
                 "Reloaded using client",
@@ -114,7 +114,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-5.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         verifyCurrentUpdateStatus(
                 "Reloaded using client",
@@ -147,7 +147,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-7.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         verifyCurrentUpdateStatus(
                 "Reloaded using client",
@@ -165,7 +165,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-8.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         verifyCurrentUpdateStatus(
                 "Reloaded using client",
@@ -183,7 +183,7 @@ public class BundleVersionCheckerCommandTest extends AbstractBundleVersionChecke
         assertUpdateType(jsonResult, "version-9.zip", "RELOAD/RESTART/SKIP");
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         verifyCurrentUpdateStatus(
                 "Reloaded using client",

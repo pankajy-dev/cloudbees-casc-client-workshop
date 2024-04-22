@@ -43,7 +43,7 @@ public class BundleVersionCheckerCommand extends CLICommand {
             boolean update = ConfigurationUpdaterHelper.checkForUpdates();
             if (!update) {
                 // maybe the bundle is the same, but it is not yet applied, also check if an update is available
-                update = ConfigurationStatus.get().isUpdateAvailable();
+                update = ConfigurationStatus.INSTANCE.isUpdateAvailable();
             }
 
             if (update) {

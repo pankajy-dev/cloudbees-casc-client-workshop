@@ -6,7 +6,7 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import com.cloudbees.opscenter.client.casc.HotReloadAction;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
@@ -65,14 +65,14 @@ public class BundleDiffActionTest extends AbstractCJPTest {
 
             bundleUpdate.doBundleUpdate();
             assertFalse("No new version, so without diff object", bundleUpdate.withDiff());
-            assertNull("No new version, so without diff object", ConfigurationStatusSingleton.INSTANCE.getChangesInNewVersion());
+            assertNull("No new version, so without diff object", ConfigurationStatus.INSTANCE.getChangesInNewVersion());
             assertNull("No new version, so without diff object", diffAction.getBundleDiff());
 
             // New version available
             System.setProperty("core.casc.config.bundle", Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/visualization/BundleDiffActionTest/version-2").toFile().getAbsolutePath());
             bundleUpdate.doBundleUpdate();
             assertTrue("New version, so with diff object", bundleUpdate.withDiff());
-            assertNotNull("New version, so with diff object", ConfigurationStatusSingleton.INSTANCE.getChangesInNewVersion());
+            assertNotNull("New version, so with diff object", ConfigurationStatus.INSTANCE.getChangesInNewVersion());
             BundleComparator.Result bundleDiff = diffAction.getBundleDiff();
             assertNotNull("New version, so with diff object", bundleDiff);
             assertThat("Expected current version 1", diffAction.getCurrentVersion(), is("1"));
@@ -87,15 +87,15 @@ public class BundleDiffActionTest extends AbstractCJPTest {
             // Apply new version - Diff should be removed
             ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
             // Wait for async reload to complete
-            await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+            await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
             assertFalse("No new version, so without diff object", bundleUpdate.withDiff());
-            assertNull("No new version, so without diff object", ConfigurationStatusSingleton.INSTANCE.getChangesInNewVersion());
+            assertNull("No new version, so without diff object", ConfigurationStatus.INSTANCE.getChangesInNewVersion());
             assertNull("No new version, so without diff object", diffAction.getBundleDiff());
 
             // Check again new version - No available
             bundleUpdate.doBundleUpdate();
             assertFalse("No new version, so without diff object", bundleUpdate.withDiff());
-            assertNull("No new version, so without diff object", ConfigurationStatusSingleton.INSTANCE.getChangesInNewVersion());
+            assertNull("No new version, so without diff object", ConfigurationStatus.INSTANCE.getChangesInNewVersion());
             assertNull("No new version, so without diff object", diffAction.getBundleDiff());
         }
     }

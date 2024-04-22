@@ -36,7 +36,7 @@ public final class JCasCReload extends BundleReload {
 
     @Override
     public boolean isReloadable() {
-        BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         return comparisonResult != null && comparisonResult.getJcasc().withChanges();
     }
 

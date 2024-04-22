@@ -8,7 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
-import com.cloudbees.opscenter.client.casc.ConfigurationStatusSingleton;
+import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -119,9 +119,9 @@ public class BundleVisualizationLinkTest {
 
             BundleVisualizationLink bundleVisualizationLink = BundleVisualizationLink.get();
             bundleVisualizationLink.doBundleUpdate();
-            assertTrue(ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
+            assertTrue(ConfigurationStatus.INSTANCE.isUpdateAvailable());
             assertTrue(bundleVisualizationLink.isUpdateAvailable());
-            assertFalse(ConfigurationStatusSingleton.INSTANCE.isErrorInNewVersion());
+            assertFalse(ConfigurationStatus.INSTANCE.isErrorInNewVersion());
             assertFalse(bundleVisualizationLink.isErrorInNewVersion());
             assertThat(bundleVisualizationLink.getErrorMessage(), is(""));
         }
@@ -140,9 +140,9 @@ public class BundleVisualizationLinkTest {
 
             BundleVisualizationLink bundleVisualizationLink = BundleVisualizationLink.get();
             bundleVisualizationLink.doBundleUpdate();
-            assertFalse(ConfigurationStatusSingleton.INSTANCE.isUpdateAvailable());
+            assertFalse(ConfigurationStatus.INSTANCE.isUpdateAvailable());
             assertFalse(bundleVisualizationLink.isUpdateAvailable());
-            assertTrue(ConfigurationStatusSingleton.INSTANCE.isErrorInNewVersion());
+            assertTrue(ConfigurationStatus.INSTANCE.isErrorInNewVersion());
             assertTrue(bundleVisualizationLink.isErrorInNewVersion());
             assertThat(bundleVisualizationLink.getErrorMessage(), containsString("Error response from bundle server: url=http://192.168.1.42:7080/zip-bundle/d2222ea38e7b9b9d509468eec1511b36/my-controller2, status=404"));
         }

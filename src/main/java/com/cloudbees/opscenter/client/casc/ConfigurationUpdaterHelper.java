@@ -25,7 +25,7 @@ import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
-import com.cloudbees.jenkins.plugins.casc.replication.CasCPublisher;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -34,7 +34,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.lifecycle.RestartNotSupportedException;
 import jenkins.model.Jenkins;
-import jenkins.util.Listeners;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -80,40 +79,19 @@ public final class ConfigurationUpdaterHelper {
      * @throws CheckNewBundleVersionException if an error happens when the new version is checked or downloaded
      */
     public synchronized static boolean checkForUpdates() throws CheckNewBundleVersionException {
-        boolean newVersionAvailable = checkForUpdates(false);
-        if (newVersionAvailable) {
-            Listeners.notify(CasCPublisher.class, true, CasCPublisher::publishNewVersionAvailable);
-        }
-        return newVersionAvailable;
-    }
-
-    /**
-     * Check for new updates in configuration bundle are available.
-     * @param replicated true if called in response to another replicas checking for update
-     * @return True if a new version is available
-     * @throws CheckNewBundleVersionException if an error happens when the new version is checked or downloaded
-     */
-    public synchronized static boolean checkForUpdates(boolean replicated) throws CheckNewBundleVersionException {
         boolean error = false;
-        ConfigurationStatus configurationStatus;
-        if(replicated) {
-            // If this is called because of another replicas, there is no need to propagate the changes
-            configurationStatus = ConfigurationStatusSingleton.INSTANCE;
-        } else {
-            configurationStatus = ConfigurationStatus.get();
-        }
         try {
-            configurationStatus.setErrorMessage(null);
+            ConfigurationStatus.INSTANCE.setErrorMessage(null);
             if (ConfigurationBundleManager.isSet()) {
-                configurationStatus.setLastCheckForUpdate(new Date());
+                ConfigurationStatus.INSTANCE.setLastCheckForUpdate(new Date());
                 // If there is a new version, the new bundle instance will replace the current one
                 // Keep the version of the current bundle to display it in the UI
                 String versionBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getVersion();
                 String idBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getId();
                 String checksumBeforeUpdate = ConfigurationBundleManager.get().getConfigurationBundle().getChecksum();
-                if (replicated || ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
+                if (ConfigurationBundleManager.get().downloadIfNewVersionIsAvailable()) {
                     PromotionErrorMonitor.get().hide();
-                    configurationStatus.setChangesInNewVersion(null);
+                    ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                     boolean newVersionIsValid = newCandidate != null && !BundleValidator.shouldBeRejected(newCandidate.getValidations().getValidations().stream().map(serialized -> Validation.deserialize(serialized)).collect(Collectors.toList()));
 
@@ -137,9 +115,9 @@ public final class ConfigurationUpdaterHelper {
                         try {
                             Path candidatePath = BundleUpdateLog.getHistoricalRecordsFolder().resolve(newCandidate.getFolder());
                             BundleComparator.Result result = BundleComparator.compare(ConfigurationBundleManager.getBundleFolder(), candidatePath.resolve("bundle"));
-                            configurationStatus.setChangesInNewVersion(result);
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(result);
                         } catch (IllegalArgumentException | IOException e) {
-                            configurationStatus.setChangesInNewVersion(null);
+                            ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                             LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
                         }
 
@@ -175,13 +153,13 @@ public final class ConfigurationUpdaterHelper {
 
                     LOGGER.log(Level.INFO, String.format("New Configuration Bundle available, version [%s]",
                             newVersionAvailable ? ConfigurationBundleManager.get().getConfigurationBundle().getVersion() : newCandidate.getVersion()));
-                    configurationStatus.setUpdateAvailable(newVersionAvailable);
-                    configurationStatus.setCandidateAvailable(!newVersionAvailable);
+                    ConfigurationStatus.INSTANCE.setUpdateAvailable(newVersionAvailable);
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(!newVersionAvailable);
 
-                    if (configurationStatus.getOutdatedVersion() == null) {
+                    if (ConfigurationStatus.INSTANCE.getOutdatedVersion() == null) {
                         // If there is no previous known version, store it
-                        configurationStatus.setOutdatedVersion(versionBeforeUpdate);
-                        configurationStatus.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
+                        ConfigurationStatus.INSTANCE.setOutdatedVersion(versionBeforeUpdate);
+                        ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(idBeforeUpdate, versionBeforeUpdate, checksumBeforeUpdate);
                     }
 
                     /*
@@ -221,7 +199,7 @@ public final class ConfigurationUpdaterHelper {
                                     SafeRestartMonitor.get().show();
                                     try {
                                         Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
-                                        configurationStatus.setUpdateAvailable(false);
+                                        ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
                                     } catch (RestartNotSupportedException | IOException | ServletException e) {
                                         SafeRestartMonitor.get().hide();
                                         throw new CasCException("Safe restart cannot be performed", e);
@@ -237,7 +215,7 @@ public final class ConfigurationUpdaterHelper {
                                 BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART, BundleUpdateLogActionSource.AUTOMATIC, BundleUpdateLog.BundleUpdateStatus::success);
                                 try {
                                     Jenkins.get().doSafeRestart(null, "A new bundle version has been detected and as for the automatic restart configuration, a Safe Restart has been scheduled.");
-                                    configurationStatus.setUpdateAvailable(false);
+                                    ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
                                 } catch (RestartNotSupportedException | IOException | ServletException e) {
                                     SafeRestartMonitor.get().hide();
                                     throw new CasCException("Safe restart cannot be performed", e);
@@ -255,7 +233,7 @@ public final class ConfigurationUpdaterHelper {
                     // When starting the instance, the bundle might be rejected, so there is a candidate that would not be shown when
                     // accessing the first time to Bundle update tab
                     BundleUpdateLog.CandidateBundle newCandidate = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
-                    configurationStatus.setCandidateAvailable(newCandidate != null);
+                    ConfigurationStatus.INSTANCE.setCandidateAvailable(newCandidate != null);
                 }
             }
 
@@ -268,10 +246,11 @@ public final class ConfigurationUpdaterHelper {
                 cause = cause.getCause();
             }
             error = true;
-            configurationStatus.setErrorMessage(cause.getMessage());
+            ConfigurationStatus.INSTANCE.setErrorMessage(cause.getMessage());
             throw new CheckNewBundleVersionException(cause.getMessage(), cause);
         } finally {
-            configurationStatus.setErrorInNewVersion(error);
+            ConfigurationStatus.INSTANCE.setErrorInNewVersion(error);
+            CasCPublisherHelper.publishCasCUpdate();
         }
     }
 
@@ -779,23 +758,23 @@ public final class ConfigurationUpdaterHelper {
      */
     @Restricted(NoExternalUse.class)
     public synchronized static boolean doSkipCandidate() throws IOException {
-            BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
-            BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
-            if (fromUpdateLog == null) {
-                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
-                throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
-            }
-            BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
-            boolean skipped = candidateBundle.isSkipped();
-            if (skipped) {
-                BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
-            } else {
-                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
-            }
-            ConfigurationStatus.get().setUpdateAvailable(!skipped);
-            ConfigurationBundleManager.refreshUpdateLog();
-            Listeners.notify(CasCPublisher.class, true, CasCPublisher::publishRefreshUpdateLog);
-            return skipped;
+        BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
+        BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
+        if (fromUpdateLog == null) {
+            BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
+            throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
+        }
+        BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
+        boolean skipped = candidateBundle.isSkipped();
+        if (skipped) {
+            BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
+        } else {
+            BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
+        }
+        ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
+        ConfigurationBundleManager.refreshUpdateLog();
+        CasCPublisherHelper.publishCasCUpdate();
+        return skipped;
     }
 
     /**
@@ -830,7 +809,7 @@ public final class ConfigurationUpdaterHelper {
         String promotedVersion = StringUtils.defaultString(promoted.getBundleInfo());
         boolean isPromoted = !promotedVersion.equals(currentVersion);
         if (isPromoted) {
-            Listeners.notify(CasCPublisher.class, true, CasCPublisher::publishBundlePromote);
+            CasCPublisherHelper.publishCasCUpdate();
         }
         return isPromoted;
     }
@@ -864,11 +843,11 @@ public final class ConfigurationUpdaterHelper {
      */
     public static UpdateType getUpdateTypeForCliAndEndpoint() {
         if (BundleUpdateTimingManager.isEnabled()) {
-            if (ConfigurationStatus.get().isCurrentlyReloading()) {
+            if (ConfigurationStatus.INSTANCE.isCurrentlyReloading()) {
                 // Automatic reload in progress
                 return UpdateType.AUTOMATIC_RELOAD;
             }
-            if (!ConfigurationStatus.get().isUpdateAvailable()) {
+            if (!ConfigurationStatus.INSTANCE.isUpdateAvailable()) {
                 // Skipped, automatic reload finished or automatic restart scheduled
                 BundleUpdateLog.CandidateBundle candidateBundle = ConfigurationBundleManager.get().getUpdateLog().getCandidateBundle();
                 if (candidateBundle != null && candidateBundle.isSkipped()) {

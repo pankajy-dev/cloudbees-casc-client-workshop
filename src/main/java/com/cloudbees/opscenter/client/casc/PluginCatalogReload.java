@@ -60,7 +60,7 @@ public final class PluginCatalogReload extends BundleReload {
             LOGGER.warning("plugin catalog reload is not available in FIPS mode");
             return false;
         }
-        BundleComparator.Result comparisonResult = ConfigurationStatus.get().getChangesInNewVersion();
+        BundleComparator.Result comparisonResult = ConfigurationStatus.INSTANCE.getChangesInNewVersion();
         return comparisonResult != null && comparisonResult.getCatalog().withChanges();
     }
 

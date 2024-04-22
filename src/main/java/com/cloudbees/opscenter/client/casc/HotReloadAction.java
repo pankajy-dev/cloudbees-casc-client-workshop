@@ -50,7 +50,7 @@ public class HotReloadAction implements RootAction {
     }
 
     // Used by jelly
-    public boolean isReloadInProgress() {return ConfigurationStatus.get().isCurrentlyReloading();}
+    public boolean isReloadInProgress() {return ConfigurationStatus.INSTANCE.isCurrentlyReloading();}
 
     @RequirePOST
     public HttpResponse doReload() {

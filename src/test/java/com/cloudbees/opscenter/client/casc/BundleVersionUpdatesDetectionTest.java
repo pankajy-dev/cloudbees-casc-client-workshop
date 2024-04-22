@@ -101,7 +101,7 @@ public class BundleVersionUpdatesDetectionTest extends AbstractBundleVersionChec
         System.setProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
         ConfigurationUpdaterHelper.checkForUpdates();
         ExtensionList.lookupSingleton(HotReloadAction.class).doReload();
-        await("Version is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await("Version is completely reloaded").atMost(3, TimeUnit.MINUTES).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
 
         rule.jenkins.setSecurityRealm(new HudsonPrivateSecurityRealm(false, false, null));
         rule.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
@@ -279,7 +279,7 @@ public class BundleVersionUpdatesDetectionTest extends AbstractBundleVersionChec
     private void reloadBundleWithCLI(User admin) {
         new CLICommandInvoker(rule, BundleReloadCommand.COMMAND_NAME).asUser(admin.getId()).invoke(); // Apply new version
         // Wait for async reload to complete
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatusSingleton.INSTANCE.isCurrentlyReloading());
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !ConfigurationStatus.INSTANCE.isCurrentlyReloading());
     }
 
     private void newBundleAvailable(String number) throws Exception {
