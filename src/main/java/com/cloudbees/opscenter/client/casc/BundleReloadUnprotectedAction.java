@@ -23,6 +23,8 @@ import hudson.security.AccessDeniedException3;
 import hudson.security.csrf.CrumbExclusion;
 import jenkins.model.Jenkins;
 
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+
 /**
  * This extension handles all requests that need to access unprotected endpoints.
  * This doesn't mean there's no security check, this is intended to be used with authentication tokens for authentication
@@ -70,7 +72,7 @@ public class BundleReloadUnprotectedAction implements UnprotectedRootAction {
                 return action.doGetBundleNewerVersion(null);
             }
         } else { // Without impersonation, so original endpoint will verify the user permissions
-            throw new AccessDeniedException3(Jenkins.getAuthentication2(), Jenkins.MANAGE);
+            throw new AccessDeniedException3(Jenkins.getAuthentication2(), CascPermission.CASC_ADMIN);
         }
     }
 

@@ -13,6 +13,9 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
+import hudson.security.Permission;
+
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
 @Extension
 @Symbol("bundleReloadInfoMonitor")
@@ -34,5 +37,10 @@ public class BundleReloadInfoMonitor extends AdministrativeMonitor {
         ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
         CasCPublisherHelper.publishCasCUpdate();
         rsp.forwardToPreviousPage(req);
+    }
+
+    @Override
+    public Permission getRequiredPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 }

@@ -11,15 +11,15 @@
                 subtitle="${%subtitle}">
             <cbcipm:tabbar>
                 <cbcipm:tab title="${%MoreInfo}" href="${rootURL}/casc-bundle-export-ui/moreinfo">${%MoreInfo}</cbcipm:tab>
-                <cbcipm:tab title="${%GeneratedBundleFiles}" href="${rootURL}/casc-bundle-export-ui/" permission="${app.ADMINISTER}">${%GeneratedBundleFiles}</cbcipm:tab>
-                <cbcipm:tab title="${%EffectiveBundleFiles}" href="${rootURL}/casc-bundle-export-ui/effective-bundle" permission="${app.ADMINISTER}">${%EffectiveBundleFiles}</cbcipm:tab>
-                <cbcipm:tab title="${%BundleUpdate}" href="${rootURL}/casc-bundle-export-ui/bundleUpdate">
+                <cbcipm:tab title="${%GeneratedBundleFiles}" href="${rootURL}/casc-bundle-export-ui/" permission="${it.getAdminPermission()}">${%GeneratedBundleFiles}</cbcipm:tab>
+                <cbcipm:tab title="${%EffectiveBundleFiles}" href="${rootURL}/casc-bundle-export-ui/effective-bundle" permission="${it.getAdminPermission()}">${%EffectiveBundleFiles}</cbcipm:tab>
+                <cbcipm:tab title="${%BundleUpdate}" href="${rootURL}/casc-bundle-export-ui/bundleUpdate" permission="${it.getRequiredPermission()}">
                     ${%BundleUpdate}
                     <j:if test="${it.isUpdateAvailable()}">
                         <l:icon src="symbol-notifications-outline plugin-ionicons-api" class="icon-sm" title="Notification" />
                     </j:if>
                 </cbcipm:tab>
-                <cbcipm:tab title="${%UpdateLog}" href="${rootURL}/casc-bundle-export-ui/updateLog">${%UpdateLog}</cbcipm:tab>
+                <cbcipm:tab title="${%UpdateLog}" href="${rootURL}/casc-bundle-export-ui/updateLog" permission="${it.getAdminPermission()}">${%UpdateLog}</cbcipm:tab>
             </cbcipm:tabbar>
             <d:invokeBody/>
         </cbcipm:layout>

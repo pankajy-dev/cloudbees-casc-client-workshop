@@ -3,6 +3,9 @@ package com.cloudbees.jenkins.plugins.casc.config.udpatetiming;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.AdministrativeMonitor;
+import hudson.security.Permission;
+
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
 /**
  * Administrative monitor that warns the administrators when a Safe restart has been scheduled because a new bundle version is going to be applied.
@@ -44,5 +47,10 @@ public class SafeRestartMonitor extends AdministrativeMonitor {
 
     public static SafeRestartMonitor get() {
         return ExtensionList.lookupSingleton(SafeRestartMonitor.class);
+    }
+
+    @Override
+    public Permission getRequiredPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 }

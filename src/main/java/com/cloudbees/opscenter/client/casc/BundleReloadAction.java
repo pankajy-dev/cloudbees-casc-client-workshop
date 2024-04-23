@@ -251,7 +251,7 @@ public class BundleReloadAction implements RootAction {
     }
 
     public boolean forceReload(boolean async) {
-        Jenkins.get().checkPermission(Jenkins.MANAGE);
+        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
         if (ConfigurationBundleManager.isSet() && isHotReloadable()) {
             return tryReload(async);
         } else if (ConfigurationBundleManager.isSet() && !isHotReloadable()) {

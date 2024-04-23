@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-    <l:layout title="Force reload the Configuration Bundle" permission="${app.MANAGE}">
+    <l:layout title="Force reload the Configuration Bundle" permission="${it.getPermission()}">
         <l:main-panel>
             <div class="alert alert-info">
                 Reload will happen asynchronously, an administrative monitor will be shown once the reload is complete to inform of the operation result.

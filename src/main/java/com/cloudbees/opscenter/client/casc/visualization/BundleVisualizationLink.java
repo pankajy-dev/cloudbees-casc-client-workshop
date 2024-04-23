@@ -84,10 +84,22 @@ public class BundleVisualizationLink extends ManagementLink {
         return Category.CONFIGURATION;
     }
 
+    // Page will be visible with CASC_READ permissions, as 2 of the tabs should be visible for that permissions
     @NonNull
     @Override
     public Permission getRequiredPermission() {
+        return CascPermission.CASC_READ;
+    }
+
+    // CASC_ADMIN will be needed for the tabs not visible for CASC_READ
+    public Permission getAdminPermission() {
         return CascPermission.CASC_ADMIN;
+    }
+
+    // Used by jelly
+    @NonNull
+    public boolean hasCascAdminPermission() {
+        return Jenkins.get().hasPermission(CascPermission.CASC_ADMIN);
     }
 
     // used in jelly
@@ -101,8 +113,8 @@ public class BundleVisualizationLink extends ManagementLink {
 
     // stapler
     public HttpResponse doIndex() {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
-        if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+        Jenkins.get().checkPermission(getRequiredPermission());
+        if (Jenkins.get().hasPermission(getAdminPermission())) {
             // Only Overall/Administer is allowed to see the list of files in the bundle and download them, as well as
             // any other tab in the UI.
             return HttpResponses.forwardToView(this, "index.jelly");
@@ -124,23 +136,25 @@ public class BundleVisualizationLink extends ManagementLink {
     /**
      * Serves "casc-bundle-export-ui/bundleUpdate".
      *
-     * Requires MANAGE permission.
-     * Renders the tab "Bundle Update", but first checks if there is any bundle update.
+     * Requires CASC_READ permission.
+     * Renders the tab "Bundle Update", but first checks if there is any bundle update if user has CASC_ADMIN permissions.
      * @return forward to the view "_bundleupdate.view"
      */
     // stapler
     public HttpResponse doBundleUpdate() throws Exception {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
-        try {
-            ConfigurationUpdaterHelper.checkForUpdates();
-        } catch (CheckNewBundleVersionException e) {
-            LOGGER.log(Level.WARNING, "Error checking the new bundle version.", e);
+        Jenkins.get().checkAnyPermission(getRequiredPermission(), getAdminPermission());
+        if (Jenkins.get().hasPermission(getAdminPermission())) {
+            try {
+                ConfigurationUpdaterHelper.checkForUpdates();
+            } catch (CheckNewBundleVersionException e) {
+                LOGGER.log(Level.WARNING, "Error checking the new bundle version.", e);
+            }
         }
         return HttpResponses.forwardToView(this, "_bundleupdate.jelly");
     }
 
     public HttpResponse doUpdateLog() {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
+        Jenkins.get().checkPermission(getAdminPermission());
         return HttpResponses.forwardToView(this, "_updateLog.jelly");
     }
 
@@ -431,7 +445,7 @@ public class BundleVisualizationLink extends ManagementLink {
 
     @RequirePOST
     public HttpResponse doAct(StaplerRequest req) throws IOException {
-        Jenkins.get().checkPermission(CascPermission.CASC_ADMIN);
+        Jenkins.get().checkPermission(getAdminPermission());
 
         if (req.hasParameter("restart")) {
             BundleUpdateLog.BundleUpdateStatus.setCurrentAction(BundleUpdateLogAction.RESTART,

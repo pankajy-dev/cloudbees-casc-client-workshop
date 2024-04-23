@@ -6,11 +6,13 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.BundleUpdateLogActionSource;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.AdministrativeMonitor;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
@@ -36,6 +38,11 @@ public class ConfigurationUpdaterMonitor extends AdministrativeMonitor {
     private boolean hotReloadable;
     private boolean canManualSkip;
     private String candidateVersion = null;
+
+    @Override
+    public Permission getRequiredPermission() {
+        return CascPermission.CASC_ADMIN;
+    }
 
     @Override
     public boolean isActivated() {
