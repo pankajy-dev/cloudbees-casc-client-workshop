@@ -66,6 +66,8 @@ public class CasCListenerImpl implements CasCListener {
                 ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
                 LOGGER.log(Level.WARNING, "Unexpected error comparing the candidate bundle and the current applied version", e);
             }
+        } else {
+            ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
         }
         ConfigurationStatus.INSTANCE.setCurrentlyReloading(newStatus.isCurrentlyReloading());
         ConfigurationStatus.INSTANCE.setErrorInReload(newStatus.isErrorInReload());
