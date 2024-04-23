@@ -4,10 +4,10 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.events.CasCPublisher;
+import com.cloudbees.jenkins.plugins.casc.events.CasCStatus;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import jenkins.util.Listeners;
 
-import java.util.Date;
 import java.util.function.Consumer;
 
 /**
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  */
 public interface CasCPublisherHelper {
     /**
-     * Call {@link CasCPublisher#publishCasCUpdate(boolean, boolean, Date, String, String, boolean, String, String, String, boolean, boolean, boolean, Boolean)}
+     * Call {@link CasCPublisher#publishCasCUpdate(CasCStatus)}
      * using the state from the {@link ConfigurationStatus#INSTANCE} and the candidate bundle from {@link ConfigurationBundleManager}
      */
     static void publishCasCUpdate() {
@@ -44,7 +44,7 @@ public interface CasCPublisherHelper {
 
         // Everything is prepared, notify CasCPublisher
         Listeners.notify(CasCPublisher.class, true, (publisher) -> {
-            publisher.publishCasCUpdate(
+            publisher.publishCasCUpdate(new CasCStatus(
                     ConfigurationStatus.INSTANCE.isUpdateAvailable(),
                     ConfigurationStatus.INSTANCE.isCandidateAvailable(),
                     ConfigurationStatus.INSTANCE.getLastCheckForUpdate(),
@@ -58,7 +58,7 @@ public interface CasCPublisherHelper {
                     ConfigurationStatus.INSTANCE.isErrorInReload(),
                     ConfigurationStatus.INSTANCE.isShowSuccessfulInstallMonitor(),
                     candidateIsHotReloadable
-            );
+            ));
         });
     }
 }

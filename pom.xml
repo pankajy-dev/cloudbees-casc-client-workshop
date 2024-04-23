@@ -48,7 +48,7 @@
       <dependency>  <!-- Remove once in URR -->
         <groupId>com.cloudbees.jenkins.plugins</groupId>
         <artifactId>cloudbees-casc-shared</artifactId>
-        <version>1.1-20240423.094913-3</version> <!-- TODO Remove once in URR BOM -->
+        <version>1.1-20240423.120217-5</version> <!-- TODO Remove once in URR BOM -->
       </dependency>
 
     </dependencies>
@@ -200,7 +200,7 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.80</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.83-20240423.094811-1</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>
