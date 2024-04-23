@@ -8,7 +8,11 @@ import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import jenkins.util.Listeners;
 
 import java.util.Date;
+import java.util.function.Consumer;
 
+/**
+ * Helper class to ease the use of {@link Listeners#notify(Class, boolean, Consumer)} on the {@link CasCPublisher}
+ */
 public interface CasCPublisherHelper {
     /**
      * Call {@link CasCPublisher#publishCasCUpdate(boolean, boolean, Date, String, String, boolean, String, String, String, boolean, boolean, boolean, Boolean)}
