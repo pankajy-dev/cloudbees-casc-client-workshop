@@ -11,7 +11,10 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.AdministrativeMonitor;
+import hudson.security.Permission;
 import jenkins.model.Jenkins;
+
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
 /**
  * Administrative monitor that warns the administrators when a bundle cannot be promoted so the Reload or Safe restart operation is stopped.
@@ -60,5 +63,10 @@ public class PromotionErrorMonitor extends AdministrativeMonitor {
 
         hide();
         return HttpResponses.redirectViaContextPath("/manage");
+    }
+
+    @Override
+    public Permission getRequiredPermission() {
+        return CascPermission.CASC_ADMIN;
     }
 }
