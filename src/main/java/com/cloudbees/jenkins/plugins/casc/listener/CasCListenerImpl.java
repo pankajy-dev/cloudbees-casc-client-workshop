@@ -72,7 +72,7 @@ public class CasCListenerImpl implements CasCListener {
         ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(newStatus.isShowSuccessfulInstallMonitor());
 
         // Update the bundle and the update log
-        ConfigurationBundleManager.refreshUpdateLog();
+        ConfigurationBundleManager.refreshBundleAndUpdateLog();
 
         // Set the hot reloadable boolean
         if (newStatus.getHotReloadable() != null) {
