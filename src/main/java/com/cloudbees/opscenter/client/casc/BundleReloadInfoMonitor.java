@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -34,6 +35,7 @@ public class BundleReloadInfoMonitor extends AdministrativeMonitor {
     @RequirePOST
     public void doAck(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
+        CasCPublisherHelper.publishCasCUpdate();
         rsp.forwardToPreviousPage(req);
     }
 

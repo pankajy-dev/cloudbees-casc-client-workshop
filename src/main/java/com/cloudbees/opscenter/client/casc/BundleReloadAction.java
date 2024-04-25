@@ -8,6 +8,7 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog.
 import com.cloudbees.jenkins.cjp.installmanager.casc.validation.Validation;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 
@@ -228,6 +229,7 @@ public class BundleReloadAction implements RootAction {
             ConfigurationStatus.INSTANCE.setUpdateAvailable(false);
             ConfigurationStatus.INSTANCE.setOutdatedVersion(null);
             ConfigurationStatus.INSTANCE.setOutdatedBundleInformation(null);
+            CasCPublisherHelper.publishCasCUpdate();
             return true;
         } else {
             if (!ConfigurationBundleManager.isSet()) {
@@ -285,6 +287,7 @@ public class BundleReloadAction implements RootAction {
         ConfigurationStatus.INSTANCE.setCurrentlyReloading(true);
         ConfigurationStatus.INSTANCE.setErrorInReload(false);
         ConfigurationStatus.INSTANCE.setShowSuccessfulInstallMonitor(false);
+        CasCPublisherHelper.publishCasCUpdate();
         try {
             if (force) {
                 service.reload(bundle);
@@ -298,6 +301,7 @@ public class BundleReloadAction implements RootAction {
             BundleUpdateLog.BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.RELOAD, ex.getMessage());
         } finally {
             ConfigurationStatus.INSTANCE.setCurrentlyReloading(false);
+            CasCPublisherHelper.publishCasCUpdate();
         }
     }
 

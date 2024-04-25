@@ -45,10 +45,10 @@
         <type>pom</type>
       </dependency>
 
-      <dependency>  <!-- Remove once in URR -->
+      <dependency>
         <groupId>com.cloudbees.jenkins.plugins</groupId>
         <artifactId>cloudbees-casc-shared</artifactId>
-        <version>1.0</version>
+        <version>1.2</version> <!-- TODO Remove once in URR BOM -->
       </dependency>
 
     </dependencies>
@@ -86,7 +86,7 @@
       <groupId>com.cloudbees.jenkins.modules</groupId>
       <artifactId>cloudbees-installation-manager</artifactId>
       <scope>provided</scope>
-      <version>2.332.0.77</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.83</version> <!-- TODO Remove once in URR -->
     </dependency>
 
     <dependency>
@@ -200,7 +200,7 @@
       <artifactId>cloudbees-installation-manager</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>2.332.0.77</version> <!-- TODO Remove once in URR -->
+      <version>2.332.0.83</version> <!-- TODO Remove once in URR -->
     </dependency>
     <dependency>
       <groupId>com.cloudbees.beekeeper</groupId>

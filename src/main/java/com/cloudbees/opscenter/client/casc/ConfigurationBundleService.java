@@ -15,6 +15,7 @@ import com.cloudbees.jenkins.plugins.assurance.remote.extensionparser.PluginConf
 import com.cloudbees.jenkins.plugins.casc.CasCException;
 import com.cloudbees.jenkins.plugins.casc.items.ItemsProcessor;
 import com.cloudbees.jenkins.plugins.casc.items.RemoveStrategyProcessor;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopePlugin;
@@ -237,6 +238,7 @@ public class ConfigurationBundleService {
                 //   1. bundle is reloaded
                 //   2. an error happens during the reload process and it has to happen again, so let's force a full reload for security
                 ConfigurationStatus.INSTANCE.setChangesInNewVersion(null);
+                CasCPublisherHelper.publishCasCUpdate();
             }
         }
     }

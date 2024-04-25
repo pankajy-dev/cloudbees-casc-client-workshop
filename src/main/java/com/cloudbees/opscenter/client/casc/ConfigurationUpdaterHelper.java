@@ -25,6 +25,7 @@ import com.cloudbees.jenkins.plugins.casc.comparator.BundleComparator;
 import com.cloudbees.jenkins.plugins.casc.config.BundleUpdateTimingConfiguration;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.PromotionErrorMonitor;
 import com.cloudbees.jenkins.plugins.casc.config.udpatetiming.SafeRestartMonitor;
+import com.cloudbees.jenkins.plugins.casc.listener.CasCPublisherHelper;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.google.common.collect.Lists;
@@ -249,6 +250,7 @@ public final class ConfigurationUpdaterHelper {
             throw new CheckNewBundleVersionException(cause.getMessage(), cause);
         } finally {
             ConfigurationStatus.INSTANCE.setErrorInNewVersion(error);
+            CasCPublisherHelper.publishCasCUpdate();
         }
     }
 
@@ -756,22 +758,23 @@ public final class ConfigurationUpdaterHelper {
      */
     @Restricted(NoExternalUse.class)
     public synchronized static boolean doSkipCandidate() throws IOException {
-            BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
-            BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
-            if (fromUpdateLog == null) {
-                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
-                throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
-            }
-            BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
-            boolean skipped = candidateBundle.isSkipped();
-            if (skipped) {
-                BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
-            } else {
-                BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
-            }
-            ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
-            ConfigurationBundleManager.refreshUpdateLog();
-            return skipped;
+        BundleUpdateLog updateLog = ConfigurationBundleManager.get().getUpdateLog();
+        BundleUpdateLog.CandidateBundle fromUpdateLog = updateLog.getCandidateBundle();
+        if (fromUpdateLog == null) {
+            BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Attempt to skip a candidate that doesn't exist. Ignoring");
+            throw new IOException("Attempt to skip a candidate that doesn't exist. Ignoring");
+        }
+        BundleUpdateLog.CandidateBundle candidateBundle = updateLog.skipCandidate(fromUpdateLog);
+        boolean skipped = candidateBundle.isSkipped();
+        if (skipped) {
+            BundleUpdateStatus.successCurrentAction(BundleUpdateLogAction.SKIP, bundleUpdateStatus -> bundleUpdateStatus.setSkipped(true));
+        } else {
+            BundleUpdateStatus.failCurrentAction(BundleUpdateLogAction.SKIP, "Fail to skip the candidate");
+        }
+        ConfigurationStatus.INSTANCE.setUpdateAvailable(!skipped);
+        ConfigurationBundleManager.refreshUpdateLog();
+        CasCPublisherHelper.publishCasCUpdate();
+        return skipped;
     }
 
     /**
@@ -804,7 +807,11 @@ public final class ConfigurationUpdaterHelper {
 
         String currentVersion = StringUtils.defaultString(currentBundle.getBundleInfo());
         String promotedVersion = StringUtils.defaultString(promoted.getBundleInfo());
-        return !promotedVersion.equals(currentVersion);
+        boolean isPromoted = !promotedVersion.equals(currentVersion);
+        if (isPromoted) {
+            CasCPublisherHelper.publishCasCUpdate();
+        }
+        return isPromoted;
     }
 
     /**
