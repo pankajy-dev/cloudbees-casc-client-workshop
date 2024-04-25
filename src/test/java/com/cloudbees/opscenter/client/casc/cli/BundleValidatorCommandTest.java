@@ -73,7 +73,7 @@ public class BundleValidatorCommandTest {
                 .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
                 .asUser(user.getId()).invoke();
         assertThat("User user does not have permissions", result.returnCode(), is(6));
-        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CasC/Admin permission"));
+        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CloudBees CasC Permissions/Admin permission"));
 
         // Valid without warnings
         logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);

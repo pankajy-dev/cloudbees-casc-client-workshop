@@ -83,7 +83,7 @@ public class BundleVisualizationLinkTest {
 
         try (ACLContext ctx = ACL.as(readUser)) {
             AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> BundleVisualizationLink.get().doBundleUpdate());
-            assertThat(exception.getMessage(), containsString("bob is missing a permission, one of CasC/Read, CasC/Admin is required"));
+            assertThat(exception.getMessage(), containsString("bob is missing a permission, one of CloudBees CasC Permissions/Read, CloudBees CasC Permissions/Admin is required"));
         }
 
         try (ACLContext ctx = ACL.as(cascUser)) {
