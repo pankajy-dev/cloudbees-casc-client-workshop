@@ -9,7 +9,9 @@ import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
 import hudson.model.User;
 import net.sf.json.JSONObject;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 
 import java.io.IOException;
 import java.net.URL;
@@ -21,6 +23,12 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 public class BundleVersionCheckerHttpEndpointTest extends AbstractBundleVersionCheckerTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Test
     @WithEnvelope(TestEnvelope.class)

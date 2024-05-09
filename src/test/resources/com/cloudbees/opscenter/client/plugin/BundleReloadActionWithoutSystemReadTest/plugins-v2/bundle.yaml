@@ -1,0 +1,6 @@
+apiVersion: "2"
+id: "bundle-with-v1-plugins"
+description: "This is a config bundle"
+version: "3"
+plugins:
+  - "plugins.yaml"

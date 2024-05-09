@@ -1,51 +1,53 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
-import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
-import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
-import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
-import com.cloudbees.opscenter.client.casc.cli.BundleUpdateLogCommand;
+import java.io.IOException;
+import java.net.URL;
+
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
+import org.mockito.MockedStatic;
+import net.sf.json.JSONObject;
+import net.sf.json.test.JSONAssert;
+
 import hudson.ExtensionList;
-import hudson.cli.CLICommandInvoker;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
-import net.sf.json.JSONObject;
-import net.sf.json.test.JSONAssert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.LocalData;
-import org.kohsuke.stapler.HttpResponse;
-import org.mockito.MockedStatic;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
+import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.mockito.Mockito.mockStatic;
 
 public class BundleUpdateLogHttpEndpointTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
     private User admin;
+    private User cascAdmin;
     private User user;
     private JenkinsRule.WebClient wc;
 
@@ -59,16 +61,23 @@ public class BundleUpdateLogHttpEndpointTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
-        authorizationStrategy.add(Jenkins.READ, admin.getId());
+        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         admin.addProperty(new ApiTokenProperty());
         admin.getProperty(ApiTokenProperty.class).changeApiToken();
 
+        cascAdmin = realm.createAccount("cascAdmin", "password");
+        rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, cascAdmin.getId());
+        authorizationStrategy.add(Jenkins.READ, cascAdmin.getId());
+        rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
+        cascAdmin.addProperty(new ApiTokenProperty());
+        cascAdmin.getProperty(ApiTokenProperty.class).changeApiToken();
+
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
         authorizationStrategy.add(CascPermission.CASC_READ, user.getId());
-        authorizationStrategy.add(Jenkins.READ, admin.getId());
+        authorizationStrategy.add(Jenkins.READ, user.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
         user.addProperty(new ApiTokenProperty());
         user.getProperty(ApiTokenProperty.class).changeApiToken();
@@ -81,13 +90,18 @@ public class BundleUpdateLogHttpEndpointTest {
         WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), user, wc);
         assertThat("User user does not have permissions", resp.getStatusCode(), is(403));
 
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), cascAdmin, wc);
+        assertThat("User cascAdmin has permissions", resp.getStatusCode(), is(200));
+
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), admin, wc);
         assertThat("User admin has permissions", resp.getStatusCode(), is(200));
     }
 
     @Test
     public void check_no_casc() throws Exception {
-        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), admin, wc);
+        WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), cascAdmin, wc);
+        assertThat("User cascAdmin has permissions", resp.getStatusCode(), is(200));
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/casc-bundle-update-log"), admin, wc);
         assertThat("User admin has permissions", resp.getStatusCode(), is(200));
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("CasC disabled", response.getString("update-log-status"), is("CASC_DISABLED"));

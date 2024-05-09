@@ -6,10 +6,14 @@ import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
+import jenkins.security.ApiTokenProperty;
+
 import net.sf.json.JSONObject;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 
@@ -40,13 +44,19 @@ import static org.junit.Assert.assertTrue;
 
 public class BundleValidateHttpEndpointTest {
 
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-
     @Rule
     public LoggerRule logger = new LoggerRule();
 
     private User admin;
+    private User cascAdmin;
     private User user;
 
     @Before
@@ -58,8 +68,13 @@ public class BundleValidateHttpEndpointTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
-        authorizationStrategy.add(Jenkins.READ, admin.getId());
+        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
+        rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
+
+        cascAdmin = realm.createAccount("cascAdmin", "password");
+        rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, cascAdmin.getId());
+        authorizationStrategy.add(Jenkins.READ, cascAdmin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
 
         user = realm.createAccount("user", "password");
@@ -76,6 +91,12 @@ public class BundleValidateHttpEndpointTest {
         assertThat("User user should not have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_FORBIDDEN));
         conn.disconnect();
 
+        // With CASC_ADMIN permissions
+        conn = post("valid-bundle.zip", cascAdmin);
+        assertThat("User cascAdmin should have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_OK));
+        conn.disconnect();
+
+        // Content validation
         // Valid without warnings
         logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         conn = post("valid-bundle.zip", admin);

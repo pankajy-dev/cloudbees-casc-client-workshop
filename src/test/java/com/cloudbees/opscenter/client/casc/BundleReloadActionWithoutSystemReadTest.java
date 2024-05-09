@@ -1,5 +1,49 @@
 package com.cloudbees.opscenter.client.casc;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import javax.servlet.http.HttpServletResponse;
+
+import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.awaitility.Awaitility;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.util.NameValuePair;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.Issue;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.sf.json.JSONObject;
+
+import hudson.ExtensionList;
+import hudson.cli.CLICommandInvoker;
+import hudson.model.User;
+import hudson.security.HudsonPrivateSecurityRealm;
+import hudson.security.Permission;
+import hudson.security.ProjectMatrixAuthorizationStrategy;
+import jenkins.model.Jenkins;
+import jenkins.security.ApiTokenProperty;
+
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
@@ -14,58 +58,11 @@ import com.cloudbees.jenkins.plugins.updates.envelope.Scope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopeProvider;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.cli.BundleVersionCheckerCommand;
-import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.htmlunit.FailingHttpStatusCodeException;
-import org.htmlunit.HttpMethod;
-import org.htmlunit.WebRequest;
-import org.htmlunit.WebResponse;
-import org.htmlunit.util.NameValuePair;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import hudson.ExtensionList;
-import hudson.cli.CLICommandInvoker;
-import hudson.model.User;
-import hudson.security.HudsonPrivateSecurityRealm;
-import hudson.security.Permission;
-import hudson.security.ProjectMatrixAuthorizationStrategy;
-import jenkins.model.Jenkins;
-import jenkins.security.ApiTokenProperty;
-import net.sf.json.JSONObject;
-import org.awaitility.Awaitility;
-
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.FlagRule;
-import org.jvnet.hudson.test.Issue;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
-import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
-
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -75,17 +72,19 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-public class BundleReloadActionTest extends AbstractCJPTest {
+import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
+import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
+
+/**
+ * Same as {@link BundleReloadActionTest} but without {@link Jenkins#SYSTEM_READ} enabled
+ */
+@Issue("BEE-49270")
+public class BundleReloadActionWithoutSystemReadTest extends AbstractCJPTest {
 
     @ClassRule
     public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
     @ClassRule
     public static TemporaryFolder bundlesSrc = new TemporaryFolder();
-    /**
-     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
-     */
-    @ClassRule
-    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     /**
      * Rule to restore system props after modifying them in a test:  bundle
@@ -93,13 +92,14 @@ public class BundleReloadActionTest extends AbstractCJPTest {
     @Rule
     public final FlagRule<String> bundleProp = FlagRule.systemProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
 
+
     @BeforeClass
     public static void processBundles() throws Exception {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
         wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
         wiremock.stubFor(get(urlEqualTo("/chucknorris.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("chucknorris.hpi")));
 
-        FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc").toFile(), bundlesSrc.getRoot());
+        FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest").toFile(), bundlesSrc.getRoot());
         // Sanitise plugin-catalog.yaml
         replaceUrlPlaceholder(bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog").resolve("plugin-catalog.yaml"));
         replaceUrlPlaceholder(bundlesSrc.getRoot().toPath().resolve("bundle-with-catalog-v2").resolve("plugin-catalog.yaml"));
@@ -118,7 +118,7 @@ public class BundleReloadActionTest extends AbstractCJPTest {
 
     @Test
     @WithEnvelope(TwoPluginsV2dot289.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/initial-bundle")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest/initial-bundle")
     public void checkHigherVersionAndHotReloadTest() throws Exception {
         // This is a dirty hack to be able to manipulate the plugin catalog as in the BeforeClass method:
         // - WithConfigBundle needs a static resource, so we cannot use the "hacked" bundle that is in the TemporaryFolder rule
@@ -135,7 +135,8 @@ public class BundleReloadActionTest extends AbstractCJPTest {
         initializeRealm(rule);
         // GIVEN The bundle is version 1 and there are 2 users: admin (with CASC_ADMIN role) and user (with CASC_READ role)
         // Jenkins.READ permission is needed to access any endpoint
-        User admin = setSecurityRealmUser(rule, "admin", CascPermission.CASC_ADMIN, Jenkins.READ);
+        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
+        User cascAdmin = setSecurityRealmUser(rule, "cascAdmin", CascPermission.CASC_ADMIN, Jenkins.READ);
         User plainUser = setSecurityRealmUser(rule, "user", CascPermission.CASC_READ, Jenkins.READ);
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
@@ -148,8 +149,10 @@ public class BundleReloadActionTest extends AbstractCJPTest {
         assertThat("There's no new version available", !response.getBoolean("update-available"));
 
         // THEN User should also get a 403, no update available for the moment
+        resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), cascAdmin, wc, false);
+        assertThat("We should get a 403 for non Admin user", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), plainUser, wc, false);
-        assertThat("We should get a 403", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
+        assertThat("We should get a 403 for non Admin user", resp.getStatusCode(), is(HttpServletResponse.SC_FORBIDDEN));
 
         // WHEN Reloading if the bundle is not hot reloadable
         // THEN Admin should get the result, not possible to update
@@ -196,10 +199,10 @@ public class BundleReloadActionTest extends AbstractCJPTest {
     @Test
     @WithEnvelope(TwoPluginsV2dot289.class)
     @Issue("BEE-22192")
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest/items-bundle")
     public void asynchronousReloadRaisesMonitorTest() throws Exception {
         initializeRealm(rule);
-        User admin = setSecurityRealmUser(rule, "admin", CascPermission.CASC_ADMIN, Jenkins.READ);
+        User admin = setSecurityRealmUser(rule, "admin", Jenkins.ADMINISTER);
         CJPRule.WebClient wc = rule.createWebClient();
         wc.getOptions().setPrintContentOnFailingStatusCode(false);
 
@@ -208,7 +211,7 @@ public class BundleReloadActionTest extends AbstractCJPTest {
 
         // Setup a new failing version of the bundle
         System.setProperty("core.casc.config.bundle",
-                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle-invalid").toFile().getAbsolutePath());
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest/items-bundle-invalid").toFile().getAbsolutePath());
         WebResponse resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc, false);
         JSONObject response = JSONObject.fromObject(resp.getContentAsString());
         assertThat("We should get a 200", resp.getStatusCode(), is(HttpServletResponse.SC_OK));
@@ -225,7 +228,7 @@ public class BundleReloadActionTest extends AbstractCJPTest {
 
         // Setup old working version of the bundle
         System.setProperty("core.casc.config.bundle",
-                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/items-bundle").toFile().getAbsolutePath());
+                           Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest/items-bundle").toFile().getAbsolutePath());
 
         resp = requestWithToken(HttpMethod.GET, new URL(rule.getURL(), "casc-bundle-mgnt/check-bundle-update"), admin, wc, false);
         response = JSONObject.fromObject(resp.getContentAsString());
@@ -254,7 +257,7 @@ public class BundleReloadActionTest extends AbstractCJPTest {
     @Test
     @WithEnvelope(ThreePluginsV2dot289.class)
     @Issue("BEE-22192")
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/casc/plugins-v1")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/BundleReloadActionWithoutSystemReadTest/plugins-v1")
     public void v2PluginsReloadTest() throws CheckNewBundleVersionException, CasCException {
         // mock update center
         System.setProperty("com.cloudbees.jenkins.plugins.assurance.StagingURLSource.CloudBees.url", wiremock.baseUrl());

@@ -1,0 +1,7 @@
+removeStrategy:
+  items: "none"
+  rbac: "sync"
+
+items:
+  - kind: "folder"
+    name: "Plugins"

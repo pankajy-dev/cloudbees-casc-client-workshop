@@ -5,11 +5,12 @@ import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
-import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 
@@ -33,13 +34,19 @@ import static org.junit.Assert.assertTrue;
 
 public class BundleValidatorCommandTest {
 
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-
     @Rule
     public LoggerRule logger = new LoggerRule();
 
     private User admin;
+    private User cascAdmin;
     private User user;
 
     @Before
@@ -51,19 +58,20 @@ public class BundleValidatorCommandTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
-        authorizationStrategy.add(Jenkins.READ, admin.getId());
+        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
-        admin.addProperty(new ApiTokenProperty());
-        admin.getProperty(ApiTokenProperty.class).changeApiToken();
+
+        cascAdmin = realm.createAccount("cascAdmin", "password");
+        rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, cascAdmin.getId());
+        authorizationStrategy.add(Jenkins.READ, cascAdmin.getId());
+        rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
 
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
-        authorizationStrategy.add(CascPermission.CASC_READ, admin.getId());
+        authorizationStrategy.add(CascPermission.CASC_READ, user.getId());
         authorizationStrategy.add(Jenkins.READ, user.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
-        user.addProperty(new ApiTokenProperty());
-        user.getProperty(ApiTokenProperty.class).changeApiToken();
     }
 
     @Test
@@ -75,6 +83,13 @@ public class BundleValidatorCommandTest {
         assertThat("User user does not have permissions", result.returnCode(), is(6));
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CloudBees CasC Permissions/Admin permission"));
 
+        // With permissions
+        result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)
+                .withStdin(Files.newInputStream(Paths.get("src/test/resources/com/cloudbees/opscenter/client/casc/cli/BundleValidatorCommandTest/valid-bundle.zip")))
+                .asUser(cascAdmin.getId()).invokeWithArgs("-c", "COMMIT_HASH");
+        assertThat("User cascAdmin should have permissions", result.returnCode(), is(0));
+
+        // Validating the content
         // Valid without warnings
         logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
         result = new CLICommandInvoker(rule, BundleValidatorCommand.COMMAND_NAME)

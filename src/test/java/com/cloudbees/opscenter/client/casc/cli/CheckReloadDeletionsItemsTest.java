@@ -1,14 +1,12 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Paths;
 
-import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
-import org.htmlunit.HttpMethod;
-import org.htmlunit.WebResponse;
+import org.junit.ClassRule;
 import org.junit.Test;
-
+import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.Issue;
 import net.sf.json.JSONObject;
 
 import hudson.cli.CLICommandInvoker;
@@ -18,9 +16,6 @@ import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.opscenter.client.casc.AbstractBundleVersionCheckerTest;
-import org.jvnet.hudson.test.Issue;
-
-import javax.servlet.http.HttpServletResponse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -30,6 +25,12 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 public class CheckReloadDeletionsItemsTest extends AbstractBundleVersionCheckerTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Test
     @WithEnvelope(TestEnvelope.class)

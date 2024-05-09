@@ -3,20 +3,15 @@ removeStrategy:
 
 roles:
   - permissions:
-      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.Admin
-      - hudson.model.Hudson.Read
+      - hudson.model.Hudson.Administer
     name: administer
   - permissions:
-      - hudson.model.Hudson.Manage
       - hudson.model.Item.Configure
       - hudson.model.Item.Create
       - hudson.model.Item.Read
       - hudson.model.Hudson.Read
-      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.Read
     name: manage
-  - permissions:
-      - hudson.model.Hudson.Administer
-    name: superadmin
+
 groups:
   - members:
       users:
@@ -25,13 +20,6 @@ groups:
       - name: administer
         grantedAt: current
     name: Administrators
-  - members:
-      users:
-        - superadmin
-    roles:
-      - name: superadmin
-        grantedAt: current
-    name: Super Administrators
   - members:
       users:
         - manager

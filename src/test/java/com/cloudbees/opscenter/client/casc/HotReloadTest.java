@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRecipe;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -76,6 +77,11 @@ public class HotReloadTest extends AbstractCJPTest {
     public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
     @ClassRule
     public static TemporaryFolder bundlesSrc = new TemporaryFolder(); // As for bundles we need a static rule and this.tmp is not static
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Rule
     public LoggerRule loggerRule = new LoggerRule();
@@ -102,15 +108,12 @@ public class HotReloadTest extends AbstractCJPTest {
             assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
             assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
             assertTrue(Jenkins.get().hasPermission(Jenkins.MANAGE));
-            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_READ));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_READ)); // Implied by CASC_ADMIN
 
             assertThrows(AccessDeniedException3.class, () -> service.reloadIfIsHotReloadable(bundle));
         }
-        try (ACLContext a = ACL.as(User.getById("admin", false))) {
-            assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
-            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
-            assertFalse(Jenkins.get().hasPermission(Jenkins.MANAGE));
-            assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_READ));
+        try (ACLContext a = ACL.as(User.getById("superadmin", false))) {
+            assertTrue(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
 
             service.reloadIfIsHotReloadable(bundle);
 
@@ -120,6 +123,14 @@ public class HotReloadTest extends AbstractCJPTest {
             assertTrue(Jenkins.get().getPlugin("configuration-as-code").getWrapper().isActive());
             assertThat(Jenkins.get().getNumExecutors(), is(1));
             assertThat(Jenkins.get().getSystemMessage(), is("From 01_jenkins.yaml"));
+        }
+        try (ACLContext a = ACL.as(User.getById("admin", false))) {
+            assertFalse(Jenkins.get().hasPermission(Jenkins.ADMINISTER));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
+            assertFalse(Jenkins.get().hasPermission(Jenkins.MANAGE));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_READ)); // Implied by CASC_ADMIN
+
+            service.reloadIfIsHotReloadable(bundle); // Just a permission check
         }
     }
 
@@ -134,7 +145,7 @@ public class HotReloadTest extends AbstractCJPTest {
 
         try (ACLContext a = ACL.as(User.getById("admin", false))) {
             assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_ADMIN));
-            assertFalse(Jenkins.get().hasPermission(CascPermission.CASC_READ));
+            assertTrue(Jenkins.get().hasPermission(CascPermission.CASC_READ)); // Implied by CASC_ADMIN
 
             Status status = BeekeeperRemote.get().getStatus();
 
