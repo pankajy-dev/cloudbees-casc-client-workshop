@@ -1,6 +1,6 @@
 apiVersion: "1"
-id: "multifile-bundle"
+id: "bundle"
 description: "This is a config bundle"
 version: "1"
-catalog:
-  - "plugin-catalog.yaml"
+jcasc:
+  - "jenkins.yaml"

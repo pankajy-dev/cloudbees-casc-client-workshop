@@ -6,6 +6,8 @@ jenkins:
     local:
       allowsSignup: false
       users:
+        - id: superadmin
+          password: eiy5otu8Sipier4noy4ahPhiek9li9ai
         - id: admin
           password: Qmas9pHXb9wpvp36FaAQ2SBN7XBxsG3h
         - id: manager

@@ -72,9 +72,8 @@ public class HotReloadWithoutSystemReadTest extends AbstractCJPTest {
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
     }
 
-    @Issue("BEE-3618")
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadWithoutSystemReadTest/bundle")
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/plugin/bundles-no-SystemRead/simple-bundle")
     @Test
     public void permissionCheck() throws IOException, CasCException {
         assertTrue(ConfigurationBundleManager.isSet());

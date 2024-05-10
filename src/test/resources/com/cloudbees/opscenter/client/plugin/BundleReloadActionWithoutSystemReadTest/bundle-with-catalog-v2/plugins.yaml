@@ -1,3 +1,0 @@
-plugins:
-- id: "cloudbees-casc-api"
-- id: "manage-permission"
