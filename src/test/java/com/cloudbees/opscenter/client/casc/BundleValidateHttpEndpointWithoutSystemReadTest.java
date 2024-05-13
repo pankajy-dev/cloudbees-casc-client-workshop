@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.logging.Level;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.net.HttpHeaders;
@@ -16,7 +15,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
 
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
@@ -36,8 +34,6 @@ public class BundleValidateHttpEndpointWithoutSystemReadTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-    @Rule
-    public LoggerRule logger = new LoggerRule();
 
     private User admin;
     private User cascAdmin;
@@ -80,9 +76,7 @@ public class BundleValidateHttpEndpointWithoutSystemReadTest {
         assertThat("User cascAdmin should not have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_FORBIDDEN));
         conn.disconnect();
 
-        // Content validation
-        // Valid without warnings
-        logger.record(ConfigurationUpdaterHelper.class, Level.INFO).capture(5);
+        // With Jenkins.ADMINISTER permission
         conn = post("valid-bundle.zip", admin);
         assertThat("User admin should have permissions", conn.getResponseCode(), is(HttpServletResponse.SC_OK));
         conn.disconnect();
