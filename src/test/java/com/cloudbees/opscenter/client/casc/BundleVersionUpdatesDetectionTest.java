@@ -29,6 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 
 import javax.servlet.http.HttpServletResponse;
@@ -64,6 +65,11 @@ public class BundleVersionUpdatesDetectionTest extends AbstractBundleVersionChec
     public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
     @ClassRule
     public static TemporaryFolder bundlesSrc = new TemporaryFolder();
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @BeforeClass
     public static void processBundles() throws Exception {

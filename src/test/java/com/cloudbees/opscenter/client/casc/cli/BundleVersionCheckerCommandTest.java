@@ -8,7 +8,9 @@ import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
 import hudson.cli.CLICommandInvoker;
 import hudson.model.FreeStyleProject;
 import net.sf.json.JSONObject;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +33,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class BundleVersionCheckerCommandTest extends AbstractBundleVersionCheckerTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
     private static void verifyCurrentUpdateStatus(
             String message,
             BundleUpdateLog.BundleUpdateLogAction action,

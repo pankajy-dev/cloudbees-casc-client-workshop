@@ -1,23 +1,25 @@
 package com.cloudbees.opscenter.client.casc.cli;
 
-import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
-import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
-import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
+import org.mockito.MockedStatic;
+import net.sf.json.JSONObject;
+import net.sf.json.test.JSONAssert;
 
 import hudson.cli.CLICommandInvoker;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
-import jenkins.security.ApiTokenProperty;
-import net.sf.json.JSONObject;
-import net.sf.json.test.JSONAssert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.LocalData;
-import org.mockito.MockedStatic;
+
+import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.validation.BundleUpdateLog;
+import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -27,10 +29,17 @@ import static org.mockito.Mockito.mockStatic;
 
 public class BundleUpdateLogCommandTest {
 
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
     private User admin;
+    private User cascAdmin;
     private User user;
 
     @Before
@@ -42,19 +51,20 @@ public class BundleUpdateLogCommandTest {
         admin = realm.createAccount("admin", "password");
         rule.jenkins.setSecurityRealm(realm);
         ProjectMatrixAuthorizationStrategy authorizationStrategy = (ProjectMatrixAuthorizationStrategy) rule.jenkins.getAuthorizationStrategy();
-        authorizationStrategy.add(CascPermission.CASC_ADMIN, admin.getId());
-        authorizationStrategy.add(Jenkins.READ, admin.getId());
+        authorizationStrategy.add(Jenkins.ADMINISTER, admin.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
-        admin.addProperty(new ApiTokenProperty());
-        admin.getProperty(ApiTokenProperty.class).changeApiToken();
+
+        cascAdmin = realm.createAccount("cascAdmin", "password");
+        rule.jenkins.setSecurityRealm(realm);
+        authorizationStrategy.add(CascPermission.CASC_ADMIN, cascAdmin.getId());
+        authorizationStrategy.add(Jenkins.READ, cascAdmin.getId());
+        rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
 
         user = realm.createAccount("user", "password");
         rule.jenkins.setSecurityRealm(realm);
         authorizationStrategy.add(CascPermission.CASC_READ, user.getId());
         authorizationStrategy.add(Jenkins.READ, user.getId());
         rule.jenkins.setAuthorizationStrategy(authorizationStrategy);
-        user.addProperty(new ApiTokenProperty());
-        user.getProperty(ApiTokenProperty.class).changeApiToken();
     }
 
     @Test
@@ -62,13 +72,17 @@ public class BundleUpdateLogCommandTest {
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(user.getId()).invoke();
         assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CloudBees CasC Permissions/Admin permission"));
         assertThat("User user does not have permissions", result.returnCode(), is(6));
+        result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(cascAdmin.getId()).invoke();
+        assertThat("User cascAdmin has permissions", result.returnCode(), is(0));
         result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("User admin has permissions", result.returnCode(), is(0));
     }
 
     @Test
     public void check_no_casc() {
-        CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
+        CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(cascAdmin.getId()).invoke();
+        assertThat("User cascAdmin has permissions", result.returnCode(), is(0));
+        result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(admin.getId()).invoke();
         assertThat("User admin has permissions", result.returnCode(), is(0));
         JSONObject response = JSONObject.fromObject(result.stdout());
         assertThat("CasC disabled", response.getString("update-log-status"), is("CASC_DISABLED"));

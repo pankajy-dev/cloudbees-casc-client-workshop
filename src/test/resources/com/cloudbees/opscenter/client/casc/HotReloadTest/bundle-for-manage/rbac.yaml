@@ -14,7 +14,9 @@ roles:
       - hudson.model.Hudson.Read
       - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.Read
     name: manage
-
+  - permissions:
+      - hudson.model.Hudson.Administer
+    name: superadmin
 groups:
   - members:
       users:
@@ -23,6 +25,13 @@ groups:
       - name: administer
         grantedAt: current
     name: Administrators
+  - members:
+      users:
+        - superadmin
+    roles:
+      - name: superadmin
+        grantedAt: current
+    name: Super Administrators
   - members:
       users:
         - manager

@@ -6,7 +6,9 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebResponse;
 import net.sf.json.JSONObject;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +20,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 
 public class BundleVersionCheckerHttpEndpointQuietTest extends AbstractBundleVersionCheckerTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
     @Test
     @WithEnvelope(AbstractBundleVersionCheckerTest.TestEnvelope.class)
     @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/AbstractBundleVersionCheckerTest/version-2.zip")

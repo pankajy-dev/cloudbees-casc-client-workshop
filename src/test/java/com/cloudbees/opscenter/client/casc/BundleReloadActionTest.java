@@ -1,6 +1,6 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.AbstractIMTest;
+import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
@@ -75,12 +75,23 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-public class BundleReloadActionTest extends AbstractIMTest {
+public class BundleReloadActionTest extends AbstractCJPTest {
 
     @ClassRule
     public static WireMockClassRule wiremock = new WireMockClassRule(wireMockConfig().dynamicPort().fileSource(new ClasspathFileSource("src/test/resources/wiremock/")));
     @ClassRule
     public static TemporaryFolder bundlesSrc = new TemporaryFolder();
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
+
+    /**
+     * Rule to restore system props after modifying them in a test:  bundle
+     */
+    @Rule
+    public final FlagRule<String> bundleProp = FlagRule.systemProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
 
     @BeforeClass
     public static void processBundles() throws Exception {
@@ -103,24 +114,6 @@ public class BundleReloadActionTest extends AbstractIMTest {
         try (OutputStream out = FileUtils.openOutputStream(file.toFile(), false)) {
             IOUtils.write(content.replaceAll("%%URL%%", wiremock.baseUrl()), out, StandardCharsets.UTF_8);
         }
-    }
-
-    @Rule
-    public final CJPRule rule;
-
-    /**
-     * Rule to restore system props after modifying them in a test
-     */
-    @Rule
-    public final FlagRule<String> props = FlagRule.systemProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
-
-    public BundleReloadActionTest() {
-        this.rule = new CJPRule(this.tmp);
-    }
-
-    @Override
-    protected CJPRule rule() {
-        return this.rule;
     }
 
     @Test

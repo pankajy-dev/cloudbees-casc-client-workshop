@@ -1,5 +1,30 @@
 package com.cloudbees.opscenter.client.casc.visualization;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.FlagRule;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.MockedStatic;
+import org.springframework.security.access.AccessDeniedException;
+
+import hudson.model.User;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
+import hudson.security.HudsonPrivateSecurityRealm;
+import hudson.security.ProjectMatrixAuthorizationStrategy;
+import jenkins.model.Jenkins;
+
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.InvalidBundleException;
@@ -9,28 +34,6 @@ import com.cloudbees.jenkins.cjp.installmanager.casc.validation.ValidationCode;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
 import com.cloudbees.jenkins.plugins.casc.validation.AbstractValidator;
 import com.cloudbees.opscenter.client.casc.ConfigurationStatus;
-import hudson.model.User;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
-import hudson.security.AccessDeniedException3;
-import hudson.security.HudsonPrivateSecurityRealm;
-import hudson.security.ProjectMatrixAuthorizationStrategy;
-import jenkins.model.Jenkins;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.MockedStatic;
-import org.springframework.security.access.AccessDeniedException;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -45,6 +48,12 @@ import static org.mockito.Mockito.when;
 
 @Issue("BEE-15886")
 public class BundleVisualizationLinkTest {
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Rule
     public JenkinsRule j = new JenkinsRule();

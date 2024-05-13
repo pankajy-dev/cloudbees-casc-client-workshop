@@ -10,6 +10,7 @@ import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import net.sf.json.JSONObject;
@@ -21,6 +22,8 @@ import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,6 +34,12 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 public class CheckBundleDeletionsHttpEndpointTest extends AbstractBundleVersionCheckerTest{
+
+    /**
+     * Rule to restore system props after modifying them in a test: Enable the Jenkins.SYSTEM_READ permission
+     */
+    @ClassRule
+    public static final FlagRule<String> systemReadProp = FlagRule.systemProperty("jenkins.security.SystemReadPermission", "true");
 
     @Test
     @WithEnvelope(TestEnvelope.class)
