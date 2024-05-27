@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.CloudBeesUCUrlConfiguration;
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.InstalledPluginsReport;
 import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.report.RequestedPluginReportEntry;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
@@ -94,16 +95,16 @@ public class BundleReloadActionTest extends AbstractCJPTest {
     @Rule
     public final FlagRule<String> bundleProp = FlagRule.systemProperty("core.casc.config.bundle", Paths.get(bundlesSrc.getRoot().getAbsolutePath() + "/bundle-with-catalog").toFile().getAbsolutePath());
     @Rule
-    public FlagRule<String> ucTestUrl = FlagRule.systemProperty("com.cloudbees.jenkins.plugins.assurance.StagingURLSource.CloudBees.url", wiremock.baseUrl());
+    public FlagRule<String> ucTestUrl = FlagRule.systemProperty(CloudBeesUCUrlConfiguration.UC_ROOT_ALT_VARIABLE, wiremock.baseUrl());
 
     @BeforeClass
     public static void processBundles() throws Exception {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
         wiremock.stubFor(get(urlEqualTo("/manage-permission-1.0.1.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("manage-permission-1.0.1.hpi")));
         wiremock.stubFor(get(urlEqualTo("/chucknorris.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("chucknorris.hpi")));
-        wiremock.stubFor(get(urlPathEqualTo("/envelope-core-cm/update-center.json")).willReturn(aResponse().withStatus(200).withBodyFile("uc-core-cm-2.375.1.1.json")));
-        wiremock.stubFor(get(urlEqualTo("/workflow-step-api/639.v6eca_cd8c04a_a_/workflow-step-api.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("workflow-step-api.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/cloudbees-casc-shared/1.0/cloudbees-casc-shared.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("cloudbees-casc-shared.hpi")));
+        wiremock.stubFor(get(urlPathEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_JSON_CONTEXT + "/envelope-core-cm/update-center.json")).willReturn(aResponse().withStatus(200).withBodyFile("uc-core-cm-2.375.1.1.json")));
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/workflow-step-api/639.v6eca_cd8c04a_a_/workflow-step-api.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("workflow-step-api.hpi")));
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/cloudbees-casc-shared/1.0/cloudbees-casc-shared.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("cloudbees-casc-shared.hpi")));
 
         FileUtils.copyDirectory(Paths.get("src/test/resources/com/cloudbees/opscenter/client/plugin/casc").toFile(), bundlesSrc.getRoot());
         // Sanitise plugin-catalog.yaml
