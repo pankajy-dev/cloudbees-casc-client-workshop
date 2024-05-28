@@ -132,7 +132,7 @@ public abstract class BundleReload implements ExtensionPoint {
             }
         }
 
-        private void doReloadFromCatalogAndExtension(ConfigurationBundle bundle) throws CasCException {
+        private void doReloadFromCatalogAndExtension(ConfigurationBundle bundle) {
             Set<String> beekperPlugins = Sets.newHashSet(CloudBeesAssurance.get().getBeekeeper().getEnvelope().getPlugins().keySet());
             ParsedEnvelopeExtension.Expanded expanded =  CloudBeesAssurance.get().getBeekeeper().getInstalledExtension();
             Set<String> expandedPlugins = new HashSet<>();

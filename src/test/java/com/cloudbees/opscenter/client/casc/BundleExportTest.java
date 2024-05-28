@@ -3,11 +3,14 @@ package com.cloudbees.opscenter.client.casc;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.IMRunner;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.CloudBeesUCUrlConfiguration;
 import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.EnvelopeProduct;
@@ -27,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRecipe;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -73,27 +77,30 @@ public class BundleExportTest extends AbstractCJPTest {
 
     @Rule
     public TestName testName = new TestName();
+    @Rule
+    public FlagRule<String> ucTestUrl = FlagRule.systemProperty(CloudBeesUCUrlConfiguration.UC_ROOT_ALT_VARIABLE, wiremock.baseUrl());
 
 
     @BeforeClass
     public static void configureBeekeeper() {
-        System.setProperty("com.cloudbees.jenkins.plugins.assurance.StagingURLSource.CloudBees.url", wiremock.baseUrl());
-        wiremock.stubFor(get(urlEqualTo("/beer/1.2/beer.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/beer/1.2/beer.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/icon-shim-1.0.1.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/icon-shim-1.0.1.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("icon-shim-1.0.1.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/caffeine-api/2.9.3-111.va_4034a_92d8b_c/caffeine-api.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/caffeine-api/2.9.3-111.va_4034a_92d8b_c/caffeine-api.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("caffeine-api-2.9.3-111.va_4034a_92d8b_c.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/manage-permissions/latest/manage-permissions.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/manage-permissions/latest/manage-permissions.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("manage-permissions-1.0.1.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/scm-api/latest/scm-api.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/scm-api/621.vda_a_b_055e58f7/scm-api.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("scm-api-2.2.6.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/structs/latest/structs.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/structs/324.va_f5d6774f3a_d/structs.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("structs-1.9.hpi")));
-        wiremock.stubFor(get(urlEqualTo("/chucknorris/latest/chucknorris.hpi"))
+        wiremock.stubFor(get(urlEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_PLUGINS_CONTEXT + "/chucknorris/1.4/chucknorris.hpi"))
                                  .willReturn(aResponse().withStatus(200).withBodyFile("chucknorris-1.0.hpi")));
         wiremock.stubFor(get(urlEqualTo("/service/rest/v1/search/assets/download?maven.artifactId=icon-shim&maven.extension=hpi&maven.baseVersion=1.0.1&maven.groupId=org.jenkins-ci.plugins"))
                                  .withBasicAuth("user1", "passwd1").willReturn(aResponse().withStatus(200).withBodyFile("icon-shim-1.0.1.hpi")));
+        wiremock.stubFor(get(urlPathEqualTo(CloudBeesUCUrlConfiguration.DEFAULT_CB_UC_JSON_CONTEXT + "/envelope-core-cm/update-center.json")).willReturn(aResponse().withStatus(200).withBodyFile("uc-core-cm-2.375.1.1.json")));
+
     }
 
     @Before
