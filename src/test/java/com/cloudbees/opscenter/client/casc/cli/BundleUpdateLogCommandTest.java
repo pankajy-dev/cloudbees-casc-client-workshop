@@ -70,7 +70,7 @@ public class BundleUpdateLogCommandTest {
     @Test
     public void check_permissions() {
         CLICommandInvoker.Result result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(user.getId()).invoke();
-        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CloudBees CasC Permissions/Admin permission"));
+        assertThat("User user does not have permissions", result.stderr(), containsString("ERROR: user is missing the CloudBees CasC Permissions/Administer permission"));
         assertThat("User user does not have permissions", result.returnCode(), is(6));
         result = new CLICommandInvoker(rule, BundleUpdateLogCommand.COMMAND_NAME).asUser(cascAdmin.getId()).invoke();
         assertThat("User cascAdmin has permissions", result.returnCode(), is(0));
