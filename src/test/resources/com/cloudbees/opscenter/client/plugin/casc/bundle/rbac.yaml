@@ -3,7 +3,7 @@ removeStrategy:
 
 roles:
   - permissions:
-      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.CascPermission.Admin
+      - com.cloudbees.jenkins.plugins.casc.permissions.CascPermission.Administer
       - hudson.model.Hudson.Read
     name: administer
   - permissions:
