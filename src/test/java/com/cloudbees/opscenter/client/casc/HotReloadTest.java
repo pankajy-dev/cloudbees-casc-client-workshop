@@ -1,6 +1,10 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.*;
+import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
+import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
+import com.cloudbees.jenkins.cjp.installmanager.IMRunner;
+import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
+import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.TextFile;
@@ -56,13 +60,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.ibm.icu.impl.Assert.fail;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -71,7 +80,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.jvnet.hudson.test.LoggerRule.recorded;
 import static org.mockito.Mockito.mockStatic;
 
@@ -321,7 +333,7 @@ public class HotReloadTest extends AbstractCJPTest {
             // error that was encountered
 
             expanderMock.when( () -> PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension()))
-                    .thenReturn(null);
+                        .thenReturn(null);
             ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
 
             try {

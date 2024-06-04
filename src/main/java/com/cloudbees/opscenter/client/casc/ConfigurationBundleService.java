@@ -33,7 +33,12 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -172,7 +177,7 @@ public class ConfigurationBundleService {
             // requirement of the upcoming lambda
             final Map<String, VersionNumber> expandedDryRun = expandedDryRunMap != null
                                                             ? expandedDryRunMap
-                                                            : new HashMap<>();
+                                                            : Collections.emptyMap();
             Map<String, VersionNumber> alreadyInstalled =
                 Jenkins.get().getPluginManager()
                              .getPlugins()
