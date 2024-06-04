@@ -33,12 +33,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.restrictions.suppressions.SuppressRestrictedWarnings;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -70,7 +65,7 @@ public class ConfigurationBundleService {
      */
     public boolean isHotReloadable(ConfigurationBundle bundle) {
         // Not possible but
-        if (bundle == null) {
+         if (bundle == null) {
             LOGGER.warning("Bundle null, the Hot-Reload cannot be checked");
             return false;
         }
@@ -172,8 +167,18 @@ public class ConfigurationBundleService {
     private boolean pluginsConfigAreHotReloadable(ConfigurationBundle bundle) {
         try {
             Envelope envelope = CloudBeesAssurance.get().getBeekeeper().getEnvelope();
-            Map<String, VersionNumber> expandedDryRun = PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension());
-            Map<String, VersionNumber> alreadyInstalled = Jenkins.get().getPluginManager().getPlugins().stream().filter(installed -> expandedDryRun.get(installed.getShortName()) != null).collect(Collectors.toMap(PluginWrapper::getShortName, PluginWrapper::getVersionNumber));
+            Map<String, VersionNumber> expandedDryRunMap = PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension());
+            // We need expandedDryRun below to circumvent the 'effectively final'
+            // requirement of the upcoming lambda
+            final Map<String, VersionNumber> expandedDryRun = expandedDryRunMap != null
+                                                            ? expandedDryRunMap
+                                                            : new HashMap<>();
+            Map<String, VersionNumber> alreadyInstalled =
+                Jenkins.get().getPluginManager()
+                             .getPlugins()
+                             .stream()
+                             .filter(installed -> expandedDryRun.get(installed.getShortName()) != null)
+                             .collect(Collectors.toMap(PluginWrapper::getShortName, PluginWrapper::getVersionNumber));
 
             Set<String> pluginsDiffs = new TreeSet<>();
             alreadyInstalled.entrySet().forEach(entry -> {

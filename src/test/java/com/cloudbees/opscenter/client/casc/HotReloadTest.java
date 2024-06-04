@@ -1,26 +1,32 @@
 package com.cloudbees.opscenter.client.casc;
 
-import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
-import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
-import com.cloudbees.jenkins.cjp.installmanager.IMRunner;
-import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
+import com.cloudbees.jenkins.cjp.installmanager.*;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.TextFile;
+import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginListExpander;
+import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
+import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
+import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
+import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.AccessDeniedException3;
+import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
@@ -33,6 +39,9 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRecipe;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,11 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -61,15 +66,14 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.jvnet.hudson.test.LoggerRule.recorded;
+import static org.mockito.Mockito.mockStatic;
 
 public class HotReloadTest extends AbstractCJPTest {
 
@@ -298,6 +302,37 @@ public class HotReloadTest extends AbstractCJPTest {
             list.add(TextFile.of(folder.resolve(file)));
         }
         return list;
+    }
+
+    @Issue("BEE-49163") // Addresses a null pointer exception
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/bundle_apiversion-2_version-2_with-plugins-only")
+    @Test
+    public void shouldCompleteWithoutExceptionAfterReceivingANullValue() throws Exception {
+
+        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+        Envelope envelope = CloudBeesAssurance.get().getBeekeeper().getEnvelope();
+
+        try (MockedStatic<PluginListExpander> expanderMock = Mockito.mockStatic(PluginListExpander.class)) {
+
+            // PluginListExpander.dryRun (mocked below) is invoked from ConfigurationBundleService.isHotReloadable.
+            // It is made to return null as this is the source of the NullPointerException being traced
+            // by this test. It has been mocked here in that it is the simplest way to reproduce the
+            // error that was encountered
+
+            expanderMock.when( () -> PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension()))
+                    .thenReturn(null);
+            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+
+            try {
+                // We don't care about the return type here -
+                // We just want to check for the occurrence of an exception, hence we only report failure
+                // in only that case
+                service.isHotReloadable(bundle);
+            } catch (NullPointerException e) {
+                fail("Should not throw a NullPointerException after PluginListExpander.dryRun returns null");
+            }
+        }
     }
 
     /**

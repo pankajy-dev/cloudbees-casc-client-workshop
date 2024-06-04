@@ -23,7 +23,6 @@
   <properties>
     <node.version>12.18.3</node.version>
     <npm.version>6.14.6</npm.version>
-    <frontend-version>1.10.0</frontend-version>
     <useBeta>true</useBeta> <!-- Jenkins.SYSTEM_READ is still Beta.class -->
     <no-test-jar>false</no-test-jar> <!-- to allow other plugins to extend abstract test classes like ProjectItem.java -->
   </properties>
