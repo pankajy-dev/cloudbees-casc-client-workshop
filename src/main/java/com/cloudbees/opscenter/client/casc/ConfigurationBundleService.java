@@ -70,7 +70,7 @@ public class ConfigurationBundleService {
      */
     public boolean isHotReloadable(ConfigurationBundle bundle) {
         // Not possible but
-         if (bundle == null) {
+        if (bundle == null) {
             LOGGER.warning("Bundle null, the Hot-Reload cannot be checked");
             return false;
         }
