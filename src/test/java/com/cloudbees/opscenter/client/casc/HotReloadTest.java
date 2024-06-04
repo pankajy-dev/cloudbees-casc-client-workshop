@@ -102,6 +102,10 @@ public class HotReloadTest extends AbstractCJPTest {
     @Rule
     public LoggerRule loggerRule = new LoggerRule();
 
+    // This path that is used more than once, hence it makes sense to provide a constant
+    private final String PATH_BEE_49163 =
+        "src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/bundle-with-plugins-only";
+
     @BeforeClass
     public static void processBundles() {
         wiremock.stubFor(get(urlEqualTo("/beer-1.2.hpi")).willReturn(aResponse().withStatus(200).withBodyFile("beer-1.2.hpi")));
@@ -318,32 +322,31 @@ public class HotReloadTest extends AbstractCJPTest {
 
     @Issue("BEE-49163") // Addresses a null pointer exception
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    @WithConfigBundle("src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/bundle_apiversion-2_version-2_with-plugins-only")
+    @WithConfigBundle(PATH_BEE_49163 + "/apiversion-1_version-1")
     @Test
-    public void shouldCompleteWithoutExceptionAfterReceivingANullValue() throws Exception {
+    public void shouldCompleteWithoutExceptionAfterReceivingAGenuineNullValue() throws Exception {
 
+        // We do not strictly need this for our test other than confirming that we are initially
+        // working with bundle version 1 and API version 1
         ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
-        Envelope envelope = CloudBeesAssurance.get().getBeekeeper().getEnvelope();
+        assertThat(bundle.getVersion(), equalTo("1"));
+        assertThat(bundle.getApiVersion(), equalTo("1"));
 
-        try (MockedStatic<PluginListExpander> expanderMock = Mockito.mockStatic(PluginListExpander.class)) {
+        // The bundle is then reloaded but not so that it overrides the one loaded via WithConfigBundle.
+        // It means that a call to ConfigurationBundleManager.get().getConfigurationBundle() will still
+        // return the bundle loaded originally
 
-            // PluginListExpander.dryRun (mocked below) is invoked from ConfigurationBundleService.isHotReloadable.
-            // It is made to return null as this is the source of the NullPointerException being traced
-            // by this test. It has been mocked here in that it is the simplest way to reproduce the
-            // error that was encountered
+        Path path = Paths.get(PATH_BEE_49163, "apiversion-2_version-2");
+        bundle = ConfigurationBundleManager.getConfigurationBundleFromPath(path);
+        assertThat(bundle.getVersion(), equalTo("2"));
+        assertThat(bundle.getApiVersion(), equalTo("2"));
 
-            expanderMock.when( () -> PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension()))
-                        .thenReturn(null);
-            ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
 
-            try {
-                // We don't care about the return type here -
-                // We just want to check for the occurrence of an exception, hence we only report failure
-                // in only that case
-                service.isHotReloadable(bundle);
-            } catch (NullPointerException e) {
-                fail("Should not throw a NullPointerException after PluginListExpander.dryRun returns null");
-            }
+        try {
+            service.isHotReloadable(bundle);
+        } catch (NullPointerException e) {
+            fail("Should not throw a NullPointerException after upgrading version and apiVersion of bundle");
         }
     }
 
