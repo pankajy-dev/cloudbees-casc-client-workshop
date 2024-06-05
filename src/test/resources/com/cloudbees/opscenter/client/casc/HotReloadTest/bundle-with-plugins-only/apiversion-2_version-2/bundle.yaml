@@ -1,0 +1,6 @@
+id: "BEE-49163"
+version: "2"
+apiVersion: "2"
+description: "Testing of resolution of NullPointerException"
+plugins:
+   - "plugins.yaml"

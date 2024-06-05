@@ -3,6 +3,7 @@ package com.cloudbees.opscenter.client.casc;
 import com.cloudbees.jenkins.cjp.installmanager.AbstractCJPTest;
 import com.cloudbees.jenkins.cjp.installmanager.CJPRule;
 import com.cloudbees.jenkins.cjp.installmanager.IMRunner;
+import com.cloudbees.jenkins.cjp.installmanager.WithConfigBundle;
 import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
@@ -58,9 +59,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.ibm.icu.impl.Assert.fail;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -70,6 +73,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.jvnet.hudson.test.LoggerRule.recorded;
+import static org.mockito.Mockito.mockStatic;
 
 public class HotReloadTest extends AbstractCJPTest {
 
@@ -85,6 +89,10 @@ public class HotReloadTest extends AbstractCJPTest {
 
     @Rule
     public LoggerRule loggerRule = new LoggerRule();
+
+    // This path that is used more than once, hence it makes sense to provide a constant
+    private final String BEE_49163_PATH =
+        "src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/bundle-with-plugins-only";
 
     @BeforeClass
     public static void processBundles() {
@@ -298,6 +306,36 @@ public class HotReloadTest extends AbstractCJPTest {
             list.add(TextFile.of(folder.resolve(file)));
         }
         return list;
+    }
+
+    @Issue("BEE-49163") // Addresses a null pointer exception
+    @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
+    @WithConfigBundle(BEE_49163_PATH + "/apiversion-1_version-1")
+    @Test
+    public void shouldCompleteWithoutExceptionAfterReceivingAGenuineNullValue() throws Exception {
+
+        // We do not strictly need this for our test other than confirming that we are initially
+        // working with bundle version 1 and API version 1
+        ConfigurationBundle bundle = ConfigurationBundleManager.get().getConfigurationBundle();
+        assertThat(bundle.getVersion(), equalTo("1"));
+        assertThat(bundle.getApiVersion(), equalTo("1"));
+
+        // The bundle is then reloaded but not so that it overrides the one loaded via WithConfigBundle.
+        // It means that a call to ConfigurationBundleManager.get().getConfigurationBundle() will still
+        // return the bundle loaded originally
+
+        Path path = Paths.get(BEE_49163_PATH, "apiversion-2_version-2");
+        bundle = ConfigurationBundleManager.getConfigurationBundleFromPath(path);
+        assertThat(bundle.getVersion(), equalTo("2"));
+        assertThat(bundle.getApiVersion(), equalTo("2"));
+
+        ConfigurationBundleService service = ExtensionList.lookupSingleton(ConfigurationBundleService.class);
+
+        try {
+            service.isHotReloadable(bundle);
+        } catch (NullPointerException e) {
+            fail("Should not throw a NullPointerException after upgrading version and apiVersion of bundle");
+        }
     }
 
     /**

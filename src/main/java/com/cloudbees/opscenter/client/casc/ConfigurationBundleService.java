@@ -172,8 +172,18 @@ public class ConfigurationBundleService {
     private boolean pluginsConfigAreHotReloadable(ConfigurationBundle bundle) {
         try {
             Envelope envelope = CloudBeesAssurance.get().getBeekeeper().getEnvelope();
-            Map<String, VersionNumber> expandedDryRun = PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension());
-            Map<String, VersionNumber> alreadyInstalled = Jenkins.get().getPluginManager().getPlugins().stream().filter(installed -> expandedDryRun.get(installed.getShortName()) != null).collect(Collectors.toMap(PluginWrapper::getShortName, PluginWrapper::getVersionNumber));
+            Map<String, VersionNumber> expandedDryRunMap = PluginListExpander.dryRun(bundle, envelope, bundle.getEnvelopeExtension());
+            // We need expandedDryRun below to circumvent the 'effectively final'
+            // requirement of the upcoming lambda
+            final Map<String, VersionNumber> expandedDryRun = expandedDryRunMap != null
+                                                            ? expandedDryRunMap
+                                                            : Collections.emptyMap();
+            Map<String, VersionNumber> alreadyInstalled =
+                Jenkins.get().getPluginManager()
+                             .getPlugins()
+                             .stream()
+                             .filter(installed -> expandedDryRun.get(installed.getShortName()) != null)
+                             .collect(Collectors.toMap(PluginWrapper::getShortName, PluginWrapper::getVersionNumber));
 
             Set<String> pluginsDiffs = new TreeSet<>();
             alreadyInstalled.entrySet().forEach(entry -> {
