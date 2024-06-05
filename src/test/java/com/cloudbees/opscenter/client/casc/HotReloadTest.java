@@ -8,29 +8,20 @@ import com.cloudbees.jenkins.cjp.installmanager.WithEnvelope;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundle;
 import com.cloudbees.jenkins.cjp.installmanager.casc.ConfigurationBundleManager;
 import com.cloudbees.jenkins.cjp.installmanager.casc.TextFile;
-import com.cloudbees.jenkins.cjp.installmanager.casc.plugin.management.PluginListExpander;
-import com.cloudbees.jenkins.plugins.assurance.CloudBeesAssurance;
 import com.cloudbees.jenkins.plugins.assurance.remote.BeekeeperRemote;
-import com.cloudbees.jenkins.plugins.assurance.remote.EnvelopeExtension;
 import com.cloudbees.jenkins.plugins.assurance.remote.Status;
 import com.cloudbees.jenkins.plugins.casc.CasCException;
-import com.cloudbees.jenkins.plugins.casc.YamlClientUtils;
 import com.cloudbees.jenkins.plugins.casc.permissions.CascPermission;
-import com.cloudbees.jenkins.plugins.updates.envelope.Envelope;
 import com.cloudbees.jenkins.plugins.updates.envelope.TestEnvelopes;
 import com.cloudbees.opscenter.client.casc.visualization.BundleVisualizationLink;
 import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.AccessDeniedException3;
-import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
@@ -43,9 +34,6 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRecipe;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,7 +91,7 @@ public class HotReloadTest extends AbstractCJPTest {
     public LoggerRule loggerRule = new LoggerRule();
 
     // This path that is used more than once, hence it makes sense to provide a constant
-    private final String PATH_BEE_49163 =
+    private final String BEE_49163_PATH =
         "src/test/resources/com/cloudbees/opscenter/client/casc/HotReloadTest/bundle-with-plugins-only";
 
     @BeforeClass
@@ -322,7 +310,7 @@ public class HotReloadTest extends AbstractCJPTest {
 
     @Issue("BEE-49163") // Addresses a null pointer exception
     @WithEnvelope(TestEnvelopes.CoreCMTraditionalJCasC.class)
-    @WithConfigBundle(PATH_BEE_49163 + "/apiversion-1_version-1")
+    @WithConfigBundle(BEE_49163_PATH + "/apiversion-1_version-1")
     @Test
     public void shouldCompleteWithoutExceptionAfterReceivingAGenuineNullValue() throws Exception {
 
@@ -336,7 +324,7 @@ public class HotReloadTest extends AbstractCJPTest {
         // It means that a call to ConfigurationBundleManager.get().getConfigurationBundle() will still
         // return the bundle loaded originally
 
-        Path path = Paths.get(PATH_BEE_49163, "apiversion-2_version-2");
+        Path path = Paths.get(BEE_49163_PATH, "apiversion-2_version-2");
         bundle = ConfigurationBundleManager.getConfigurationBundleFromPath(path);
         assertThat(bundle.getVersion(), equalTo("2"));
         assertThat(bundle.getApiVersion(), equalTo("2"));
